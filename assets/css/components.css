@@ -1,0 +1,112 @@
+
+/* BUTTONS */
+.button {
+  padding: 12px 25px;
+  border: none;
+  border-radius: var(--round-1);
+  text-align: center;
+  font-weight: 500;
+  text-transform: capitalize;
+  text-decoration: none;
+  cursor: pointer;
+  transition: 500ms;
+}
+
+.custom-button {
+  color: white;
+  background-color: var(--accent-color);
+  background: linear-gradient(135deg, var(--accent-dark), var(--accent-color));
+}
+
+.custom-button:hover {
+  background-color: #101129;
+  transition: 500ms;
+}
+
+.custom-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.custom-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.outline-button {
+  border: 1px solid var(--accent-color);
+  background-color: transparent;
+  color: var(--accent-color);
+}
+.outline-button:hover {
+  transition: 500ms;
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.btn-google {
+  background: var(--bg-white);
+  color: var(--text-dark);
+  border: 2px solid var(--border-color);
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.btn-google:hover:not(:disabled) {
+  border-color: var(--google-blue);
+  box-shadow: 0 2px 10px rgba(66, 133, 244, 0.1);
+  transform: translateY(-1px);
+}
+
+.btn-google:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* INPUT FIELDS */
+
+.input-field {
+  border-radius: 15px;
+  background-color: #fff;
+}
+
+.input-wrapper {
+  position: relative;
+  padding: 10px;
+}
+.input-title {
+  position: absolute;
+  top: 5px;
+  background-color: white;
+  padding: 0px 10px;
+  z-index: 100;
+  left: 25px;
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--gray);
+}
+
+::placeholder {
+    margin-right: 20px;
+}
+.input-icon {
+    font-size: 29px;
+    position: absolute;
+    left: 0;
+}
+

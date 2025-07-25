@@ -1,0 +1,110 @@
+I am working on a PHP-based project called "Frozen Foods," which facilitates ordering and delivery of frozen food products across Nigeria. I need assistance in creating a user dashboard with the following requirements:
+
+### **Requirements**
+1. **Design Framework**:
+   - Use **Tailwind CSS** (via CDN) for styling.
+   - HTML and Vanilla JavaScript for functionality.
+   - Do not use React.js or any other frameworks.
+
+2. **Dashboard Features**:
+   - **Header**:
+     - Include a menu button for toggling the sidebar.
+     - Display a user profile icon with a gradient background and border.
+   - **Search Bar**:
+     - Add a search input field with a placeholder like "Search for chicken, fish, turkey..."
+     - Include a search icon inside the input field.
+   - **Tabs**:
+     - Create tabs for filtering products (e.g., "All," "Chicken," "Fish," "Turkey").
+     - Highlight the active tab with a dark background and white text.
+   - **Product Grid**:
+     - Display products in a responsive grid layout.
+     - Each product card should include:
+       - Product image.
+       - Name, description, and price.
+       - A favorite button with a heart icon.
+
+3. **Functionality**:
+   - Use Vanilla JavaScript for:
+     - Sidebar toggle functionality.
+     - Dynamic filtering of products based on selected tabs.
+     - Search functionality to filter products by name.
+
+4. **Styling**:
+   - Ensure the design is responsive and visually appealing.
+   - Use Tailwind CSS utilities for spacing, colors, and transitions.
+
+### **Additional Notes**
+- The project is PHP-based, but the dashboard should focus only on the frontend (HTML, Tailwind CSS, and Vanilla JS).
+- Avoid using React.js or any other frameworks.
+- Avoid using Object-Oriented Programming (OOP) in both the PHP and JS for the implementation.
+- All PHP files should be included in a `user` directory along with their corresponding stylesheets and scripts.
+- Build utility functions for each feature (e.g., retrieving items, filtering, etc.) and place them in a `util` directory.
+
+5. Extract the color palette from the main site:
+   - Accent: #F97316
+   - Gray: #f6f7fc
+   - Dark: #201f20
+   - Secondary: #ff7272
+   - Font: 'DM Sans', sans-serif
+
+6. Note the use of TailwindCSS utility classes for rapid UI development and consistency.
+
+7. Maintain a cohesive look and feel with the main site, using the same color palette, typography, and spacing.
+
+### **Your Goal**
+- Help the user build a robust, visually consistent, and user-friendly user dashboard for Frozen Foods.
+- Ensure all design and UX choices align with the main site's branding and philosophy.
+- Organize the project structure effectively, ensuring all utility functions are reusable and placed in the `util` directory.
+
+I am working on a PHP-based project called "Frozen Foods," which facilitates ordering and delivery of frozen food products across Nigeria. I need assistance in creating a product description page that matches the design provided in the attached image. The page should display the product details dynamically based on the retrieved `GET` ID. Below are the requirements:
+
+### **Requirements**
+1. **Design Framework**:
+   - Use **Tailwind CSS** (via CDN) for styling.
+   - HTML and Vanilla JavaScript for functionality.
+   - Do not use React.js or any other frameworks.
+   - Avoid using Object-Oriented Programming (OOP) in both PHP and JavaScript.
+
+2. **Page Features**:
+   - **Header**:
+     - Include a back button (arrow icon) to navigate to the previous page.
+     - Display a notification icon with a badge indicating the number of notifications.
+   - **Product Section**:
+     - Display the product image prominently.
+     - Include the product name, price, and quantity selector (with "+" and "-" buttons).
+   - **Description Section**:
+     - Show the product description in a clean and readable format.
+     - Include a rating (e.g., 4.9) with a star icon.
+   - **Action Buttons**:
+     - Add two buttons:
+       - "Order Now" (primary button with black background and white text).
+       - "Add to Cart" (secondary button with white background and black border).
+
+3. **Functionality**:
+   - Use PHP to retrieve the product details dynamically based on the `GET` ID.
+   - Use Vanilla JavaScript for:
+     - Quantity increment and decrement functionality.
+     - Handling button clicks (e.g., adding to cart or proceeding to order).
+   - Ensure the page is responsive and works seamlessly across devices.
+
+4. **Styling**:
+   - Match the exact styling provided in the attached image:
+     - Use Tailwind CSS utility classes for spacing, colors, and transitions.
+     - Ensure the design is clean, modern, and visually appealing.
+
+5. **Additional Notes**:
+   - The project is PHP-based, but the product description page should focus only on the frontend (HTML, Tailwind CSS, and Vanilla JS).
+   - All PHP files should be included in a `user` directory along with their corresponding stylesheets and scripts.
+   - Build utility functions for retrieving product details and place them in a `util` directory.
+
+6. **Color Palette**:
+   - Accent: #F97316
+   - Gray: #f6f7fc
+   - Dark: #201f20
+   - Secondary: #ff7272
+   - Font: 'DM Sans', sans-serif
+
+### **Your Goal**
+- Help the user build a robust, visually consistent, and user-friendly product description page for Frozen Foods.
+- Ensure all design and UX choices align with the main site's branding and philosophy.
+- Organize the project structure effectively, ensuring all utility functions are reusable and placed in the `util` directory.

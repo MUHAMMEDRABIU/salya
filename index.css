@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+:root {
+    --accent-color: #F97316;
+    --gray: #f6f7fc;
+    --dark: #201f20;
+    --secondary-color: #ff7272;
+    --font-family: 'DM Sans', sans-serif;
+}
+
+/* Hero background image */
+.hero-bg {
+    background-image: url('https://images.pexels.com/photos/4518606/pexels-photo-4518606.jpeg?auto=compress&cs=tinysrgb&w=1920');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+/* Custom animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 1s ease-out;
+}
+
+.animate-fade-in-up-delay-1 {
+    animation: fadeInUp 1s ease-out 0.2s both;
+}
+
+.animate-fade-in-up-delay-2 {
+    animation: fadeInUp 1s ease-out 0.4s both;
+}
+
+/* Custom hover effects */
+.category-card {
+    transition: all 0.3s ease;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+}
+
+.category-overlay {
+    transition: all 0.3s ease;
+}
+
+.testimonial-track {
+    transition: transform 0.5s ease;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Custom button styles */
+.btn-custom {
+    transition: all 0.3s ease;
+}
+
+.btn-custom:hover {
+    transform: translateY(-2px);
+}
