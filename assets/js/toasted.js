@@ -1,4 +1,4 @@
-// Toasted.js
+// toast.js
 const toastedIcons = {
   success: `<svg viewBox="0 0 24 24"><path d="M7 13.5l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
   error: `<svg viewBox="0 0 24 24"><path d="M8 8l8 8M16 8l-8 8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
@@ -17,7 +17,7 @@ function showToasted(message, type = "info", duration = 3000) {
 
   // Hide all toasts if type is 'hide'
   if (type === "hide") {
-    container.querySelectorAll(".toasted").forEach(t => t.remove());
+    container.querySelectorAll(".toasted").forEach((t) => t.remove());
     return;
   }
 

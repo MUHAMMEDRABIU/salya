@@ -74,7 +74,7 @@ require __DIR__ . '/../components/header.php';
         </div>
         <!-- End Overlay -->
     </main>
-    <script src="../assets/js/toasted.js"></script>
+    <script src="../assets/js/toast.js"></script>
     <script src="../assets/js/toggle-password.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {

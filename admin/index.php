@@ -99,7 +99,7 @@ require __DIR__ . '/../components/header.php';
         <div class="text-white text-lg font-bold">Processing...</div>
     </div>
     <!-- End Overlay -->
-    <script src="../assets/js/toasted.js"></script>
+    <script src="../assets/js/toast.js"></script>
     <script src="../assets/js/toggle-password.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
