@@ -8,8 +8,104 @@ $product_id = isset($_GET['id']) ? (int)$_GET['id'] : 1;
 $product = getProductById($pdo, $product_id);
 
 // Cart count
-$cartCount = isset($_SESSION['cart']) ? array_sum(array: array_column($_SESSION['cart'], 'quantity')) : 0;
+$cartCount = isset($_SESSION['cart']) ? array_sum(array_column($_SESSION['cart'], 'quantity')) : 0;
 ?>
+
+<style>
+  :root {
+    --primary-color: #6366f1;
+    --secondary-color: #8b5cf6;
+    --accent-color: #f59e0b;
+    --success-color: #10b981;
+    --error-color: #ef4444;
+    --warning-color: #f59e0b;
+    --custom-dark: #1f2937;
+    --custom-gray: #f9fafb;
+    --custom-accent: #6366f1;
+  }
+
+  .quantity-btn {
+    transition: all 0.3s ease;
+  }
+
+  .quantity-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .product-image {
+    transition: transform 0.3s ease;
+  }
+
+  .product-image:hover {
+    transform: scale(1.05);
+  }
+
+  .action-button {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+  }
+
+  .action-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  .action-button:hover::before {
+    left: 100%;
+  }
+
+  .star-rating {
+    color: #fbbf24;
+  }
+
+  .loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ffffff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .fade-in {
+    animation: fadeIn 0.5s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
 
 <body class="bg-custom-gray min-h-screen">
   <div class="container mx-auto pt-6">
@@ -17,21 +113,28 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array: array_column($_SESSION[
     <?php include 'partials/top-nav.php'; ?>
 
     <!-- Product Content -->
-    <div class="p-4 product-content px-4 sm:px-8 relative">
+    <div class="p-4 product-content px-4 sm:px-8 relative fade-in">
       <div class="flex items-center relative min-h-[250px]">
         <!-- Product Info -->
         <div class="flex-1 z-10">
           <div>
-            <div class="flex items-center">
-              <p class="text-3xl font-bold text-custom-dark mb-4"><?php echo htmlspecialchars($product['name']); ?>
-              </p>
-              <div class="mb-4 ml-2 flex items-center space-x-2">
+            <div class="flex items-center flex-wrap">
+              <h1 class="text-3xl sm:text-4xl font-bold text-custom-dark mb-4 mr-4">
+                <?php echo htmlspecialchars($product['name']); ?>
+              </h1>
+              <div class="mb-4 flex items-center space-x-2">
                 <?php if (!empty($product['in_stock'])): ?>
-                  <span class="bg-green-500 text-white inline flex-nowrap text-xs font-semibold px-2 py-1 rounded-full flex items-center">
+                  <span class="bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
                     In Stock
                   </span>
                 <?php else: ?>
-                  <span class="bg-red-500 text-white inline flex-nowrap text-xs font-semibold px-2 py-1 rounded-full flex items-center">
+                  <span class="bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
                     Out of Stock
                   </span>
                 <?php endif; ?>
@@ -44,13 +147,13 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array: array_column($_SESSION[
             </div>
 
             <div>
-              <p class="text-gray-300 text-md mb-4">Choice quantity</p>
-              <div class="flex items-center space-x-2">
-                <button id="decreaseBtn" class="bg-white quantity-btn w-12 h-12 flex items-center justify-center text-xl font-bold rounded-lg shadow-xl text-custom-dark hover:border-custom-accent hover-accent">
+              <p class="text-gray-500 text-md mb-4">Choose quantity</p>
+              <div class="flex items-center space-x-3">
+                <button id="decreaseBtn" class="bg-white quantity-btn w-12 h-12 flex items-center justify-center text-xl font-bold rounded-xl shadow-lg text-custom-dark hover:border-2 hover:border-custom-accent">
                   -
                 </button>
-                <span id="quantity" class="text-2xl font-bold text-custom-dark min-w-[3rem] text-center">1</span>
-                <button id="increaseBtn" class="bg-white quantity-btn w-12 h-12 flex items-center justify-center text-xl font-bold rounded-lg shadow-xl text-custom-dark hover:border-custom-accent hover-accent">
+                <span id="quantity" class="text-3xl font-bold text-custom-dark min-w-[4rem] text-center bg-white px-4 py-2 rounded-xl shadow-lg">1</span>
+                <button id="increaseBtn" class="bg-white quantity-btn w-12 h-12 flex items-center justify-center text-xl font-bold rounded-xl shadow-lg text-custom-dark hover:border-2 hover:border-custom-accent">
                   +
                 </button>
               </div>
@@ -60,11 +163,11 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array: array_column($_SESSION[
 
         <!-- Product Image -->
         <div class="flex-1 relative">
-          <div class="absolute right-0 top-1/2 -translate-y-1/2 z-20 pointer-events-none select-none">
+          <div class="absolute right-0 top-1/2 -translate-y-1/2 z-20">
             <img
               src="../assets/uploads/<?php echo htmlspecialchars($product['image']); ?>"
               alt="<?php echo htmlspecialchars($product['name']); ?>"
-              class="w-40 h-40 sm:w-56 sm:h-56 md:w-64 md:h-64 object-cover"
+              class="w-40 h-40 sm:w-56 sm:h-56 md:w-64 md:h-64 object-cover rounded-2xl shadow-2xl product-image"
               style="max-width: none;">
           </div>
         </div>
@@ -72,20 +175,27 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array: array_column($_SESSION[
     </div>
 
     <!-- Description Section -->
-    <div class="mt-8 bg-white w-full py-8 px-6 shadow-lg" style="border-radius: 24px 24px 0 0;">
+    <div class="mt-8 bg-white w-full py-8 px-6 shadow-2xl fade-in" style="border-radius: 24px 24px 0 0;">
       <div class="flex items-center justify-between mb-6">
-        <h2 class="text-base font-bold text-custom-dark">Description</h2>
+        <h2 class="text-xl font-bold text-custom-dark">Description</h2>
         <div class="flex items-center space-x-1">
           <div class="flex items-center">
-            <svg class="w-4 h-4 star-rating" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-            </svg>
+            <?php
+            $rating = isset($product['rating']) ? $product['rating'] : 4.9;
+            $fullStars = floor($rating);
+            $hasHalfStar = $rating - $fullStars >= 0.5;
+
+            for ($i = 0; $i < $fullStars; $i++): ?>
+              <svg class="w-5 h-5 star-rating" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+            <?php endfor; ?>
           </div>
-          <span class="text-base font-bold text-custom-accent"><?php echo isset($product['rating']) ? $product['rating'] : '4.9'; ?></span>
+          <span class="text-lg font-bold text-custom-accent"><?php echo $rating; ?></span>
         </div>
       </div>
 
-      <p class="text-gray-300 text-base leading-relaxed mb-6">
+      <p class="text-gray-600 text-base leading-relaxed mb-6">
         <?php echo htmlspecialchars($product['description']); ?>
       </p>
 
@@ -94,23 +204,29 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array: array_column($_SESSION[
         $features = is_array($product['features']) ? $product['features'] : json_decode($product['features'], true);
       ?>
         <div class="mt-8">
-          <h3 class="text-lg font-semibold text-custom-dark mb-4">Features</h3>
-          <ul class="list-disc pl-6 text-gray-700 space-y-2">
+          <h3 class="text-lg font-semibold text-custom-dark mb-4">Key Features</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <?php foreach ($features as $feature): ?>
-              <li><?php echo htmlspecialchars($feature); ?></li>
+              <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="text-gray-700"><?php echo htmlspecialchars($feature); ?></span>
+              </div>
             <?php endforeach; ?>
-          </ul>
+          </div>
         </div>
       <?php endif; ?>
 
-
       <!-- Action Buttons -->
-      <div class="flex flex-row gap-3 mt-8 flex-wrap sm:flex-nowrap">
-        <button id="orderBtn" class="flex-1 bg-custom-accent text-white py-4 px-6 rounded-2xl font-semibold text-sm hover:opacity-90 transition-opacity duration-200 min-w-[140px]">
-          Order Now
+      <div class="flex flex-col sm:flex-row gap-4 mt-10">
+        <button id="orderBtn" class="flex-1 bg-custom-accent text-white py-4 px-8 rounded-2xl font-semibold text-base action-button hover:bg-opacity-90 transition-all duration-300 min-w-[160px] flex items-center justify-center">
+          <span id="orderBtnText">Order Now</span>
+          <div id="orderBtnSpinner" class="loading-spinner ml-2 hidden"></div>
         </button>
-        <button id="addCartBtn" class="flex-1 border-2 border-accent text-custom-dark py-4 px-6 rounded-2xl font-semibold text-sm hover:border-custom-accent hover-accent transition-all duration-200 min-w-[140px]">
-          Add to Cart
+        <button id="addCartBtn" class="flex-1 border-2 border-custom-accent text-custom-accent py-4 px-8 rounded-2xl font-semibold text-base action-button hover:bg-custom-accent hover:text-white transition-all duration-300 min-w-[160px] flex items-center justify-center">
+          <span id="addCartBtnText">Add to Cart</span>
+          <div id="addCartBtnSpinner" class="loading-spinner ml-2 hidden"></div>
         </button>
       </div>
     </div>
@@ -121,10 +237,12 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array: array_column($_SESSION[
   <script>
     // Product data
     const productData = {
+      id: <?php echo json_encode($product_id); ?>,
       name: <?php echo json_encode($product['name']); ?>,
       price: <?php echo json_encode($product['price']); ?>,
       rating: <?php echo json_encode(isset($product['rating']) ? $product['rating'] : 4.9); ?>,
-      description: <?php echo json_encode($product['description']); ?>
+      description: <?php echo json_encode($product['description']); ?>,
+      inStock: <?php echo json_encode(!empty($product['in_stock'])); ?>
     };
 
     let currentQuantity = 1;
@@ -137,15 +255,19 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array: array_column($_SESSION[
     const addCartBtn = document.getElementById('addCartBtn');
     const backBtn = document.getElementById('backBtn');
 
-    // Quantity functions
+    // Quantity functions with improved animations
     function updateQuantity(newQuantity) {
       if (newQuantity >= 1) {
         currentQuantity = newQuantity;
         quantityDisplay.textContent = currentQuantity;
+
+        // Add pulse animation
         quantityDisplay.style.transform = 'scale(1.2)';
+        quantityDisplay.style.transition = 'transform 0.2s ease';
+
         setTimeout(() => {
           quantityDisplay.style.transform = 'scale(1)';
-        }, 150);
+        }, 200);
       }
     }
 
@@ -159,23 +281,26 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array: array_column($_SESSION[
       updateQuantity(currentQuantity + 1);
     }
 
-    decreaseBtn.addEventListener('click', decreaseQuantity);
-    increaseBtn.addEventListener('click', increaseQuantity);
+    // Enhanced cart functionality
+    async function addToCart(isOrderNow = false) {
+      if (!productData.inStock) {
+        showToasted('Product is out of stock', 'error');
+        return;
+      }
 
-    orderBtn.addEventListener('click', () => {
-      window.location.href = "cart.php"
-    });
+      const button = isOrderNow ? orderBtn : addCartBtn;
+      const buttonText = isOrderNow ? document.getElementById('orderBtnText') : document.getElementById('addCartBtnText');
+      const spinner = isOrderNow ? document.getElementById('orderBtnSpinner') : document.getElementById('addCartBtnSpinner');
 
-    addCartBtn.addEventListener('click', async () => {
-      // Prepare cart data
+      // Show loading state
+      button.disabled = true;
+      buttonText.textContent = isOrderNow ? 'Processing...' : 'Adding...';
+      spinner.classList.remove('hidden');
+
       const cartData = {
-        product_id: <?php echo json_encode($product_id); ?>,
+        product_id: productData.id,
         quantity: currentQuantity
       };
-
-      // Disable button and show loading state
-      addCartBtn.disabled = true;
-      addCartBtn.textContent = 'Adding...';
 
       try {
         const response = await fetch('api/add-to-cart.php', {
@@ -189,54 +314,60 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array: array_column($_SESSION[
         const result = await response.json();
 
         if (result.success) {
-          showToasted('Added to cart!', 'success');
-
-          // if undefined
-          if (result.cart_count !== undefined) {
-            document.getElementById('cartCount').textContent = result.cart_count;
-          }
-
-          // Update button state
-          addCartBtn.textContent = 'Added!';
-          addCartBtn.style.backgroundColor = 'var(--accent-color)';
-          addCartBtn.style.color = 'white';
-          addCartBtn.style.borderColor = 'var(--accent-color)';
+          showToasted(isOrderNow ? 'Added to cart! Redirecting to checkout...' : 'Added to cart!', 'success');
 
           // Update cart count
-          let cartCountElem = document.getElementById('cartCount');
-          let currentCount = parseInt(cartCountElem.textContent) || 0;
-          cartCountElem.textContent = currentCount + currentQuantity;
+          if (result.cart_count !== undefined) {
+            const cartCountElem = document.getElementById('cartCount');
+            if (cartCountElem) {
+              cartCountElem.textContent = result.cart_count;
+            }
+          }
 
+          // Show success state
+          buttonText.textContent = isOrderNow ? 'Added!' : 'Added!';
+          button.style.backgroundColor = 'var(--success-color)';
+          button.style.borderColor = 'var(--success-color)';
+          button.style.color = 'white';
+
+          // Redirect for order now
+          if (isOrderNow) {
+            setTimeout(() => {
+              window.location.href = 'checkout.php';
+            }, 1500);
+          }
         } else {
           showToasted(result.message || 'Failed to add to cart', 'error');
-          addCartBtn.textContent = 'Add to Cart';
         }
       } catch (err) {
         showToasted('An error occurred. Please try again.', 'error');
-        addCartBtn.textContent = 'Add to Cart';
         console.error('Add to cart error:', err);
       } finally {
+        spinner.classList.add('hidden');
+
         setTimeout(() => {
-          addCartBtn.disabled = false;
-          addCartBtn.textContent = 'Add to Cart';
-          addCartBtn.style.backgroundColor = '';
-          addCartBtn.style.color = '';
-          addCartBtn.style.borderColor = '';
-        }, 1500);
+          button.disabled = false;
+          buttonText.textContent = isOrderNow ? 'Order Now' : 'Add to Cart';
+          button.style.backgroundColor = '';
+          button.style.borderColor = '';
+          button.style.color = '';
+        }, 2000);
       }
-    });
+    }
 
-    backBtn.addEventListener('click', () => {
-      window.history.length > 1 ? window.history.back() : window.location.href = 'dashboard.php';
-    });
+    // Event listeners
+    decreaseBtn.addEventListener('click', decreaseQuantity);
+    increaseBtn.addEventListener('click', increaseQuantity);
+    orderBtn.addEventListener('click', () => addToCart(true));
+    addCartBtn.addEventListener('click', () => addToCart(false));
 
-    quantityDisplay.style.transition = 'transform 0.15s ease';
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        window.history.length > 1 ? window.history.back() : window.location.href = 'dashboard.php';
+      });
+    }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('Product details page loaded');
-      console.log('Product:', productData);
-    });
-
+    // Keyboard navigation
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowUp' || e.key === '+') {
         e.preventDefault();
@@ -247,13 +378,16 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array: array_column($_SESSION[
       }
     });
 
+    // Touch gestures for quantity
     let touchStartY = 0;
     quantityDisplay.addEventListener('touchstart', (e) => {
       touchStartY = e.touches[0].clientY;
     });
+
     quantityDisplay.addEventListener('touchend', (e) => {
       const touchEndY = e.changedTouches[0].clientY;
       const difference = touchStartY - touchEndY;
+
       if (Math.abs(difference) > 30) {
         if (difference > 0) {
           increaseQuantity();
@@ -261,6 +395,12 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array: array_column($_SESSION[
           decreaseQuantity();
         }
       }
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Enhanced product details page loaded');
+      console.log('Product:', productData);
     });
   </script>
 </body>

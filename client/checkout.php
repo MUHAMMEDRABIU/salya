@@ -5,6 +5,33 @@ require_once 'partials/headers.php';
 
 $cart_items = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
 $cartCount = array_sum(array_column($cart_items, 'quantity'));
+
+// Redirect if cart is empty
+if (empty($cart_items)) {
+    header('Location: cart.php');
+    exit();
+}
+
+// Calculate totals
+$subtotal = 0;
+foreach ($cart_items as $item) {
+    $subtotal += $item['price'] * $item['quantity'];
+}
+$delivery_fee = $subtotal >= 10000 ? 0 : 500;
+$tax = 0;
+$total = $subtotal + $delivery_fee + $tax;
+
+// Generate unique virtual account number for this user/order
+function generateVirtualAccount($userId)
+{
+    $prefix = "9876"; // Bank prefix
+    $userPart = str_pad($userId, 4, '0', STR_PAD_LEFT);
+    $random = str_pad(mt_rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+    return $prefix . $userPart . $random;
+}
+
+$userId = $_SESSION['user_id'] ?? 1;
+$virtualAccount = generateVirtualAccount($userId);
 ?>
 
 <body class="font-dm bg-gray min-h-screen blob-bg">
@@ -22,267 +49,181 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
         <!-- Header -->
         <header class="mb-8">
             <?php include 'partials/top-nav.php'; ?>
-            <!-- Progress Steps -->
-            <div class="flex items-center justify-center space-x-4 mb-8">
-                <div class="flex items-center space-x-4">
-                    <div id="step-1" class="step-active w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300">
-                        <i class="fas fa-map-marker-alt"></i>
-                    </div>
-                    <div class="w-16 h-1 bg-gray-300 rounded-full">
-                        <div id="progress-1" class="h-1 bg-orange-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
-                    </div>
-                    <div id="step-2" class="step-inactive w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300">
-                        <i class="fas fa-credit-card"></i>
-                    </div>
-                    <div class="w-16 h-1 bg-gray-300 rounded-full">
-                        <div id="progress-2" class="h-1 bg-orange-500 rounded-full transition-all duration-500" style="width: 0%;"></div>
-                    </div>
-                    <div id="step-3" class="step-inactive w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300">
-                        <i class="fas fa-check"></i>
-                    </div>
-                </div>
+
+            <!-- Simple Header -->
+            <div class="flex items-center space-x-4 mb-8">
+                <button onclick="history.back()" class="p-3 bg-white rounded-full shadow-soft hover:shadow-medium transition-all duration-300">
+                    <i class="fas fa-arrow-left text-dark"></i>
+                </button>
+                <h1 class="text-3xl font-bold text-dark">Choose Payment Method</h1>
             </div>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Main Content -->
-            <div class="lg:col-span-2">
-                <!-- Step 1: Checkout -->
-                <div id="checkout-step" class="animate-fade-in">
-                    <h2 class="text-2xl font-bold text-dark mb-6">Checkout</h2>
-                    <form id="checkout-form" class="space-y-6">
-                        <!-- Personal Information -->
-                        <div class="bg-white rounded-2xl p-6 shadow-soft border border-slate-200">
-                            <h3 class="text-lg font-semibold text-dark mb-4">Personal information:</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                                    <input type="text" id="firstName" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none" placeholder="e.g Ademu" required>
-                                    <span class="error-message text-red-500 text-sm mt-1 hidden">Please enter your first name</span>
+            <!-- Payment Methods Section -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Payment Method Selection -->
+                <div class="bg-white rounded-2xl p-6 shadow-soft border border-slate-200">
+                    <h2 class="text-xl font-bold text-dark mb-6 flex items-center">
+                        <i class="fas fa-credit-card text-accent mr-3"></i>
+                        Select Payment Method
+                    </h2>
+
+                    <div class="space-y-4">
+                        <!-- Bank Transfer -->
+                        <div>
+                            <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" class="payment-option hidden" checked>
+                            <label for="bank_transfer" class="payment-label flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-accent cursor-pointer transition-all duration-200">
+                                <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mr-4">
+                                    <i class="fas fa-university text-blue-600 text-xl"></i>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                                    <input type="text" id="lastName" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none" placeholder="e.g Rabiu" required>
-                                    <span class="error-message text-red-500 text-sm mt-1 hidden">Please enter your last name</span>
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-dark">Bank Transfer</h3>
+                                    <p class="text-sm text-gray-600">Transfer to our virtual account number</p>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                                    <div class="relative">
-                                        <input type="tel" id="phone" class="form-input w-full px-4 py-3 pl-16 rounded-xl focus:outline-none" placeholder="70-3949-5494" required inputmode="numeric" maxlength="11">
-                                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 flex items-center">
-                                            <span class="text-red-500 text-lg mr-1">
-                                                <!-- nigerian flag image -->
-                                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Flag_of_Nigeria.svg/32px-Flag_of_Nigeria.svg.png" alt="Nigeria Flag" class="w-6 h-6 rounded-full">
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <span class="error-message text-red-500 text-sm mt-1 hidden">Please enter a valid phone number</span>
+                                <div class="w-5 h-5 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                                    <div class="w-2 h-2 bg-accent rounded-full opacity-0 radio-dot transition-opacity duration-200"></div>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                                    <input type="email" id="email" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none" placeholder="e.g adamurabiu@gmail.com" required>
-                                    <span class="error-message text-red-500 text-sm mt-1 hidden">Please enter a valid email address</span>
-                                </div>
-                            </div>
+                            </label>
                         </div>
 
-                        <!-- Delivery Details -->
-                        <div class="bg-white rounded-2xl p-6 shadow-soft border border-slate-200">
-                            <h3 class="text-lg font-semibold text-dark mb-4">Delivery details:</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">City</label>
-                                    <select id="city" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none" required>
-                                        <option value="">Select City</option>
-                                        <option value="abuja" selected>Abuja</option>
-                                        <option value="kaduna">Kaduna</option>
-                                        <option value="lagos">Lagos</option>
-                                    </select>
-                                    <span class="error-message text-red-500 text-sm mt-1 hidden">Please select a city</span>
+                        <!-- Card Payment -->
+                        <div>
+                            <input type="radio" id="card_payment" name="payment_method" value="card_payment" class="payment-option hidden">
+                            <label for="card_payment" class="payment-label flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-accent cursor-pointer transition-all duration-200">
+                                <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mr-4">
+                                    <i class="fas fa-credit-card text-green-600 text-xl"></i>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                                    <input type="text" id="address" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none" placeholder="e.g 34 Main St" required>
-                                    <span class="error-message text-red-500 text-sm mt-1 hidden">Please enter your address</span>
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-dark">Card Payment</h3>
+                                    <p class="text-sm text-gray-600">Pay with Visa, Mastercard, or Verve</p>
                                 </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Postal Code</label>
-                                    <input type="text" id="postalCode" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none" placeholder="e.g 223466" required>
-                                    <span class="error-message text-red-500 text-sm mt-1 hidden">Please enter a valid postal code</span>
+                                <div class="w-5 h-5 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                                    <div class="w-2 h-2 bg-accent rounded-full opacity-0 radio-dot transition-opacity duration-200"></div>
                                 </div>
-                            </div>
+                            </label>
                         </div>
-                    </form>
-                    <!-- If cart is not empty show continue else show back to products page -->
-                    <div class="flex justify-end mt-6">
-                        <?php
-                        if (empty($cart_items)) {
-                        ?>
-                            <div id="cart-empty-message" class="text-center text-gray-500">
-                                Your cart is empty. <a href="dashboard.php" class="text-accent">Continue shopping</a>
-                            </div>
-                        <?php
-                        } else {
-                        ?>
-                            <button id="continue-btn" class="bg-accent hover:bg-orange-600 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-accent hover:shadow-large flex items-center space-x-2">
-                                <span id="continue-text">Continue</span>
-                                <div id="continue-spinner" class="loading-spinner hidden"></div>
-                            </button>
-                        <?php
-                        }
-                        ?>
+
+                        <!-- Mobile Money -->
+                        <div>
+                            <input type="radio" id="mobile_money" name="payment_method" value="mobile_money" class="payment-option hidden">
+                            <label for="mobile_money" class="payment-label flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-accent cursor-pointer transition-all duration-200">
+                                <div class="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mr-4">
+                                    <i class="fas fa-mobile-alt text-purple-600 text-xl"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-dark">Mobile Money</h3>
+                                    <p class="text-sm text-gray-600">Pay with Opay, PalmPay, Kuda, etc.</p>
+                                </div>
+                                <div class="w-5 h-5 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                                    <div class="w-2 h-2 bg-accent rounded-full opacity-0 radio-dot transition-opacity duration-200"></div>
+                                </div>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Step 2: Payment -->
-                <div id="payment-step" class="hidden">
-                    <h2 class="text-2xl font-bold text-dark mb-6">Payment</h2>
+                <!-- Payment Details Section -->
+                <div id="paymentDetails" class="bg-white rounded-2xl p-6 shadow-soft border border-slate-200">
+                    <!-- Bank Transfer Details (Default) -->
+                    <div id="bank_transferDetails" class="payment-details">
+                        <h3 class="text-lg font-bold text-dark mb-4 flex items-center">
+                            <i class="fas fa-university text-accent mr-2"></i>
+                            Bank Transfer Details
+                        </h3>
 
-                    <!-- Payment Methods -->
-                    <div class="bg-white rounded-2xl p-6 shadow-soft border border-slate-200 mb-6">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                            <div class="payment-method rounded-xl p-4 text-center selected" data-method="mastercard">
-                                <div class="w-12 h-8 mx-auto mb-2 bg-gradient-to-r from-red-500 to-yellow-500 rounded flex items-center justify-center">
+                        <div class="bg-gray-50 rounded-xl p-4 mb-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-600">Bank Name:</span>
+                                    <p class="font-semibold text-dark">First Bank Nigeria</p>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Account Name:</span>
+                                    <p class="font-semibold text-dark">ShopEase Store</p>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <span class="text-gray-600 text-sm">Virtual Account Number:</span>
+                                <div class="flex items-center justify-between bg-white rounded-lg p-3 mt-2 border-2 border-accent">
+                                    <span class="text-2xl font-bold text-dark tracking-wider" id="virtualAccountNumber">
+                                        <?php echo $virtualAccount; ?>
+                                    </span>
+                                    <button onclick="copyAccountNumber()" class="bg-accent hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center transform hover:scale-105">
+                                        <i id="copyIcon" class="fas fa-copy mr-2"></i>
+                                        <span id="copyText">Copy</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-exclamation-triangle text-yellow-600 mt-0.5 mr-3 flex-shrink-0"></i>
+                                <div>
+                                    <h4 class="font-semibold text-yellow-800 mb-2">Important Instructions:</h4>
+                                    <ul class="text-sm text-yellow-700 space-y-1">
+                                        <li>• Transfer the exact amount: <strong>₦<?php echo number_format($total, 2); ?></strong></li>
+                                        <li>• This account number is unique to your order</li>
+                                        <li>• Payment will be confirmed automatically</li>
+                                        <li>• Account expires in 24 hours</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Payment Details -->
+                    <div id="card_paymentDetails" class="payment-details hidden">
+                        <h3 class="text-lg font-bold text-dark mb-4 flex items-center">
+                            <i class="fas fa-credit-card text-accent mr-2"></i>
+                            Card Payment
+                        </h3>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                            <i class="fas fa-shield-alt text-blue-600 text-4xl mb-4"></i>
+                            <p class="text-blue-800 font-semibold text-lg">Secure Card Payment</p>
+                            <p class="text-blue-600 text-sm mt-2">You will be redirected to a secure payment gateway</p>
+                            <div class="flex justify-center space-x-4 mt-4">
+                                <div class="w-12 h-8 bg-gradient-to-r from-red-500 to-yellow-500 rounded flex items-center justify-center">
                                     <span class="text-white font-bold text-xs">MC</span>
                                 </div>
-                                <span class="text-sm text-gray-600">Mastercard</span>
-                            </div>
-                            <div class="payment-method rounded-xl p-4 text-center" data-method="visa">
-                                <div class="w-12 h-8 mx-auto mb-2 bg-blue-600 rounded flex items-center justify-center">
+                                <div class="w-12 h-8 bg-blue-600 rounded flex items-center justify-center">
                                     <span class="text-white font-bold text-xs">VISA</span>
                                 </div>
-                                <span class="text-sm text-gray-600">Visa</span>
-                            </div>
-                            <div class="payment-method rounded-xl p-4 text-center" data-method="paypal">
-                                <div class="w-12 h-8 mx-auto mb-2 bg-blue-500 rounded flex items-center justify-center">
-                                    <span class="text-white font-bold text-xs">PP</span>
-                                </div>
-                                <span class="text-sm text-gray-600">PayPal</span>
-                            </div>
-                            <div class="payment-method rounded-xl p-4 text-center" data-method="applepay">
-                                <div class="w-12 h-8 mx-auto mb-2 bg-black rounded flex items-center justify-center">
-                                    <i class="fab fa-apple text-white"></i>
-                                </div>
-                                <span class="text-sm text-gray-600">Apple Pay</span>
-                            </div>
-                        </div>
-
-                        <form id="payment-form" class="space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Name on Card</label>
-                                    <input type="text" id="cardName" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none" placeholder="Anna Montgomery" required>
-                                    <span class="error-message text-red-500 text-sm mt-1 hidden">Please enter the name on card</span>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
-                                    <input type="text" id="cardNumber" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none" placeholder="1234 - 5678 - 9012 - 3456" maxlength="19" required inputmode="numeric">
-                                    <span class="error-message text-red-500 text-sm mt-1 hidden">Please enter a valid card number</span>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Expiration Date</label>
-                                    <input type="text" id="cardExpiry" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none" placeholder="06/25" maxlength="5" required>
-                                    <span class="error-message text-red-500 text-sm mt-1 hidden">Please enter expiration date</span>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">CVC Code</label>
-                                    <input type="text" id="cardCVC" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none" placeholder="123" maxlength="3" required inputmode="numeric">
-                                    <span class="error-message text-red-500 text-sm mt-1 hidden">Please enter CVC code</span>
-                                    <p class="text-xs text-gray-500 mt-1">
-                                        <i class="fas fa-info-circle mr-1"></i>3 digit code on the back of your card 3
-                                    </p>
+                                <div class="w-12 h-8 bg-green-600 rounded flex items-center justify-center">
+                                    <span class="text-white font-bold text-xs">VERVE</span>
                                 </div>
                             </div>
-
-                            <div class="flex items-center mt-4">
-                                <input type="checkbox" id="billingAddress" class="w-5 h-5 text-accent border-slate-300 rounded focus:ring-accent" checked>
-                                <label for="billingAddress" class="ml-3 text-sm text-gray-700">
-                                    <i class="fas fa-check text-orange-500 mr-2"></i>
-                                    Billing address is the same as shipping address.
-                                </label>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="flex justify-between mt-6">
-                        <button id="back-btn" class="border border-slate-300 text-gray-700 font-semibold px-8 py-3 rounded-xl transition-all duration-300 hover:bg-slate-50 shadow-soft hover:shadow-medium">
-                            Back
-                        </button>
-                        <button id="purchase-btn" class="bg-accent hover:bg-orange-600 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-accent hover:shadow-large flex items-center space-x-2">
-                            <span id="purchase-text">Purchase</span>
-                            <div id="purchase-spinner" class="loading-spinner hidden"></div>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Step 3: Success -->
-                <div id="success-step" class="hidden text-center">
-                    <div class="animate-scale-in">
-                        <!-- Success Vector Illustration -->
-                        <div class="w-80 h-80 mx-auto mb-8 relative">
-                            <svg viewBox="0 0 400 400" class="w-full h-full animate-float">
-                                <!-- Background Circle -->
-                                <circle cx="200" cy="200" r="180" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="2" />
-
-                                <!-- Delivery Person -->
-                                <g transform="translate(150, 120)">
-                                    <!-- Head -->
-                                    <circle cx="50" cy="40" r="25" fill="#fbbf24" />
-                                    <!-- Hair -->
-                                    <path d="M25 35 Q50 15 75 35 Q70 25 50 25 Q30 25 25 35" fill="#92400e" />
-                                    <!-- Face -->
-                                    <circle cx="45" cy="38" r="2" fill="#1f2937" />
-                                    <circle cx="55" cy="38" r="2" fill="#1f2937" />
-                                    <path d="M45 45 Q50 50 55 45" stroke="#1f2937" stroke-width="2" fill="none" />
-
-                                    <!-- Body -->
-                                    <rect x="35" y="65" width="30" height="40" rx="15" fill="#F97316" />
-                                    <!-- Arms -->
-                                    <rect x="20" y="75" width="15" height="25" rx="7" fill="#fbbf24" />
-                                    <rect x="65" y="75" width="15" height="25" rx="7" fill="#fbbf24" />
-
-                                    <!-- Legs -->
-                                    <rect x="40" y="105" width="8" height="30" rx="4" fill="#1e40af" />
-                                    <rect x="52" y="105" width="8" height="30" rx="4" fill="#1e40af" />
-
-                                    <!-- Delivery Bag -->
-                                    <rect x="10" y="85" width="20" height="15" rx="3" fill="#22c55e" />
-                                    <rect x="12" y="87" width="16" height="11" rx="2" fill="#16a34a" />
-                                    <text x="20" y="95" text-anchor="middle" fill="white" font-size="8" font-weight="bold">W&R</text>
-                                </g>
-
-                                <!-- Floating Elements -->
-                                <g class="animate-wiggle">
-                                    <circle cx="100" cy="100" r="8" fill="#fbbf24" opacity="0.6" />
-                                    <circle cx="320" cy="120" r="6" fill="#F97316" opacity="0.5" />
-                                    <circle cx="80" cy="300" r="10" fill="#22c55e" opacity="0.4" />
-                                    <circle cx="330" cy="280" r="7" fill="#fbbf24" opacity="0.6" />
-                                </g>
-
-                                <!-- Success Checkmark -->
-                                <g transform="translate(280, 80)">
-                                    <circle cx="30" cy="30" r="25" fill="#22c55e" />
-                                    <path d="M20 30 L27 37 L40 23" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" />
-                                </g>
-
-                                <!-- Motion Lines -->
-                                <g opacity="0.3">
-                                    <path d="M50 200 Q100 190 150 200" stroke="#F97316" stroke-width="2" fill="none" />
-                                    <path d="M60 220 Q110 210 160 220" stroke="#22c55e" stroke-width="2" fill="none" />
-                                    <path d="M70 240 Q120 230 170 240" stroke="#fbbf24" stroke-width="2" fill="none" />
-                                </g>
-                            </svg>
                         </div>
                     </div>
 
-                    <h2 class="text-3xl font-bold text-dark mb-4">Thank! Your order is on the way.</h2>
-                    <p class="text-gray-600 mb-8 max-w-md mx-auto">
-                        We've received your order and will send you updates via email and SMS as it's prepared and shipped.
-                    </p>
-
-                    <button id="track-btn" class="bg-accent hover:bg-orange-600 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-accent hover:shadow-large">
-                        Track Your Order
-                    </button>
+                    <!-- Mobile Money Details -->
+                    <div id="mobile_moneyDetails" class="payment-details hidden">
+                        <h3 class="text-lg font-bold text-dark mb-4 flex items-center">
+                            <i class="fas fa-mobile-alt text-accent mr-2"></i>
+                            Mobile Money Payment
+                        </h3>
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-6 text-center">
+                            <i class="fas fa-mobile-alt text-purple-600 text-4xl mb-4"></i>
+                            <p class="text-purple-800 font-semibold text-lg">Mobile Money Transfer</p>
+                            <p class="text-purple-600 text-sm mt-2">Choose your preferred mobile money provider</p>
+                            <div class="grid grid-cols-2 gap-3 mt-4">
+                                <div class="bg-green-100 p-3 rounded-lg">
+                                    <span class="text-green-800 font-semibold">Opay</span>
+                                </div>
+                                <div class="bg-blue-100 p-3 rounded-lg">
+                                    <span class="text-blue-800 font-semibold">PalmPay</span>
+                                </div>
+                                <div class="bg-purple-100 p-3 rounded-lg">
+                                    <span class="text-purple-800 font-semibold">Kuda</span>
+                                </div>
+                                <div class="bg-orange-100 p-3 rounded-lg">
+                                    <span class="text-orange-800 font-semibold">Others</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -299,7 +240,6 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
                                     <div class="flex-1">
                                         <h4 class="font-semibold text-dark"><?= htmlspecialchars($item['name']) ?></h4>
                                         <div class="flex items-center justify-between mt-2">
-                                            <!-- Quantity Adjusters -->
                                             <div class="flex items-center space-x-2" data-id="<?= $item['product_id']; ?>">
                                                 <button class="qty-btn decrease w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-gray-500 hover:bg-slate-100 transition-colors">-</button>
                                                 <span class="qty-count font-medium"><?= $item['quantity'] ?></span>
@@ -308,26 +248,14 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
                                             <span class="font-semibold text-dark">₦<?= number_format($item['price'] * $item['quantity'], 2) ?></span>
                                         </div>
                                     </div>
-                                    <button class="remove-btn text-gray-100 hover:bg-red-600 transition-colors" data-id="<?= $item['product_id'] ?>">
+                                    <button class="remove-btn text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors" data-id="<?= $item['product_id'] ?>">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
                             <?php endforeach; ?>
-                        <?php else : ?>
-                            <p class="text-center text-gray-500">Your cart is empty.</p>
                         <?php endif; ?>
                     </div>
 
-
-                    <?php
-                    $subtotal = 0;
-                    foreach ($cart_items as $item) {
-                        $subtotal += $item['price'] * $item['quantity'];
-                    }
-                    $delivery_fee = $subtotal >= 10000 ? 0 : 500;
-                    $tax = 0; // Update if you have a tax policy
-                    $total = $subtotal + $delivery_fee + $tax;
-                    ?>
                     <div class="border-t border-slate-200 pt-4 space-y-2">
                         <div class="flex justify-between text-gray-600">
                             <span>Subtotal:</span>
@@ -341,17 +269,33 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
                             <span>Tax:</span>
                             <span id="tax-value">₦<?= number_format($tax, 2) ?></span>
                         </div>
-                        <div class="flex justify-between text-lg font-bold text-dark pt-2 border-t border-slate-200">
+                        <div class="flex justify-between text-xl font-bold text-dark pt-2 border-t border-slate-200">
                             <span>Total:</span>
                             <span id="total-value">₦<?= number_format($total, 2) ?></span>
                         </div>
                     </div>
+
+                    <!-- Payment Status -->
+                    <div id="paymentStatus" class="my-6 p-4 rounded-lg border-2 border-yellow-200 bg-yellow-50">
+                        <div class="flex items-center">
+                            <i class="fas fa-clock text-yellow-600 mr-3"></i>
+                            <span class="text-yellow-800 font-semibold">Waiting for Payment</span>
+                        </div>
+                        <p class="text-yellow-700 text-sm mt-1">Complete your payment using the selected method</p>
+                    </div>
+
+                    <button onclick="confirmPayment()" class="w-full bg-accent hover:bg-orange-600 text-white py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-accent hover:shadow-large mb-4">
+                        I Have Made Payment
+                    </button>
+
+                    <div class="text-center">
+                        <button onclick="checkPaymentStatus()" class="text-accent hover:underline text-sm font-medium">
+                            Check Payment Status
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-        <!-- Bottom navigation include -->
-        <?php #include 'partials/bottom-nav.php'; 
-        ?>
     </div>
 
     <script src="../assets/js/toast.js"></script>
@@ -364,89 +308,115 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
             delivery_fee: <?= $delivery_fee ?>,
             total: <?= $total ?>
         };
-    </script>
 
-    <script>
-        // Mock API endpoints for demonstration
-        const API_BASE = 'https://jsonplaceholder.typicode.com'; // Using JSONPlaceholder for demo
-
-        // Store checkout data
-        let checkoutData = {};
-        let paymentData = {};
-
-        // AJAX helper function
-        async function makeRequest(url, method = 'GET', data = null) {
-            try {
-                const options = {
-                    method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                };
-
-                if (data) {
-                    options.body = JSON.stringify(data);
-                }
-
-                const response = await fetch(url, options);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                return await response.json();
-            } catch (error) {
-                console.error('API request failed:', error);
-                throw error;
-            }
-        }
-
-        // Save checkout data to database
-        async function saveCheckoutData(data) {
-            const response = await fetch('api/save-checkout.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-            const result = await response.json();
-            if (!result.success) throw new Error(result.message || 'Failed to save checkout data');
-            return result;
-        }
-
-        async function fetchCheckoutData() {
-            try {
-                const response = await fetch('api/get-checkout-data.php', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
+        // Payment method selection logic
+        document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Hide all payment details
+                document.querySelectorAll('.payment-details').forEach(detail => {
+                    detail.classList.add('hidden');
                 });
-                const result = await response.json();
-                if (result.success && result.data) {
-                    const data = result.data;
-                    if (data.first_name) document.getElementById('firstName').value = data.first_name;
-                    if (data.last_name) document.getElementById('lastName').value = data.last_name;
-                    if (data.phone) document.getElementById('phone').value = data.phone;
-                    if (data.email) document.getElementById('email').value = data.email;
-                    if (data.city) document.getElementById('city').value = data.city;
-                    if (data.address) document.getElementById('address').value = data.address;
-                    if (data.postal_code) document.getElementById('postalCode').value = data.postal_code;
-                }
 
-            } catch (error) {
-                console.warn('Could not fetch checkout data', error);
+                // Show selected payment details
+                const selectedMethod = this.value;
+                document.getElementById(selectedMethod + 'Details').classList.remove('hidden');
+
+                // Update radio button styling
+                document.querySelectorAll('.radio-dot').forEach(dot => {
+                    dot.style.opacity = '0';
+                });
+                this.parentElement.querySelector('.radio-dot').style.opacity = '1';
+
+                // Update payment label styling
+                document.querySelectorAll('.payment-label').forEach(label => {
+                    label.classList.remove('border-accent', 'bg-orange-50');
+                    label.classList.add('border-gray-200');
+                });
+                this.parentElement.classList.add('border-accent', 'bg-orange-50');
+                this.parentElement.classList.remove('border-gray-200');
+
+                showToasted(`${selectedMethod.replace('_', ' ')} selected as payment method.`, 'info');
+            });
+        });
+
+        // Initialize first option
+        document.querySelector('input[name="payment_method"]:checked').parentElement.querySelector('.radio-dot').style.opacity = '1';
+        document.querySelector('input[name="payment_method"]:checked').parentElement.classList.add('border-accent', 'bg-orange-50');
+
+        function copyAccountNumber() {
+            const accountNumber = document.getElementById('virtualAccountNumber').textContent.trim();
+
+            navigator.clipboard.writeText(accountNumber).then(() => {
+                const copyIcon = document.getElementById('copyIcon');
+                const copyText = document.getElementById('copyText');
+
+                // Change to checkmark
+                copyIcon.className = 'fas fa-check mr-2';
+                copyText.textContent = 'Copied!';
+
+                showToasted('Account number copied to clipboard!', 'success');
+
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    copyIcon.className = 'fas fa-copy mr-2';
+                    copyText.textContent = 'Copy';
+                }, 2000);
+            }).catch(() => {
+                showToasted('Failed to copy account number', 'error');
+            });
+        }
+
+        function confirmPayment() {
+            const selectedMethod = document.querySelector('input[name="payment_method"]:checked').value;
+
+            if (selectedMethod === 'bank_transfer') {
+                // Simulate payment confirmation
+                const statusDiv = document.getElementById('paymentStatus');
+                statusDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                        <span class="text-green-800 font-semibold">Payment Confirmed!</span>
+                    </div>
+                    <p class="text-green-700 text-sm mt-1">Your order has been received and is being processed</p>
+                `;
+                statusDiv.className = 'my-6 p-4 rounded-lg border-2 border-green-200 bg-green-50';
+
+                showToasted('Payment confirmed! Order is being processed.', 'success');
+
+                // Show delivery form after payment confirmation
+                setTimeout(() => {
+                    showDeliveryForm();
+                }, 2000);
+            } else {
+                showToasted('Redirecting to payment gateway...', 'success');
+                // Here you would integrate with actual payment gateways
+                setTimeout(() => {
+                    alert('Payment gateway integration would happen here');
+                }, 1000);
             }
         }
 
+        function checkPaymentStatus() {
+            showToasted('Checking payment status...', 'info');
+
+            // Simulate payment status check
+            setTimeout(() => {
+                const random = Math.random();
+                if (random > 0.5) {
+                    confirmPayment();
+                } else {
+                    showToasted('Payment not yet received. Please complete your transfer.', 'error');
+                }
+            }, 2000);
+        }
+
+        // Existing cart management code
         document.querySelectorAll('.qty-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const parent = btn.closest('[data-id]');
                 const productId = parent.getAttribute('data-id');
                 const action = btn.classList.contains('increase') ? 'increase' : 'decrease';
                 const qtySpan = parent.querySelector('.qty-count');
-                const itemTotalSpan = parent.closest('.space-x-4').querySelector('.item-total-price');
 
                 try {
                     const res = await fetch('api/update-quantity.php', {
@@ -463,29 +433,18 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
                     const data = await res.json();
 
                     if (data.success) {
-                        // Update quantity text
                         qtySpan.textContent = data.quantity;
-
-                        // Update item total
-                        if (itemTotalSpan) {
-                            itemTotalSpan.textContent = `₦${data.item_total.toFixed(2)}`;
-                        }
-
-                        // Update summary totals
                         document.getElementById('subtotal-value').textContent = `₦${data.subtotal.toFixed(2)}`;
                         document.getElementById('delivery-value').textContent = `₦${data.delivery_fee.toFixed(2)}`;
                         document.getElementById('tax-value').textContent = `₦${data.tax.toFixed(2)}`;
                         document.getElementById('total-value').textContent = `₦${data.total.toFixed(2)}`;
 
-                        // Optional: Update cart count badge
                         if (document.getElementById('cartCount')) {
                             document.getElementById('cartCount').textContent = `${data.cartCount}`;
                         }
-
                     } else {
                         showToasted(data.message || 'Error updating cart', 'error');
                     }
-
                 } catch (err) {
                     console.error('AJAX Error:', err);
                     showToasted('Failed to update cart. Please try again.', 'error');
@@ -493,12 +452,9 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
             });
         });
 
-
         document.querySelectorAll('.remove-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const itemId = btn.getAttribute('data-id');
-
-                // if (!confirm('Are you sure you want to remove this item?')) return;
 
                 try {
                     const res = await fetch('api/remove-cart-item.php', {
@@ -515,372 +471,428 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
 
                     if (data.success) {
                         showToasted('Item removed.', 'success');
-
-                        // Remove item from DOM
                         const itemContainer = btn.closest('.flex.items-center.space-x-4');
                         itemContainer?.remove();
 
-                        // Update totals
                         document.getElementById('subtotal-value').textContent = `₦${data.subtotal.toFixed(2)}`;
                         document.getElementById('delivery-value').textContent = `₦${data.delivery_fee.toFixed(2)}`;
                         document.getElementById('total-value').textContent = `₦${data.total.toFixed(2)}`;
 
-                        // Update cart count
                         const cartCountEl = document.getElementById('cartCount');
                         if (cartCountEl) {
                             cartCountEl.textContent = `${data.cartCount}`;
                         }
 
-                        // If cart is empty, optionally hide or show empty state
-                        if (data.cartCountEl == 0) {
+                        if (data.cartCount == 0) {
                             document.querySelector('.frosted-glass').innerHTML = '<p class="text-center text-gray-600 py-6">Your cart is empty.</p>';
                         }
-
                     } else {
                         showToasted(data.message || 'Failed to remove item.', 'error');
                     }
-
                 } catch (err) {
                     console.error('Remove error:', err);
                     showToasted('Error removing item.', 'error');
                 }
             });
         });
+    </script>
 
+    <!-- Delivery Location Form (Hidden by default) -->
+    <div id="deliveryFormModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-custom-dark">Delivery Information</h2>
+                <button onclick="closeDeliveryForm()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
 
+            <form id="deliveryForm" class="space-y-6">
+                <!-- Personal Information -->
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <h3 class="text-lg font-semibold text-custom-dark mb-4">Personal Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                            <input type="text" id="fullName" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" placeholder="e.g John Doe" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                            <div class="relative">
+                                <input type="tel" id="phoneNumber" class="w-full px-4 py-3 pl-16 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" placeholder="08012345678" required>
+                                <div class="absolute left-4 top-1/2 transform -translate-y-1/2">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Flag_of_Nigeria.svg/32px-Flag_of_Nigeria.svg.png" alt="Nigeria Flag" class="w-6 h-4 rounded">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Delivery Address -->
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <h3 class="text-lg font-semibold text-custom-dark mb-4">Delivery Address</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
+                            <select id="state" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" required>
+                                <option value="">Select State</option>
+                                <option value="lagos">Lagos</option>
+                                <option value="abuja">Abuja (FCT)</option>
+                                <option value="kano">Kano</option>
+                                <option value="rivers">Rivers</option>
+                                <option value="oyo">Oyo</option>
+                                <option value="kaduna">Kaduna</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">City/LGA</label>
+                            <input type="text" id="city" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" placeholder="e.g Ikeja" required>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Street Address</label>
+                            <textarea id="streetAddress" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" placeholder="e.g 123 Main Street, Victoria Island" required></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Postal Code (Optional)</label>
+                            <input type="text" id="postalCode" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" placeholder="e.g 100001">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Landmark (Optional)</label>
+                            <input type="text" id="landmark" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" placeholder="e.g Near First Bank">
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Delivery Options -->
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <h3 class="text-lg font-semibold text-custom-dark mb-4">Delivery Options</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <input type="radio" id="standard" name="delivery_option" value="standard" class="hidden" checked>
+                            <label for="standard" class="delivery-option-label flex items-center p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-custom-accent transition-all">
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-custom-dark">Standard Delivery</h4>
+                                    <p class="text-sm text-gray-600">3-5 business days • Free for orders above ₦10,000</p>
+                                </div>
+                                <div class="text-custom-accent font-semibold">₦500</div>
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" id="express" name="delivery_option" value="express" class="hidden">
+                            <label for="express" class="delivery-option-label flex items-center p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-custom-accent transition-all">
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-custom-dark">Express Delivery</h4>
+                                    <p class="text-sm text-gray-600">1-2 business days • Fast delivery</p>
+                                </div>
+                                <div class="text-custom-accent font-semibold">₦1,500</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
 
-        // Step management
-        let currentStep = Number(localStorage.getItem('checkoutStep')) || 1;
-        const totalSteps = 3;
+                <!-- Special Instructions -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Special Delivery Instructions (Optional)</label>
+                    <textarea id="specialInstructions" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" placeholder="Any special instructions for delivery..."></textarea>
+                </div>
 
-        function updateStepIndicators(step) {
-            for (let i = 1; i <= totalSteps; i++) {
-                const stepEl = document.getElementById(`step-${i}`);
-                const progressEl = document.getElementById(`progress-${i}`);
+                <div class="flex space-x-4 pt-4">
+                    <button type="button" onclick="closeDeliveryForm()" class="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-custom-accent text-white rounded-xl hover:opacity-90 transition-opacity">
+                        Complete Order
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-                if (i < step) {
-                    stepEl.className = 'step-completed w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300';
-                    if (progressEl) progressEl.style.width = '100%';
-                } else if (i === step) {
-                    stepEl.className = 'step-active w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300';
-                    if (progressEl) progressEl.style.width = '0%';
-                } else {
-                    stepEl.className = 'step-inactive w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300';
-                    if (progressEl) progressEl.style.width = '0%';
-                }
-            }
-            localStorage.setItem('checkoutStep', step);
+    <!-- Order Success Modal -->
+    <div id="orderSuccessModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-md text-center">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-custom-dark mb-2">Order Placed Successfully!</h2>
+            <p class="text-gray-600 mb-4">Your order has been confirmed and will be delivered to your specified address.</p>
+
+            <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                <p class="text-sm text-gray-600 mb-2">Order ID</p>
+                <p class="text-lg font-bold text-custom-dark" id="orderIdDisplay">#ORD-2024-001</p>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="trackOrder()" class="w-full bg-custom-accent text-white py-3 rounded-xl hover:opacity-90 transition-opacity">
+                    Track Your Order
+                </button>
+                <button onclick="continueShopping()" class="w-full border border-gray-300 text-gray-700 py-3 rounded-xl hover:bg-gray-50 transition-colors">
+                    Continue Shopping
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Tracking Modal -->
+    <div id="orderTrackingModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-custom-dark">Track Your Order</h2>
+                <button onclick="closeTrackingModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-sm text-gray-600">Order ID</p>
+                        <p class="font-bold text-custom-dark" id="trackingOrderId">#ORD-2024-001</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-600">Estimated Delivery</p>
+                        <p class="font-bold text-custom-dark" id="estimatedDelivery">Dec 28, 2024</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tracking Progress -->
+            <div class="space-y-4">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-custom-dark">Order Confirmed</h4>
+                        <p class="text-sm text-gray-600">Dec 25, 2024 at 2:30 PM</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center">
+                    <div class="w-8 h-8 bg-custom-accent rounded-full flex items-center justify-center mr-4">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-custom-dark">Processing</h4>
+                        <p class="text-sm text-gray-600">Your order is being prepared</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center opacity-50">
+                    <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-4">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-gray-500">Shipped</h4>
+                        <p class="text-sm text-gray-400">Pending</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center opacity-50">
+                    <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-4">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-gray-500">Delivered</h4>
+                        <p class="text-sm text-gray-400">Pending</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Information -->
+            <div class="mt-6 bg-blue-50 rounded-xl p-4">
+                <h4 class="font-semibold text-custom-dark mb-2">Delivery Information</h4>
+                <p class="text-sm text-gray-600" id="deliveryAddress">123 Main Street, Victoria Island, Lagos</p>
+                <p class="text-sm text-gray-600 mt-1">Contact: <span id="deliveryPhone">+234 801 234 5678</span></p>
+            </div>
+
+            <div class="mt-6 flex space-x-4">
+                <button onclick="contactSupport()" class="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl hover:bg-gray-50 transition-colors">
+                    Contact Support
+                </button>
+                <button onclick="closeTrackingModal()" class="flex-1 bg-custom-accent text-white py-3 rounded-xl hover:opacity-90 transition-opacity">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Generate random order ID
+        function generateOrderId() {
+            const timestamp = Date.now().toString().slice(-6);
+            return `ORD-2024-${timestamp}`;
         }
 
-        function showStep(step) {
-            // Hide all steps
-            document.getElementById('checkout-step').classList.add('hidden');
-            document.getElementById('payment-step').classList.add('hidden');
-            document.getElementById('success-step').classList.add('hidden');
-
-            // Hide order summary on last step
-            const orderSummary = document.querySelector('.frosted-glass.rounded-2xl.p-6.sticky.top-8.shadow-medium');
-            if (orderSummary) {
-                if (step === 3) {
-                    orderSummary.classList.add('hidden');
-                    setTimeout(() => {
-                        // clear session storage
-                        sessionStorage.removeItem('cart');
-                        sessionStorage.removeItem('checkoutStep');
-                        localStorage.removeItem('checkoutStep');
-
-                        fetch('api/clear-cart.php', {
-                            method: 'POST'
-                        });
-
-                    }, 500);
-                } else {
-                    orderSummary.classList.remove('hidden');
-                }
-            }
-
-            // Show current step with animation
-            setTimeout(() => {
-                if (step === 1) {
-                    document.getElementById('checkout-step').classList.remove('hidden');
-                    document.getElementById('checkout-step').classList.add('animate-slide-right');
-                } else if (step === 2) {
-                    document.getElementById('payment-step').classList.remove('hidden');
-                    document.getElementById('payment-step').classList.add('animate-slide-left');
-                } else if (step === 3) {
-                    document.getElementById('success-step').classList.remove('hidden');
-                    document.getElementById('success-step').classList.add('animate-scale-in');
-                }
-            }, 100);
-
-            updateStepIndicators(step);
-            currentStep = step;
-            localStorage.setItem('checkoutStep', step);
+        // Show delivery form
+        function showDeliveryForm() {
+            document.getElementById('deliveryFormModal').classList.remove('hidden');
         }
 
-        // Form validation logic for step 1 (personal + delivery info)
-        function validateCheckoutForm() {
-            const fields = ['firstName', 'lastName', 'phone', 'email', 'city', 'address', 'postalCode'];
-            let isValid = true;
-
-            fields.forEach(field => {
-                const input = document.getElementById(field);
-
-                if (!input) {
-                    console.warn(`Missing input field: ${field}`);
-                    isValid = false;
-                    return;
-                }
-
-                const errorMsg = input.parentElement.querySelector('.error-message');
-                if (!input.value.trim()) {
-                    input.classList.add('border-red-500');
-                    if (errorMsg) errorMsg.classList.remove('hidden');
-                    isValid = false;
-                } else {
-                    input.classList.remove('border-red-500');
-                    input.classList.add('border-orange-500');
-                    if (errorMsg) errorMsg.classList.add('hidden');
-                }
-            });
-
-            // Email validation
-            const email = document.getElementById('email');
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (email.value && !emailRegex.test(email.value)) {
-                email.classList.add('border-red-500');
-                email.parentElement.querySelector('.error-message').classList.remove('hidden');
-                isValid = false;
-            }
-
-            return isValid;
+        // Close delivery form
+        function closeDeliveryForm() {
+            document.getElementById('deliveryFormModal').classList.add('hidden');
         }
 
-        function validatePaymentForm() {
-            const fields = ['cardName', 'cardNumber', 'cardExpiry', 'cardCVC'];
-            let isValid = true;
+        // Handle delivery form submission
+        document.getElementById('deliveryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-            fields.forEach(field => {
-                const input = document.getElementById(field);
-                const errorMsg = input.parentElement.querySelector('.error-message') || null;
-
-                if (!input.value.trim()) {
-                    input.classList.add('border-red-500');
-                    if (errorMsg) errorMsg.classList.remove('hidden');
-                    isValid = false;
-                } else {
-                    input.classList.remove('border-red-500');
-                    input.classList.add('border-orange-500');
-                    if (errorMsg) errorMsg.classList.add('hidden');
-                }
-
-            });
-
-            return isValid;
-        }
-
-        // Card formatting
-        function formatCardNumber(input) {
-            let value = input.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
-            input.value = formattedValue;
-        }
-
-        function formatExpiry(input) {
-            let value = input.value.replace(/\D/g, '');
-            if (value.length >= 2) {
-                value = value.substring(0, 2) + '/' + value.substring(2, 4);
-            }
-            input.value = value;
-        }
-
-        // Loading state management
-        function setButtonLoading(buttonId, textId, spinnerId, isLoading) {
-            const button = document.getElementById(buttonId);
-            const text = document.getElementById(textId);
-            const spinner = document.getElementById(spinnerId);
-
-            if (isLoading) {
-                button.disabled = true;
-                button.classList.add('opacity-75', 'cursor-not-allowed');
-                text.textContent = 'Processing...';
-                spinner.classList.remove('hidden');
-            } else {
-                button.disabled = false;
-                button.classList.remove('opacity-75', 'cursor-not-allowed');
-                spinner.classList.add('hidden');
-                text.textContent = 'Continue';
-            }
-        }
-
-        // Event listeners
-        document?.getElementById('continue-btn').addEventListener('click', async () => {
-            if (validateCheckoutForm()) {
-                setButtonLoading('continue-btn', 'continue-text', 'continue-spinner', true);
-
-                try {
-                    // Collect form data
-                    const formData = {
-                        firstName: document.getElementById('firstName').value,
-                        lastName: document.getElementById('lastName').value,
-                        phone: document.getElementById('phone').value,
-                        email: document.getElementById('email').value,
-                        city: document.getElementById('city').value,
-                        address: document.getElementById('address').value,
-                        postalCode: document.getElementById('postalCode').value,
-                        timestamp: new Date().toISOString()
-                    };
-
-                    // Save to database
-                    await saveCheckoutData(formData);
-
-                    // Success - move to next step
-                    showStep(2);
-                    showToasted('Personal information saved successfully!', 'success');
-
-                } catch (error) {
-                    showToasted('Failed to save information. Please try again.', 'error');
-                } finally {
-                    setButtonLoading('continue-btn', 'continue-text', 'continue-spinner', false);
-                    document.getElementById('continue-text').textContent = 'Continue';
-                }
-            } else {
-                showToasted('Please fill in all required fields correctly.', 'error');
-            }
-        });
-
-        document.getElementById('back-btn').addEventListener('click', () => {
-            showStep(1);
-        });
-        document.getElementById('purchase-btn').addEventListener('click', async () => {
-            if (!validatePaymentForm()) {
-                showToasted('Please fill in all payment details correctly.', 'error');
-                return;
-            }
-
-            setButtonLoading('purchase-btn', 'purchase-text', 'purchase-spinner', true);
+            // Collect form data
+            const deliveryData = {
+                fullName: document.getElementById('fullName').value,
+                phoneNumber: document.getElementById('phoneNumber').value,
+                state: document.getElementById('state').value,
+                city: document.getElementById('city').value,
+                streetAddress: document.getElementById('streetAddress').value,
+                postalCode: document.getElementById('postalCode').value,
+                landmark: document.getElementById('landmark').value,
+                deliveryOption: document.querySelector('input[name="delivery_option"]:checked').value,
+                specialInstructions: document.getElementById('specialInstructions').value
+            };
 
             try {
-                const paymentFormData = {
-                    cardName: document.getElementById('cardName').value,
-                    cardNumber: document.getElementById('cardNumber').value.replace(/\s/g, ''),
-                    cardExpiry: document.getElementById('cardExpiry').value,
-                    billingAddressSame: document.getElementById('billingAddress').checked,
-                    paymentMethod: document.querySelector('.payment-method.selected').dataset.method,
-                    amount: window.cartTotals.total,
-                    currency: 'NGN', // Use your currency
-                    timestamp: new Date().toISOString()
-                };
-
-                const orderDetails = {
-                    product_id: window.productId,
-                    items: window.cartItems,
-                    subtotal: window.cartTotals.subtotal,
-                    delivery_fee: window.cartTotals.delivery_fee,
-                    total_amount: window.cartTotals.total,
-                    timestamp: new Date().toISOString()
-                };
-
-                // Save card details securely
-                const cardRes = await fetch('api/save-card-details.php', {
+                // Save delivery information
+                const response = await fetch('api/save-delivery-info.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(paymentFormData)
+                    body: JSON.stringify(deliveryData)
                 });
 
-                if (!cardRes.ok) throw new Error('Card save failed');
-                const cardResult = await cardRes.json();
-                if (!cardResult.success) throw new Error(cardResult.message || 'Failed to save card details');
+                const result = await response.json();
 
-                // Save order
-                const orderRes = await fetch('api/place-order.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(orderDetails)
-                });
+                if (result.success) {
+                    // Generate and display order ID
+                    const orderId = generateOrderId();
+                    document.getElementById('orderIdDisplay').textContent = `#${orderId}`;
+                    document.getElementById('trackingOrderId').textContent = `#${orderId}`;
 
-                if (!orderRes.ok) throw new Error('Order save failed');
-                const orderResult = await orderRes.json();
-                if (!orderResult.success) throw new Error(orderResult.message || 'Failed to place order');
+                    // Update delivery info in tracking
+                    document.getElementById('deliveryAddress').textContent =
+                        `${deliveryData.streetAddress}, ${deliveryData.city}, ${deliveryData.state}`;
+                    document.getElementById('deliveryPhone').textContent = deliveryData.phoneNumber;
 
-                // Success
-                showStep(3);
-                showToasted('Payment processed and order placed successfully!', 'success');
+                    // Close delivery form and show success
+                    closeDeliveryForm();
+                    document.getElementById('orderSuccessModal').classList.remove('hidden');
 
-                await makeRequest('api/send-confirmation-email.php', 'POST', {
-                    email: document.getElementById('email')?.value,
-                    orderDetails: orderDetails
-                });
-
-                await fetch('api/clear-cart.php', {
-                    method: 'POST'
-                });
-                sessionStorage.clear();
-                localStorage.removeItem('checkoutStep');
-
-                setTimeout(() => {
-                    window.location.href = 'dashboard.php';
-                }, 20000);
-
+                    showToast('Order placed successfully!', 'success');
+                } else {
+                    showToast('Failed to save delivery information. Please try again.', 'error');
+                }
             } catch (error) {
-                console.error(error);
-                showToasted('Payment or order processing failed. Please try again.', 'error');
-            } finally {
-                setButtonLoading('purchase-btn', 'purchase-text', 'purchase-spinner', false);
-                document.getElementById('purchase-text').textContent = 'Purchase';
+                console.error('Error:', error);
+                showToast('An error occurred. Please try again.', 'error');
             }
         });
 
+        // Delivery option selection
+        document.querySelectorAll('input[name="delivery_option"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.delivery-option-label').forEach(label => {
+                    label.classList.remove('border-custom-accent', 'bg-blue-50');
+                    label.classList.add('border-gray-200');
+                });
+                this.parentElement.classList.add('border-custom-accent', 'bg-blue-50');
+                this.parentElement.classList.remove('border-gray-200');
+            });
+        });
 
-        document.getElementById('track-btn').addEventListener('click', () => {
-            showToasted('Redirecting to order tracking...', 'info');
+        // Initialize first delivery option
+        document.querySelector('input[name="delivery_option"]:checked').parentElement.classList.add('border-custom-accent', 'bg-blue-50');
+
+        // Track order function
+        function trackOrder() {
+            document.getElementById('orderSuccessModal').classList.add('hidden');
+            document.getElementById('orderTrackingModal').classList.remove('hidden');
+        }
+
+        // Close tracking modal
+        function closeTrackingModal() {
+            document.getElementById('orderTrackingModal').classList.add('hidden');
+        }
+
+        // Continue shopping
+        function continueShopping() {
+            window.location.href = 'dashboard.php';
+        }
+
+        // Contact support
+        function contactSupport() {
+            showToast('Redirecting to support...', 'success');
+            // You can redirect to support page or open chat
             setTimeout(() => {
-                window.location.href = 'orders.php';
+                window.location.href = 'support.php';
             }, 1500);
-        });
+        }
 
-        // Payment method selection
-        document.querySelectorAll('.payment-method').forEach(method => {
-            method.addEventListener('click', () => {
-                document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
-                method.classList.add('selected');
-                showToasted(`${method.dataset.method} selected as payment method.`, 'info');
-            });
-        });
+        // Set estimated delivery date (3-5 days from now)
+        function setEstimatedDelivery() {
+            const today = new Date();
+            const deliveryDate = new Date(today.getTime() + (4 * 24 * 60 * 60 * 1000)); // 4 days from now
+            const options = {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            };
+            document.getElementById('estimatedDelivery').textContent = deliveryDate.toLocaleDateString('en-US', options);
+        }
 
-        // Card number formatting
-        document.getElementById('cardNumber').addEventListener('input', (e) => formatCardNumber(e.target));
-        document.getElementById('cardExpiry').addEventListener('input', (e) => formatExpiry(e.target));
-
-        // CVC validation
-        document.getElementById('cardCVC').addEventListener('input', (e) => {
-            e.target.value = e.target.value.replace(/\D/g, '');
-        });
-
-        // Real-time validation
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('blur', () => {
-                if (input.value.trim()) {
-                    input.classList.remove('border-red-500');
-                    input.classList.add('border-orange-500');
-                    input.parentElement.querySelector('.error-message')?.classList.add('hidden');
-                }
-            });
-        });
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchCheckoutData();
-            updateStepIndicators(1);
-            showStep(currentStep);
-        });
+        // Initialize estimated delivery date
+        setEstimatedDelivery();
     </script>
+
+    <style>
+        .delivery-option-label input[type="radio"]:checked+.delivery-option-label {
+            border-color: var(--custom-accent) !important;
+            background-color: rgba(49, 130, 206, 0.1) !important;
+        }
+    </style>
+
+    <style>
+        .payment-option:checked+.payment-label {
+            border-color: #F97316 !important;
+            background-color: rgba(249, 115, 22, 0.1) !important;
+        }
+
+        .frosted-glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .shadow-soft {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .shadow-medium {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .shadow-accent {
+            box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.3), 0 4px 6px -2px rgba(249, 115, 22, 0.1);
+        }
+
+        .shadow-large {
+            box-shadow: 0 20px 25px -5px rgba(249, 115, 22, 0.3), 0 10px 10px -5px rgba(249, 115, 22, 0.1);
+        }
+    </style>
 </body>
 
 </html>

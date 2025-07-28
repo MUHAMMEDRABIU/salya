@@ -240,7 +240,7 @@
                             Kaduna
                         </div>
                         <div class="bg-gray-custom p-4 rounded-lg text-center font-medium text-dark-custom hover:bg-accent hover:text-white transition-all cursor-pointer">
-                            Warri
+                            kogi
                         </div>
                         <div class="bg-gray-custom p-4 rounded-lg text-center font-medium text-dark-custom hover:bg-accent hover:text-white transition-all cursor-pointer">
                             Jos
