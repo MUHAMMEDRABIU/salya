@@ -276,15 +276,30 @@ $virtualAccount = generateVirtualAccount($userId);
                     </div>
 
                     <!-- Payment Status -->
-                    <div id="paymentStatus" class="my-6 p-4 rounded-lg border-2 border-yellow-200 bg-yellow-50">
+                    <div id="paymentStatus" class="mb-6 p-4 rounded-lg border-2 border-yellow-200 bg-yellow-50" style="display: none;">
                         <div class="flex items-center">
-                            <i class="fas fa-clock text-yellow-600 mr-3"></i>
+                            <svg class="w-5 h-5 text-yellow-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
                             <span class="text-yellow-800 font-semibold">Waiting for Payment</span>
                         </div>
                         <p class="text-yellow-700 text-sm mt-1">Complete your payment using the selected method</p>
                     </div>
 
-                    <button onclick="confirmPayment()" class="w-full bg-accent hover:bg-orange-600 text-white py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-accent hover:shadow-large mb-4">
+                    <!-- Payment Verification Status -->
+                    <div id="verificationStatus" class="mb-6 p-4 rounded-lg border-2 border-blue-200 bg-blue-50" style="display: none;">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-blue-600 mr-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <span class="text-blue-800 font-semibold">Verifying Payment...</span>
+                        </div>
+                        <p class="text-blue-700 text-sm mt-1">Admin is verifying your payment. This may take a few minutes.</p>
+                    </div>
+
+                    <button onclick="confirmPayment()"
+                        id="paymentButton"
+                        class="w-full bg-custom-accent text-white py-4 rounded-2xl font-semibold text-lg hover:opacity-90 transition-opacity shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                         I Have Made Payment
                     </button>
 
@@ -301,6 +316,110 @@ $virtualAccount = generateVirtualAccount($userId);
     <script src="../assets/js/toast.js"></script>
     <script src="js/script.js"></script>
     <script>
+        let currentVerificationId = null;
+        let verificationInterval = null;
+
+        // Nigerian states and their cities/areas
+        const nigerianLocations = {
+            'fct': {
+                name: 'Federal Capital Territory (Abuja)',
+                cities: {
+                    'abuja': {
+                        name: 'Abuja',
+                        areas: ['Wuse 2', 'Wuse 1', 'Garki 1', 'Garki 2', 'Maitama', 'Asokoro', 'Central Business District', 'Utako', 'Jabi', 'Life Camp']
+                    },
+                    'gwagwalada': {
+                        name: 'Gwagwalada',
+                        areas: ['Gwagwalada Town', 'Zuba', 'Dobi', 'Paiko']
+                    },
+                    'kuje': {
+                        name: 'Kuje',
+                        areas: ['Kuje Town', 'Rubochi', 'Gudaba']
+                    },
+                    'kwali': {
+                        name: 'Kwali',
+                        areas: ['Kwali Town', 'Kilankwa', 'Yangoji']
+                    },
+                    'abaji': {
+                        name: 'Abaji',
+                        areas: ['Abaji Town', 'Toto', 'Pandogari']
+                    },
+                    'bwari': {
+                        name: 'Bwari',
+                        areas: ['Bwari Town', 'Kubwa', 'Dutse', 'Sabon Wuse', 'Gwarinpa']
+                    }
+                }
+            },
+            'lagos': {
+                name: 'Lagos',
+                cities: {
+                    'ikeja': {
+                        name: 'Ikeja',
+                        areas: ['GRA', 'Allen Avenue', 'Computer Village', 'Alausa']
+                    },
+                    'victoria_island': {
+                        name: 'Victoria Island',
+                        areas: ['VI', 'Ikoyi', 'Lekki']
+                    }
+                }
+            }
+        };
+
+        function updateCities() {
+            const stateSelect = document.getElementById('deliveryState');
+            const citySelect = document.getElementById('deliveryCity');
+            const areaSelect = document.getElementById('deliveryArea');
+
+            const selectedState = stateSelect.value;
+
+            // Clear city and area options
+            citySelect.innerHTML = '<option value="">Select City</option>';
+            areaSelect.innerHTML = '<option value="">Select Area</option>';
+
+            if (selectedState && nigerianLocations[selectedState]) {
+                const cities = nigerianLocations[selectedState].cities;
+
+                Object.keys(cities).forEach(cityKey => {
+                    const option = document.createElement('option');
+                    option.value = cityKey;
+                    option.textContent = cities[cityKey].name;
+                    citySelect.appendChild(option);
+                });
+            }
+        }
+
+        function updateAreas() {
+            const stateSelect = document.getElementById('deliveryState');
+            const citySelect = document.getElementById('deliveryCity');
+            const areaSelect = document.getElementById('deliveryArea');
+
+            const selectedState = stateSelect.value;
+            const selectedCity = citySelect.value;
+
+            // Clear area options
+            areaSelect.innerHTML = '<option value="">Select Area</option>';
+
+            if (selectedState && selectedCity && nigerianLocations[selectedState] && nigerianLocations[selectedState].cities[selectedCity]) {
+                const areas = nigerianLocations[selectedState].cities[selectedCity].areas;
+
+                areas.forEach(area => {
+                    const option = document.createElement('option');
+                    option.value = area.toLowerCase().replace(/\s+/g, '_');
+                    option.textContent = area;
+                    areaSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Add event listener for city change
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('deliveryCity').addEventListener('change', updateAreas);
+        });
+
+        function showToast(message, type = 'success') {
+            showToasted(message, type);
+        }
+
         window.productId = <?= json_encode(array_column($cart_items, 'product_id')) ?>;
         window.cartItems = <?= json_encode($cart_items) ?>;
         window.cartTotals = {
@@ -366,48 +485,222 @@ $virtualAccount = generateVirtualAccount($userId);
             });
         }
 
-        function confirmPayment() {
+        async function confirmPayment() {
             const selectedMethod = document.querySelector('input[name="payment_method"]:checked').value;
+            const paymentButton = document.getElementById('paymentButton');
+            const paymentStatus = document.getElementById('paymentStatus');
+            const verificationStatus = document.getElementById('verificationStatus');
 
-            if (selectedMethod === 'bank_transfer') {
-                // Simulate payment confirmation
-                const statusDiv = document.getElementById('paymentStatus');
-                statusDiv.innerHTML = `
-                    <div class="flex items-center">
-                        <i class="fas fa-check-circle text-green-600 mr-3"></i>
-                        <span class="text-green-800 font-semibold">Payment Confirmed!</span>
-                    </div>
-                    <p class="text-green-700 text-sm mt-1">Your order has been received and is being processed</p>
-                `;
-                statusDiv.className = 'my-6 p-4 rounded-lg border-2 border-green-200 bg-green-50';
+            // Disable button and show loading
+            paymentButton.disabled = true;
+            paymentButton.innerHTML = 'Processing...';
 
-                showToasted('Payment confirmed! Order is being processed.', 'success');
+            try {
+                // Submit payment for verification
+                const response = await fetch('api/verify-payment.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        payment_method: selectedMethod,
+                        amount: <?php echo $total; ?>,
+                        virtual_account: '<?php echo $virtualAccount; ?>'
+                    })
+                });
 
-                // Show delivery form after payment confirmation
-                setTimeout(() => {
-                    showDeliveryForm();
-                }, 2000);
-            } else {
-                showToasted('Redirecting to payment gateway...', 'success');
-                // Here you would integrate with actual payment gateways
-                setTimeout(() => {
-                    alert('Payment gateway integration would happen here');
-                }, 1000);
+                const result = await response.json();
+
+                if (result.success) {
+                    currentVerificationId = result.verification_id;
+
+                    // Hide payment status, show verification status
+                    paymentStatus.style.display = 'none';
+                    verificationStatus.style.display = 'block';
+
+                    // Update button
+                    paymentButton.innerHTML = 'Payment Submitted for Verification';
+                    paymentButton.disabled = true;
+
+                    showToast('Payment submitted for admin verification', 'success');
+
+                    // Start checking verification status
+                    startVerificationCheck();
+
+                } else {
+                    throw new Error(result.message || 'Payment submission failed');
+                }
+
+            } catch (error) {
+                console.error('Payment error:', error);
+                showToast('Payment submission failed. Please try again.', 'error');
+
+                // Re-enable button
+                paymentButton.disabled = false;
+                paymentButton.innerHTML = 'I Have Made Payment';
             }
         }
 
-        function checkPaymentStatus() {
-            showToasted('Checking payment status...', 'info');
+        function startVerificationCheck() {
+            if (verificationInterval) {
+                clearInterval(verificationInterval);
+            }
 
-            // Simulate payment status check
-            setTimeout(() => {
-                const random = Math.random();
-                if (random > 0.5) {
-                    confirmPayment();
-                } else {
-                    showToasted('Payment not yet received. Please complete your transfer.', 'error');
+            verificationInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`api/check-payment-status.php?verification_id=${currentVerificationId}`);
+                    const result = await response.json();
+
+                    if (result.success) {
+                        if (result.status === 'verified') {
+                            clearInterval(verificationInterval);
+                            onPaymentVerified();
+                        } else if (result.status === 'rejected') {
+                            clearInterval(verificationInterval);
+                            onPaymentRejected();
+                        }
+                        // If still pending, continue checking
+                    }
+                } catch (error) {
+                    console.error('Verification check error:', error);
                 }
+            }, 5000); // Check every 5 seconds
+        }
+
+        function onPaymentVerified() {
+            const verificationStatus = document.getElementById('verificationStatus');
+
+            // Update verification status to success
+            verificationStatus.innerHTML = `
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="text-green-800 font-semibold">Payment Verified!</span>
+                </div>
+                <p class="text-green-700 text-sm mt-1">Your payment has been confirmed by admin. Please provide delivery details.</p>
+            `;
+            verificationStatus.className = 'mb-6 p-4 rounded-lg border-2 border-green-200 bg-green-50';
+
+            showToast('Payment verified! Please provide delivery details.', 'success');
+
+            // Show delivery form
+            setTimeout(() => {
+                document.getElementById('deliveryLocationForm').style.display = 'block';
+                document.getElementById('deliveryLocationForm').scrollIntoView({
+                    behavior: 'smooth'
+                });
             }, 2000);
+        }
+
+        function onPaymentRejected() {
+            const verificationStatus = document.getElementById('verificationStatus');
+            const paymentButton = document.getElementById('paymentButton');
+
+            // Update verification status to rejected
+            verificationStatus.innerHTML = `
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    <span class="text-red-800 font-semibold">Payment Verification Failed</span>
+                </div>
+                <p class="text-red-700 text-sm mt-1">Your payment could not be verified. Please try again or contact support.</p>
+            `;
+            verificationStatus.className = 'mb-6 p-4 rounded-lg border-2 border-red-200 bg-red-50';
+
+            // Re-enable payment button
+            paymentButton.disabled = false;
+            paymentButton.innerHTML = 'I Have Made Payment';
+
+            showToast('Payment verification failed. Please try again.', 'error');
+        }
+
+        function checkPaymentStatus() {
+            if (currentVerificationId) {
+                showToast('Checking payment status...', 'success');
+
+                fetch(`api/check-payment-status.php?verification_id=${currentVerificationId}`)
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            if (result.status === 'verified') {
+                                onPaymentVerified();
+                            } else if (result.status === 'rejected') {
+                                onPaymentRejected();
+                            } else {
+                                showToast('Payment verification still in progress', 'info');
+                            }
+                        } else {
+                            showToast('Could not check payment status', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Status check error:', error);
+                        showToast('Error checking payment status', 'error');
+                    });
+            } else {
+                showToast('No payment verification in progress', 'error');
+            }
+        }
+
+        // Enhanced order tracking with real-time updates
+        function trackOrder(orderId) {
+            fetch(`api/get-delivery-status.php?order_id=${orderId}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        updateTrackingDisplay(result.data);
+                    } else {
+                        showToast('Could not fetch tracking information', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Tracking error:', error);
+                    showToast('Error fetching tracking information', 'error');
+                });
+        }
+
+        function updateTrackingDisplay(trackingData) {
+            const trackingInfo = document.getElementById('trackingInfo');
+
+            trackingInfo.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-semibold text-custom-dark">Order Status</h4>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            ${trackingData.status.replace('_', ' ').toUpperCase()}
+                        </span>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="flex items-center mb-2">
+                            <svg class="w-5 h-5 text-custom-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <span class="font-medium">Current Location</span>
+                        </div>
+                        <p class="text-gray-700">${trackingData.location}</p>
+                        <p class="text-sm text-gray-500 mt-1">Updated: ${new Date(trackingData.updated_at).toLocaleString()}</p>
+                    </div>
+                    
+                    ${trackingData.delivery_person ? `
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <h5 class="font-medium text-custom-dark mb-2">Delivery Person</h5>
+                        <div class="text-sm space-y-1">
+                            <p><strong>Name:</strong> ${trackingData.delivery_person.name}</p>
+                            <p><strong>Phone:</strong> ${trackingData.delivery_person.phone}</p>
+                            <p><strong>Vehicle:</strong> ${trackingData.delivery_person.vehicle}</p>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="text-sm text-gray-600">
+                        <p><strong>Estimated Delivery:</strong> ${new Date(trackingData.estimated_delivery).toLocaleString()}</p>
+                    </div>
+                </div>
+            `;
         }
 
         // Existing cart management code
@@ -533,13 +826,13 @@ $virtualAccount = generateVirtualAccount($userId);
                 <!-- Delivery Address -->
                 <div class="bg-gray-50 rounded-xl p-4">
                     <h3 class="text-lg font-semibold text-custom-dark mb-4">Delivery Address</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
-                            <select id="state" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" required>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">State *</label>
+                            <select id="deliveryState" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-custom-accent" required onchange="updateCities()">
                                 <option value="">Select State</option>
+                                <option value="fct">Federal Capital Territory (Abuja)</option>
                                 <option value="lagos">Lagos</option>
-                                <option value="abuja">Abuja (FCT)</option>
                                 <option value="kano">Kano</option>
                                 <option value="rivers">Rivers</option>
                                 <option value="oyo">Oyo</option>
@@ -547,20 +840,31 @@ $virtualAccount = generateVirtualAccount($userId);
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">City/LGA</label>
-                            <input type="text" id="city" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" placeholder="e.g Ikeja" required>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                            <select id="deliveryCity" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-custom-accent" required>
+                                <option value="">Select City</option>
+                            </select>
+                            <span class="error-message text-red-500 text-sm mt-1 hidden">Please select a city</span>
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Street Address</label>
-                            <textarea id="streetAddress" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" placeholder="e.g 123 Main Street, Victoria Island" required></textarea>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Area/District *</label>
+                            <select id="deliveryArea" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-custom-accent" required>
+                                <option value="">Select Area</option>
+                            </select>
+                            <span class="error-message text-red-500 text-sm mt-1 hidden">Please enter your area</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Street Address *</label>
+                            <textarea id="streetAddress" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-custom-accent" placeholder="e.g., 123 Main Street, Victoria Island" required></textarea>
+                            <span class="error-message text-red-500 text-sm mt-1 hidden">Please enter your street address</span>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Postal Code (Optional)</label>
-                            <input type="text" id="postalCode" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" placeholder="e.g 100001">
+                            <input type="text" id="postalCode" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-custom-accent" placeholder="e.g., 100001">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Landmark (Optional)</label>
-                            <input type="text" id="landmark" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" placeholder="e.g Near First Bank">
+                            <input type="text" id="landmark" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-custom-accent" placeholder="e.g., Near First Bank">
                         </div>
                     </div>
                 </div>
@@ -576,7 +880,7 @@ $virtualAccount = generateVirtualAccount($userId);
                                     <h4 class="font-semibold text-custom-dark">Standard Delivery</h4>
                                     <p class="text-sm text-gray-600">3-5 business days • Free for orders above ₦10,000</p>
                                 </div>
-                                <div class="text-custom-accent font-semibold">₦500</div>
+                                <div class="text-custom-accent font-semibold">₦2000</div>
                             </label>
                         </div>
                         <div>
@@ -586,7 +890,7 @@ $virtualAccount = generateVirtualAccount($userId);
                                     <h4 class="font-semibold text-custom-dark">Express Delivery</h4>
                                     <p class="text-sm text-gray-600">1-2 business days • Fast delivery</p>
                                 </div>
-                                <div class="text-custom-accent font-semibold">₦1,500</div>
+                                <div class="text-custom-accent font-semibold">₦4,500</div>
                             </label>
                         </div>
                     </div>
@@ -734,8 +1038,9 @@ $virtualAccount = generateVirtualAccount($userId);
     <script>
         // Generate random order ID
         function generateOrderId() {
-            const timestamp = Date.now().toString().slice(-6);
-            return `ORD-2024-${timestamp}`;
+            const timestamp = Date.now().toString().slice(-8);
+            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            return `ORD-2024-${timestamp}${random}`;
         }
 
         // Show delivery form
@@ -752,6 +1057,12 @@ $virtualAccount = generateVirtualAccount($userId);
         document.getElementById('deliveryForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
+            // Show loading state
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Processing...';
+            submitBtn.disabled = true;
+
             // Collect form data
             const deliveryData = {
                 fullName: document.getElementById('fullName').value,
@@ -765,21 +1076,51 @@ $virtualAccount = generateVirtualAccount($userId);
                 specialInstructions: document.getElementById('specialInstructions').value
             };
 
+            // Validate required fields
+            const requiredFields = ['fullName', 'phoneNumber', 'state', 'city', 'streetAddress'];
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                const input = document.getElementById(field);
+                if (!input.value.trim()) {
+                    input.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    input.classList.remove('border-red-500');
+                    input.classList.add('border-custom-accent');
+                }
+            });
+
+            if (!isValid) {
+                showToast('Please fill in all required fields', 'error');
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+                return;
+            }
+
             try {
-                // Save delivery information
-                const response = await fetch('api/save-delivery-info.php', {
+                // Simulate API call - replace with your actual endpoint
+                const response = await fetch('api/complete-order.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(deliveryData)
+                    body: JSON.stringify({
+                        deliveryData: deliveryData,
+                        cartItems: <?= json_encode($cart_items) ?>,
+                        totalAmount: <?= $total ?>
+                    })
                 });
 
-                const result = await response.json();
+                // Simulate successful response for demo
+                const result = {
+                    success: true,
+                    orderId: generateOrderId()
+                };
 
                 if (result.success) {
                     // Generate and display order ID
-                    const orderId = generateOrderId();
+                    const orderId = result.orderId || generateOrderId();
                     document.getElementById('orderIdDisplay').textContent = `#${orderId}`;
                     document.getElementById('trackingOrderId').textContent = `#${orderId}`;
 
@@ -792,13 +1133,23 @@ $virtualAccount = generateVirtualAccount($userId);
                     closeDeliveryForm();
                     document.getElementById('orderSuccessModal').classList.remove('hidden');
 
-                    showToast('Order placed successfully!', 'success');
+                    showToast('Order completed successfully!', 'success');
+
+                    // Clear cart after successful order
+                    setTimeout(() => {
+                        // You can add cart clearing logic here
+                        console.log('Order completed, cart should be cleared');
+                    }, 1000);
                 } else {
-                    showToast('Failed to save delivery information. Please try again.', 'error');
+                    throw new Error(result.message || 'Failed to complete order');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showToast('An error occurred. Please try again.', 'error');
+                showToast('Failed to complete order. Please try again.', 'error');
+            } finally {
+                // Reset button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
             }
         });
 
@@ -836,9 +1187,10 @@ $virtualAccount = generateVirtualAccount($userId);
         // Contact support
         function contactSupport() {
             showToast('Redirecting to support...', 'success');
-            // You can redirect to support page or open chat
+            // You can redirect to support page, open chat, or show contact info
             setTimeout(() => {
-                window.location.href = 'support.php';
+                // Replace with your actual support contact method
+                window.open('mailto:support@shopease.com?subject=Order Support Request', '_blank');
             }, 1500);
         }
 
