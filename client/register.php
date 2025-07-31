@@ -304,8 +304,14 @@ require __DIR__ . '/../components/header.php';
         </div>
 
         <!-- Overlay -->
-        <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-            <div class="text-white text-lg font-bold">Processing...</div>
+        <div id="overlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+            <div class="text-white text-lg font-bold p-8 rounded-lg max-w-lg mx-4">
+                <div class="text-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                    <div class="text-white text-lg font-bold">Processing...</div>
+                    <div class="text-white text-sm opacity-75 mt-2">Please wait, this may take a moment</div>
+                </div>
+            </div>
         </div>
         <!-- End Overlay -->
     </main>
