@@ -332,8 +332,9 @@ require __DIR__ . '/../components/header.php';
                 const termsAccepted = form.querySelector('input[type="checkbox"]').checked;
 
                 const overlay = document.getElementById("overlay");
+                const overlayText = overlay.querySelector("div");
 
-
+                // Basic validation
                 if (!termsAccepted) {
                     showToasted("You must accept the Terms of Service and Privacy Policy.", 'info', 3000);
                     return;
@@ -344,8 +345,42 @@ require __DIR__ . '/../components/header.php';
                     return;
                 }
 
-                // Show overlay
+                // Progress messages array
+                const progressMessages = [
+                    "Validating your information...",
+                    "Creating your account...",
+                    "Setting up your profile...",
+                    "Connecting to payment services...",
+                    "Creating virtual account...",
+                    "Finalizing registration...",
+                    "Almost done..."
+                ];
+
+                let currentMessageIndex = 0;
+                let progressInterval;
+
+                // Function to update progress message
+                function updateProgressMessage() {
+                    if (currentMessageIndex < progressMessages.length) {
+                        overlayText.innerHTML = `
+                    <div class="text-center">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                        <div class="text-white text-lg font-bold">${progressMessages[currentMessageIndex]}</div>
+                        <div class="text-white text-sm opacity-75 mt-2">Please wait, this may take a moment</div>
+                    </div>
+                `;
+                        currentMessageIndex++;
+                    }
+                }
+
+                // Show overlay with initial message
                 overlay.classList.remove("hidden");
+                updateProgressMessage();
+
+                // Start progress message interval
+                progressInterval = setInterval(() => {
+                    updateProgressMessage();
+                }, 1500); // Change message every 1.5 seconds
 
                 // AJAX request
                 fetch("api/api_register.php", {
@@ -362,24 +397,44 @@ require __DIR__ . '/../components/header.php';
                     })
                     .then((response) => response.json())
                     .then((data) => {
-                        overlay.classList.add("hidden"); // Hide overlay
+                        // Clear the progress interval
+                        clearInterval(progressInterval);
 
                         if (data.success) {
-                            // Redirect to login page
-                            showToasted(data.message, 'success');
+                            // Show simple success message
+                            overlayText.innerHTML = `
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div class="text-white text-lg font-bold mb-2">Registration Successful!</div>
+                            <div class="text-white text-sm opacity-75">Redirecting to login page...</div>
+                        </div>
+                    `;
+
+                            // Show toast message
+                            showToasted("Registration successful! Welcome to ShopEase! 🎉", 'success', 4000);
+
+                            // Redirect to login page after 2 seconds
                             setTimeout(() => {
+                                overlay.classList.add("hidden");
                                 window.location.href = "index.php";
-                            }, timeout = 2000);
+                            }, 2000);
                         } else {
-                            // Show error message
-                            showToasted(data.message, 'error');
+                            // Hide overlay and show error
+                            overlay.classList.add("hidden");
+                            showToasted(data.message || "Registration failed. Please try again.", 'error');
                         }
                     })
                     .catch((error) => {
-                        overlay.classList.add("hidden"); // Hide overlay
-                        showToasted("An unexpected error occurred.", "error");
-                        console.error("Error:", error);
+                        // Clear the progress interval
+                        clearInterval(progressInterval);
 
+                        overlay.classList.add("hidden");
+                        showToasted("An unexpected error occurred during registration.", "error");
+                        console.error("Registration Error:", error);
                     });
             });
 
@@ -393,13 +448,13 @@ require __DIR__ . '/../components/header.php';
                     input.type = isPassword ? "text" : "password";
                     eyeToggleBtn.innerHTML = isPassword ?
                         `<svg xmlns="http://www.w3.org/2000/svg" class="lucide lucide-eye-off h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path d="M17.94 17.94a10.94 10.94 0 0 1-5.94 1.94C5 19.88 2 12 2 12a21.05 21.05 0 0 1 4.29-6.29"/>
-                        <path d="M1 1l22 22"/>
-                    </svg>` :
+                    <path d="M17.94 17.94a10.94 10.94 0 0 1-5.94 1.94C5 19.88 2 12 2 12a21.05 21.05 0 0 1 4.29-6.29"/>
+                    <path d="M1 1l22 22"/>
+                </svg>` :
                         `<svg xmlns="http://www.w3.org/2000/svg" class="lucide lucide-eye h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z"/>
-                        <circle cx="12" cy="12" r="3"/>
-                    </svg>`;
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>`;
                 });
             });
         });
