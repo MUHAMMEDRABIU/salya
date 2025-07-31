@@ -74,11 +74,19 @@ try {
         $stmt->execute([$first_name, $last_name, $email, $phone, $hashedPassword]);
         $userId = $pdo->lastInsertId();
 
+        // Create user wallet
+        $walletCreated = createUserWallet($userId, $email, $phone, $pdo);
+
+        if (!$walletCreated) {
+            error_log("Registration Warning: Wallet creation failed for user $userId");
+        }
+
         // Initialize response
         $response = [
             'success' => true,
             'message' => 'Registration successful.',
             'user_id' => $userId,
+            'wallet_created' => $walletCreated,
             'virtual_account_created' => false
         ];
 
@@ -86,7 +94,6 @@ try {
         $virtualAccountData = null;
         if (isset($_ENV['MONNIFY_API_KEY']) && isset($_ENV['MONNIFY_SECRET_KEY']) && isset($_ENV['MONNIFY_CONTRACT_CODE'])) {
             try {
-                error_log("Registration: Attempting to create virtual account for user $userId");
 
                 $apiKey = $_ENV['MONNIFY_API_KEY'];
                 $secretKey = $_ENV['MONNIFY_SECRET_KEY'];
@@ -96,7 +103,6 @@ try {
                 $token = getMonnifyToken($apiKey, $secretKey);
 
                 if ($token) {
-                    error_log("Registration: Got Monnify token for user $userId");
 
                     // Create permanent virtual account
                     $virtualAccountData = createPermanentVirtualAccount(
@@ -110,12 +116,6 @@ try {
 
                     if ($virtualAccountData) {
                         $response['virtual_account_created'] = true;
-                        $response['virtual_account'] = [
-                            'account_number' => $virtualAccountData['account_number'],
-                            'account_name' => $virtualAccountData['account_name'],
-                            'bank_name' => $virtualAccountData['bank_name']
-                        ];
-                        error_log("Registration Success: Virtual account created for user $userId - Account: " . $virtualAccountData['account_number']);
                     } else {
                         error_log("Registration Warning: Virtual account creation failed for user $userId");
                         $response['virtual_account_error'] = 'Virtual account creation failed, but registration completed successfully.';
@@ -136,10 +136,6 @@ try {
         // Commit the transaction (user is created regardless of virtual account status)
         $pdo->commit();
 
-        // Log successful registration
-        error_log("Registration Complete: User $userId registered successfully. Virtual account: " .
-            ($response['virtual_account_created'] ? 'Created' : 'Failed'));
-
         echo json_encode($response);
     } catch (Exception $e) {
         // Rollback transaction on error
@@ -152,4 +148,46 @@ try {
 } catch (Exception $e) {
     error_log('Registration General Error: ' . $e->getMessage());
     echo json_encode(['success' => false, 'message' => 'An unexpected error occurred during registration.']);
+}
+
+/**
+ * Create user wallet with initial balance of 0
+ * 
+ * @param int $userId User ID
+ * @param string $email User email
+ * @param string $phone User phone number
+ * @param PDO $pdo Database connection
+ * @return bool True if wallet created successfully, false otherwise
+ */
+function createUserWallet($userId, $email, $phone, $pdo)
+{
+    try {
+        // Check if user already has a wallet
+        $stmt = $pdo->prepare("SELECT id FROM wallets WHERE user_id = ? LIMIT 1");
+        $stmt->execute([$userId]);
+        $existingWallet = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($existingWallet) {
+            error_log("Wallet: User $userId already has a wallet with ID " . $existingWallet['id']);
+            return false; // Wallet already exists, consider it failed
+        }
+
+        // Create new wallet with initial balance of 0
+        $stmt = $pdo->prepare("
+            INSERT INTO wallets (user_id, balance, email, phone, created_at, updated_at) 
+            VALUES (?, 0.00, ?, ?, NOW(), NOW())
+        ");
+
+        $result = $stmt->execute([$userId, $email, $phone]);
+
+        if ($result) {
+            return true;
+        } else {
+            error_log("Wallet Creation Failed: Unable to create wallet for user $userId");
+            return false;
+        }
+    } catch (PDOException $e) {
+        error_log("Wallet Creation Error: " . $e->getMessage() . " for user $userId");
+        return false;
+    }
 }
