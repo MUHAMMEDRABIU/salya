@@ -19,32 +19,11 @@ $delivery_fee = $subtotal >= 10000 ? 0 : 500;
 $tax = 0;
 $total = $subtotal + $delivery_fee + $tax;
 
-try {
-    // Monnify Payment Gateway Setup use $_ENV variables
-    $apiKey = $_ENV['MONNIFY_API_KEY'];
-    $secretKey = $_ENV['MONNIFY_SECRET_KEY'];
-    $contractCode = $_ENV['MONNIFY_CONTRACT_CODE'];
+$account = getUserVirtualAccount($pdo, $_SESSION['user_id']);
 
-    $token = getMonnifyToken($apiKey, $secretKey);
-    $orderRef = uniqid("ORD_");
-    $customerName = $user['full_name'] ?? 'Test User';
-    $customerEmail = $user['email'] ?? 'test@example.com';
-
-    $response = createVirtualAccount($token, $contractCode, $customerEmail, $orderRef, $customerName);
-
-    if (isset($response['responseBody'])) {
-        $accountNumber = $response['responseBody']['accountNumber'];
-        $accountName = $response['responseBody']['accountName'];
-        $bankName = $response['responseBody']['bankName'];
-    } else {
-        $accountNumber = 'Unavailable';
-        $accountName = 'Unavailable';
-        $bankName = 'Unavailable';
-    }
-} catch (PDOException $e) {
-    error_log("Monnify error: " . $e->getMessage());
-    exit();
-}
+$accountNumber = $account['account_number'] ?? 'Unavailable';
+$accountName = $account['account_name'] ?? 'Unavailable';
+$bankName = $account['bank_name'] ?? 'Unavailable';
 
 require_once 'partials/headers.php';
 ?>
