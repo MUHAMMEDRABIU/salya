@@ -147,13 +147,13 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array_column($_SESSION['cart']
             </div>
 
             <div>
-              <p class="text-gray-500 text-md mb-4">Choose quantity</p>
-              <div class="flex items-center space-x-3">
-                <button id="decreaseBtn" class="bg-white quantity-btn w-12 h-12 flex items-center justify-center text-xl font-bold rounded-xl shadow-lg text-custom-dark hover:border-2 hover:border-custom-accent">
+              <p class="text-gray-200 text-md mb-4">Choose quantity</p>
+              <div class="flex items-center">
+                <button id="decreaseBtn" class="bg-white quantity-btn w-12 h-12 flex items-center justify-center text-xl font-bold rounded-xl shadow-lg text-custom-dark">
                   -
                 </button>
-                <span id="quantity" class="text-3xl font-bold text-custom-dark min-w-[4rem] text-center bg-white px-4 py-2 rounded-xl shadow-lg">1</span>
-                <button id="increaseBtn" class="bg-white quantity-btn w-12 h-12 flex items-center justify-center text-xl font-bold rounded-xl shadow-lg text-custom-dark hover:border-2 hover:border-custom-accent">
+                <span id="quantity" class="text-base font-bold text-custom-dark min-w-[4rem] text-center">1</span>
+                <button id="increaseBtn" class="bg-white quantity-btn w-12 h-12 flex items-center justify-center text-xl font-bold rounded-xl shadow-lg text-custom-dark">
                   +
                 </button>
               </div>
@@ -167,7 +167,7 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array_column($_SESSION['cart']
             <img
               src="../assets/uploads/<?php echo htmlspecialchars($product['image']); ?>"
               alt="<?php echo htmlspecialchars($product['name']); ?>"
-              class="w-40 h-40 sm:w-56 sm:h-56 md:w-64 md:h-64 object-cover rounded-2xl shadow-2xl product-image"
+              class="w-40 h-40 sm:w-56 sm:h-56 md:w-64 md:h-64 object-cover rounded-2xl product-image"
               style="max-width: none;">
           </div>
         </div>

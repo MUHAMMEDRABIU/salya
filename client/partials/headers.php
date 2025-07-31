@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +17,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- LUcide icons -->
-    <script src="https://unpkg.com/lucide@latest/dist/lucide.umd.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Lottie JSON -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js"></script>

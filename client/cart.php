@@ -53,7 +53,7 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
 
                     <!-- Buttons -->
                     <div class="flex space-x-3">
-                        <button id="confirm-cancel" class="flex-1 px-4 py-3 border border-slate-200 text-gray-700 rounded-xl font-semibold hover:bg-slate-50 transition-all duration-300 transform hover:scale-105">
+                        <button id="confirm-cancel" class="flex-1 px-4 py-3 border border-blue-200 text-gray-700 rounded-xl font-semibold hover:bg-slate-50 transition-all duration-300 transform hover:scale-105">
                             Cancel
                         </button>
                         <button id="confirm-ok" class="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105 shadow-accent">
@@ -108,7 +108,6 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
                                             </button>
                                         </div>
                                         <div class="text-right">
-                                            <p class="item-total font-bold text-custom-dark text-xl">₦<?php echo number_format($item['price'] * $item['quantity']); ?></p>
                                             <button class="remove-item-btn text-red-500 hover:text-red-700 text-sm mt-2 px-3 py-1 rounded-lg hover:bg-red-50 transition-all duration-300 transform hover:scale-105" data-item-id="<?php echo $item['product_id']; ?>">
                                                 <i class="fas fa-times mr-1"></i>
                                                 Remove
@@ -311,7 +310,6 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
                     const itemId = cartItem.getAttribute('data-item-id');
                     const price = parseInt(cartItem.getAttribute('data-price'));
                     const quantityDisplay = cartItem.querySelector('.quantity-display');
-                    const itemTotal = cartItem.querySelector('.item-total');
 
                     // Add loading state
                     this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
@@ -339,13 +337,6 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
                             quantityDisplay.textContent = quantity;
                             setTimeout(() => {
                                 quantityDisplay.style.transform = 'scale(1)';
-                            }, 200);
-
-                            // Animate total change
-                            itemTotal.style.transform = 'scale(1.1)';
-                            itemTotal.textContent = '₦' + (price * quantity).toLocaleString();
-                            setTimeout(() => {
-                                itemTotal.style.transform = 'scale(1)';
                             }, 200);
 
                             updateTotals();

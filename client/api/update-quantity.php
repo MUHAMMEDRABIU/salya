@@ -9,32 +9,16 @@ try {
     }
 
     $data = json_decode(file_get_contents('php://input'), true);
-    if (!isset($data['product_id'], $data['action'])) {
+    if (!isset($data['product_id'])) {
         echo json_encode(['success' => false, 'message' => 'Invalid parameters.']);
         exit;
     }
 
     $product_id = $data['product_id'];
-    $action = $data['action'];
     $cart = $_SESSION['cart'] ?? [];
 
     if (!isset($cart[$product_id])) {
         echo json_encode(['success' => false, 'message' => 'Product not found in cart.']);
-        exit;
-    }
-
-    // Modify quantity
-    if ($action === 'increase') {
-        $cart[$product_id]['quantity'] += 1;
-    } elseif ($action === 'decrease') {
-        if ($cart[$product_id]['quantity'] > 1) {
-            $cart[$product_id]['quantity'] -= 1;
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Quantity cannot be less than 1.']);
-            exit;
-        }
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Invalid action.']);
         exit;
     }
 
@@ -61,7 +45,7 @@ try {
         'total' => $total,
         'cartCount' => array_sum(array_column($cart, 'quantity'))
     ]);
-} catch (Throwable $e) {
+} catch (PDOException $e) {
     error_log('Update quantity error: ' . $e->getMessage());
     echo json_encode([
         'success' => false,

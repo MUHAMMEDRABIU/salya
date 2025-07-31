@@ -1,7 +1,6 @@
 <?php
 require_once 'util/util.php';
 require_once 'initialize.php';
-require_once 'partials/headers.php';
 
 $cart_items = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
 $cartCount = array_sum(array_column($cart_items, 'quantity'));
@@ -32,6 +31,8 @@ function generateVirtualAccount($userId)
 
 $userId = $_SESSION['user_id'] ?? 1;
 $virtualAccount = generateVirtualAccount($userId);
+
+require_once 'partials/headers.php';
 ?>
 
 <body class="font-dm bg-gray min-h-screen blob-bg">
@@ -49,14 +50,6 @@ $virtualAccount = generateVirtualAccount($userId);
         <!-- Header -->
         <header class="mb-8">
             <?php include 'partials/top-nav.php'; ?>
-
-            <!-- Simple Header -->
-            <div class="flex items-center space-x-4 mb-8">
-                <button onclick="history.back()" class="p-3 bg-white rounded-full shadow-soft hover:shadow-medium transition-all duration-300">
-                    <i class="fas fa-arrow-left text-dark"></i>
-                </button>
-                <h1 class="text-3xl font-bold text-dark">Choose Payment Method</h1>
-            </div>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -73,7 +66,7 @@ $virtualAccount = generateVirtualAccount($userId);
                         <!-- Bank Transfer -->
                         <div>
                             <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" class="payment-option hidden" checked>
-                            <label for="bank_transfer" class="payment-label flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-accent cursor-pointer transition-all duration-200">
+                            <label for="bank_transfer" class="payment-label flex items-center p-4 border-2 border-gray-50 rounded-xl hover:border-accent cursor-pointer transition-all duration-200">
                                 <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mr-4">
                                     <i class="fas fa-university text-blue-600 text-xl"></i>
                                 </div>
@@ -90,7 +83,7 @@ $virtualAccount = generateVirtualAccount($userId);
                         <!-- Card Payment -->
                         <div>
                             <input type="radio" id="card_payment" name="payment_method" value="card_payment" class="payment-option hidden">
-                            <label for="card_payment" class="payment-label flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-accent cursor-pointer transition-all duration-200">
+                            <label for="card_payment" class="payment-label flex items-center p-4 border-2 border-gray-50 rounded-xl hover:border-accent cursor-pointer transition-all duration-200">
                                 <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mr-4">
                                     <i class="fas fa-credit-card text-green-600 text-xl"></i>
                                 </div>
@@ -107,7 +100,7 @@ $virtualAccount = generateVirtualAccount($userId);
                         <!-- Mobile Money -->
                         <div>
                             <input type="radio" id="mobile_money" name="payment_method" value="mobile_money" class="payment-option hidden">
-                            <label for="mobile_money" class="payment-label flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-accent cursor-pointer transition-all duration-200">
+                            <label for="mobile_money" class="payment-label flex items-center p-4 border-2 border-gray-50 rounded-xl hover:border-accent cursor-pointer transition-all duration-200">
                                 <div class="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mr-4">
                                     <i class="fas fa-mobile-alt text-purple-600 text-xl"></i>
                                 </div>
@@ -238,18 +231,13 @@ $virtualAccount = generateVirtualAccount($userId);
                                 <div class="flex items-center space-x-4 p-3 bg-white bg-opacity-50 rounded-xl shadow-soft">
                                     <img src="../assets/uploads/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="w-16 h-16 rounded-lg object-cover">
                                     <div class="flex-1">
-                                        <h4 class="font-semibold text-dark"><?= htmlspecialchars($item['name']) ?></h4>
-                                        <div class="flex items-center justify-between mt-2">
-                                            <div class="flex items-center space-x-2" data-id="<?= $item['product_id']; ?>">
-                                                <button class="qty-btn decrease w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-gray-500 hover:bg-slate-100 transition-colors">-</button>
-                                                <span class="qty-count font-medium"><?= $item['quantity'] ?></span>
-                                                <button class="qty-btn increase w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-gray-500 hover:bg-slate-100 transition-colors">+</button>
-                                            </div>
+                                        <h4 class="text-gray-400"><?= htmlspecialchars($item['name']) ?></h4>
+                                        <div class="flex items-center justify-between">
                                             <span class="font-semibold text-dark">₦<?= number_format($item['price'] * $item['quantity'], 2) ?></span>
                                         </div>
                                     </div>
                                     <button class="remove-btn text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors" data-id="<?= $item['product_id'] ?>">
-                                        <i class="fas fa-trash-alt"></i>
+                                        <i data-lucide="trash"></i>
                                     </button>
                                 </div>
                             <?php endforeach; ?>
@@ -257,20 +245,20 @@ $virtualAccount = generateVirtualAccount($userId);
                     </div>
 
                     <div class="border-t border-slate-200 pt-4 space-y-2">
-                        <div class="flex justify-between text-gray-600">
-                            <span>Subtotal:</span>
+                        <div class="flex justify-between mb-3">
+                            <span class="text-gray-300">Subtotal:</span>
                             <span id="subtotal-value">₦<?= number_format($subtotal, 2) ?></span>
                         </div>
-                        <div class="flex justify-between text-gray-600">
-                            <span>Delivery:</span>
+                        <div class="flex justify-between mb-3">
+                            <span class="text-gray-300">Delivery:</span>
                             <span id="delivery-value">₦<?= number_format($delivery_fee, 2) ?></span>
                         </div>
-                        <div class="flex justify-between text-gray-600">
-                            <span>Tax:</span>
+                        <div class="flex justify-between mb-3">
+                            <span class="text-gray-300">Tax:</span>
                             <span id="tax-value">₦<?= number_format($tax, 2) ?></span>
                         </div>
                         <div class="flex justify-between text-xl font-bold text-dark pt-2 border-t border-slate-200">
-                            <span>Total:</span>
+                            <span class="text-gray-300">Total:</span>
                             <span id="total-value">₦<?= number_format($total, 2) ?></span>
                         </div>
                     </div>
@@ -297,16 +285,18 @@ $virtualAccount = generateVirtualAccount($userId);
                         <p class="text-blue-700 text-sm mt-1">Admin is verifying your payment. This may take a few minutes.</p>
                     </div>
 
-                    <button onclick="confirmPayment()"
-                        id="paymentButton"
-                        class="w-full bg-custom-accent text-white py-4 rounded-2xl font-semibold text-lg hover:opacity-90 transition-opacity shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                        I Have Made Payment
-                    </button>
-
-                    <div class="text-center">
-                        <button onclick="checkPaymentStatus()" class="text-accent hover:underline text-sm font-medium">
-                            Check Payment Status
+                    <div class="mt-4">
+                        <button onclick="confirmPayment()"
+                            id="paymentButton"
+                            class="w-full bg-custom-accent text-white py-4 rounded-2xl font-semibold text-lg hover:opacity-90 transition-opacity shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            I Have Made Payment
                         </button>
+
+                        <div class="text-center mt-3">
+                            <button onclick="checkPaymentStatus()" class="text-accent hover:underline text-sm font-medium">
+                                Check Payment Status
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -316,6 +306,7 @@ $virtualAccount = generateVirtualAccount($userId);
     <script src="../assets/js/toast.js"></script>
     <script src="js/script.js"></script>
     <script>
+
         let currentVerificationId = null;
         let verificationInterval = null;
 
@@ -414,6 +405,7 @@ $virtualAccount = generateVirtualAccount($userId);
         // Add event listener for city change
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('deliveryCity').addEventListener('change', updateAreas);
+            lucide.createIcons();
         });
 
         function showToast(message, type = 'success') {
@@ -449,12 +441,11 @@ $virtualAccount = generateVirtualAccount($userId);
                 // Update payment label styling
                 document.querySelectorAll('.payment-label').forEach(label => {
                     label.classList.remove('border-accent', 'bg-orange-50');
-                    label.classList.add('border-gray-200');
+                    label.classList.add('border-gray-50');
                 });
                 this.parentElement.classList.add('border-accent', 'bg-orange-50');
-                this.parentElement.classList.remove('border-gray-200');
+                this.parentElement.classList.remove('border-gray-50');
 
-                showToasted(`${selectedMethod.replace('_', ' ')} selected as payment method.`, 'info');
             });
         });
 
@@ -708,7 +699,6 @@ $virtualAccount = generateVirtualAccount($userId);
             btn.addEventListener('click', async () => {
                 const parent = btn.closest('[data-id]');
                 const productId = parent.getAttribute('data-id');
-                const action = btn.classList.contains('increase') ? 'increase' : 'decrease';
                 const qtySpan = parent.querySelector('.qty-count');
 
                 try {
@@ -719,7 +709,6 @@ $virtualAccount = generateVirtualAccount($userId);
                         },
                         body: JSON.stringify({
                             product_id: productId,
-                            action: action
                         })
                     });
 
@@ -875,7 +864,7 @@ $virtualAccount = generateVirtualAccount($userId);
                     <div class="space-y-3">
                         <div>
                             <input type="radio" id="standard" name="delivery_option" value="standard" class="hidden" checked>
-                            <label for="standard" class="delivery-option-label flex items-center p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-custom-accent transition-all">
+                            <label for="standard" class="delivery-option-label flex items-center p-3 border-2 border-gray-50 rounded-xl cursor-pointer hover:border-custom-accent transition-all">
                                 <div class="flex-1">
                                     <h4 class="font-semibold text-custom-dark">Standard Delivery</h4>
                                     <p class="text-sm text-gray-600">3-5 business days • Free for orders above ₦10,000</p>
@@ -885,7 +874,7 @@ $virtualAccount = generateVirtualAccount($userId);
                         </div>
                         <div>
                             <input type="radio" id="express" name="delivery_option" value="express" class="hidden">
-                            <label for="express" class="delivery-option-label flex items-center p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-custom-accent transition-all">
+                            <label for="express" class="delivery-option-label flex items-center p-3 border-2 border-gray-50 rounded-xl cursor-pointer hover:border-custom-accent transition-all">
                                 <div class="flex-1">
                                     <h4 class="font-semibold text-custom-dark">Express Delivery</h4>
                                     <p class="text-sm text-gray-600">1-2 business days • Fast delivery</p>
@@ -1158,10 +1147,10 @@ $virtualAccount = generateVirtualAccount($userId);
             radio.addEventListener('change', function() {
                 document.querySelectorAll('.delivery-option-label').forEach(label => {
                     label.classList.remove('border-custom-accent', 'bg-blue-50');
-                    label.classList.add('border-gray-200');
+                    label.classList.add('border-gray-50');
                 });
                 this.parentElement.classList.add('border-custom-accent', 'bg-blue-50');
-                this.parentElement.classList.remove('border-gray-200');
+                this.parentElement.classList.remove('border-gray-50');
             });
         });
 
@@ -1209,42 +1198,5 @@ $virtualAccount = generateVirtualAccount($userId);
         // Initialize estimated delivery date
         setEstimatedDelivery();
     </script>
-
-    <style>
-        .delivery-option-label input[type="radio"]:checked+.delivery-option-label {
-            border-color: var(--custom-accent) !important;
-            background-color: rgba(49, 130, 206, 0.1) !important;
-        }
-    </style>
-
-    <style>
-        .payment-option:checked+.payment-label {
-            border-color: #F97316 !important;
-            background-color: rgba(249, 115, 22, 0.1) !important;
-        }
-
-        .frosted-glass {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .shadow-soft {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-
-        .shadow-medium {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        .shadow-accent {
-            box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.3), 0 4px 6px -2px rgba(249, 115, 22, 0.1);
-        }
-
-        .shadow-large {
-            box-shadow: 0 20px 25px -5px rgba(249, 115, 22, 0.3), 0 10px 10px -5px rgba(249, 115, 22, 0.1);
-        }
-    </style>
 </body>
-
 </html>
