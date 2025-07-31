@@ -1,17 +1,16 @@
 <?php
 require_once 'util/util.php';
 require_once 'initialize.php';
+require_once '../helpers/monnify.php';
 
 $cart_items = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
 $cartCount = array_sum(array_column($cart_items, 'quantity'));
 
-// Redirect if cart is empty
 if (empty($cart_items)) {
     header('Location: cart.php');
     exit();
 }
 
-// Calculate totals
 $subtotal = 0;
 foreach ($cart_items as $item) {
     $subtotal += $item['price'] * $item['quantity'];
@@ -20,17 +19,27 @@ $delivery_fee = $subtotal >= 10000 ? 0 : 500;
 $tax = 0;
 $total = $subtotal + $delivery_fee + $tax;
 
-// Generate unique virtual account number for this user/order
-function generateVirtualAccount($userId)
-{
-    $prefix = "9876"; // Bank prefix
-    $userPart = str_pad($userId, 4, '0', STR_PAD_LEFT);
-    $random = str_pad(mt_rand(1000, 9999), 4, '0', STR_PAD_LEFT);
-    return $prefix . $userPart . $random;
-}
+// Monnify Payment Gateway Setup use $_ENV variables
+$apiKey = $_ENV['MONNIFY_API_KEY'];
+$secretKey = $_ENV['MONNIFY_SECRET_KEY'];
+$contractCode = $_ENV['MONNIFY_CONTRACT_CODE'];
 
-$userId = $_SESSION['user_id'] ?? 1;
-$virtualAccount = generateVirtualAccount($userId);
+$token = getMonnifyToken($apiKey, $secretKey);
+$orderRef = uniqid("ORD_");
+$customerName = $user['full_name'] ?? 'Test User';
+$customerEmail = $user['email'] ?? 'test@example.com';
+
+$response = createVirtualAccount($token, $contractCode, $customerEmail, $orderRef, $customerName);
+
+if (isset($response['responseBody'])) {
+    $accountNumber = $response['responseBody']['accountNumber'];
+    $accountName = $response['responseBody']['accountName'];
+    $bankName = $response['responseBody']['bankName'];
+} else {
+    $accountNumber = 'Unavailable';
+    $accountName = 'Unavailable';
+    $bankName = 'Unavailable';
+}
 
 require_once 'partials/headers.php';
 ?>
@@ -306,7 +315,6 @@ require_once 'partials/headers.php';
     <script src="../assets/js/toast.js"></script>
     <script src="js/script.js"></script>
     <script>
-
         let currentVerificationId = null;
         let verificationInterval = null;
 
@@ -1199,4 +1207,5 @@ require_once 'partials/headers.php';
         setEstimatedDelivery();
     </script>
 </body>
+
 </html>
