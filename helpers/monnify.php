@@ -27,7 +27,7 @@ function createVirtualAccount($token, $contractCode, $customerEmail, $orderRef, 
         "customerName" => $customerName
     ];
 
-    $ch = curl_init("https://sandbox.monnify.com/api/v2/bank-transfer/reserved-accounts");
+    $ch = curl_init("https://sandbox.monnify.com");
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
     curl_setopt($ch, CURLOPT_HTTPHEADER, [

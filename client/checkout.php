@@ -19,26 +19,31 @@ $delivery_fee = $subtotal >= 10000 ? 0 : 500;
 $tax = 0;
 $total = $subtotal + $delivery_fee + $tax;
 
-// Monnify Payment Gateway Setup use $_ENV variables
-$apiKey = $_ENV['MONNIFY_API_KEY'];
-$secretKey = $_ENV['MONNIFY_SECRET_KEY'];
-$contractCode = $_ENV['MONNIFY_CONTRACT_CODE'];
+try {
+    // Monnify Payment Gateway Setup use $_ENV variables
+    $apiKey = $_ENV['MONNIFY_API_KEY'];
+    $secretKey = $_ENV['MONNIFY_SECRET_KEY'];
+    $contractCode = $_ENV['MONNIFY_CONTRACT_CODE'];
 
-$token = getMonnifyToken($apiKey, $secretKey);
-$orderRef = uniqid("ORD_");
-$customerName = $user['full_name'] ?? 'Test User';
-$customerEmail = $user['email'] ?? 'test@example.com';
+    $token = getMonnifyToken($apiKey, $secretKey);
+    $orderRef = uniqid("ORD_");
+    $customerName = $user['full_name'] ?? 'Test User';
+    $customerEmail = $user['email'] ?? 'test@example.com';
 
-$response = createVirtualAccount($token, $contractCode, $customerEmail, $orderRef, $customerName);
+    $response = createVirtualAccount($token, $contractCode, $customerEmail, $orderRef, $customerName);
 
-if (isset($response['responseBody'])) {
-    $accountNumber = $response['responseBody']['accountNumber'];
-    $accountName = $response['responseBody']['accountName'];
-    $bankName = $response['responseBody']['bankName'];
-} else {
-    $accountNumber = 'Unavailable';
-    $accountName = 'Unavailable';
-    $bankName = 'Unavailable';
+    if (isset($response['responseBody'])) {
+        $accountNumber = $response['responseBody']['accountNumber'];
+        $accountName = $response['responseBody']['accountName'];
+        $bankName = $response['responseBody']['bankName'];
+    } else {
+        $accountNumber = 'Unavailable';
+        $accountName = 'Unavailable';
+        $bankName = 'Unavailable';
+    }
+} catch (PDOException $e) {
+    error_log("Monnify error: " . $e->getMessage());
+    exit();
 }
 
 require_once 'partials/headers.php';
@@ -138,19 +143,19 @@ require_once 'partials/headers.php';
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                 <div>
                                     <span class="text-gray-600">Bank Name:</span>
-                                    <p class="font-semibold text-dark">First Bank Nigeria</p>
+                                    <p class="font-semibold text-dark"><?= $bankName ?></p>
                                 </div>
                                 <div>
                                     <span class="text-gray-600">Account Name:</span>
-                                    <p class="font-semibold text-dark">ShopEase Store</p>
+                                    <p class="font-semibold text-dark"><?= $accountName ?></p>
                                 </div>
                             </div>
 
                             <div class="mt-4">
                                 <span class="text-gray-600 text-sm">Virtual Account Number:</span>
                                 <div class="flex items-center justify-between bg-white rounded-lg p-3 mt-2 border-2 border-accent">
-                                    <span class="text-2xl font-bold text-dark tracking-wider" id="virtualAccountNumber">
-                                        <?php echo $virtualAccount; ?>
+                                    <span class="text-2xl font-bold text-dark tracking-wider" id="accountNumber">
+                                        <?php echo $accountNumber; ?>
                                     </span>
                                     <button onclick="copyAccountNumber()" class="bg-accent hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center transform hover:scale-105">
                                         <i id="copyIcon" class="fas fa-copy mr-2"></i>
@@ -427,6 +432,16 @@ require_once 'partials/headers.php';
             delivery_fee: <?= $delivery_fee ?>,
             total: <?= $total ?>
         };
+        window.checkoutData = {
+            orderRef: '<?= $orderRef ?>',
+            customerName: '<?= htmlspecialchars($customerName) ?>',
+            customerEmail: '<?= htmlspecialchars($customerEmail) ?>',
+            accountNumber: '<?= htmlspecialchars($accountNumber) ?>',
+            bankName: '<?= htmlspecialchars($bankName) ?>',
+            accountName: '<?= htmlspecialchars($accountName) ?>',
+            total: <?= $total ?>,
+            cartItems: <?= json_encode($cart_items) ?>
+        };
 
         // Payment method selection logic
         document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
@@ -462,7 +477,7 @@ require_once 'partials/headers.php';
         document.querySelector('input[name="payment_method"]:checked').parentElement.classList.add('border-accent', 'bg-orange-50');
 
         function copyAccountNumber() {
-            const accountNumber = document.getElementById('virtualAccountNumber').textContent.trim();
+            const accountNumber = document.getElementById('accountNumber').textContent.trim();
 
             navigator.clipboard.writeText(accountNumber).then(() => {
                 const copyIcon = document.getElementById('copyIcon');
@@ -504,7 +519,7 @@ require_once 'partials/headers.php';
                     body: JSON.stringify({
                         payment_method: selectedMethod,
                         amount: <?php echo $total; ?>,
-                        virtual_account: '<?php echo $virtualAccount; ?>'
+                        virtual_account: '<?php echo $accountNumber; ?>'
                     })
                 });
 
