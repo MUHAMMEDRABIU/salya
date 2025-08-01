@@ -87,7 +87,6 @@ function getMonnifyToken($apiKey, $secretKey)
 
     $token = $data['responseBody']['accessToken'];
     $expiresIn = $data['responseBody']['expiresIn'] ?? 'unknown';
-    error_log("Monnify Token Success: Token obtained successfully, expires in: $expiresIn seconds");
 
     return $token;
 }
@@ -161,8 +160,6 @@ function createPermanentVirtualAccount($token, $contractCode, $userId, $customer
 
     $url = "https://sandbox.monnify.com/api/v2/bank-transfer/reserved-accounts";
 
-    error_log("Permanent Virtual Account: Creating for user $userId ($customerEmail)");
-
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
@@ -219,6 +216,7 @@ function createPermanentVirtualAccount($token, $contractCode, $userId, $customer
     }
 
     // Extract account details from the accounts array
+    $fullCustomerName = $customerName;
     $accountNumber = $account['accountNumber'];
     $accountName = $account['accountName'];
     $bankName = $account['bankName'];
@@ -228,13 +226,12 @@ function createPermanentVirtualAccount($token, $contractCode, $userId, $customer
     // Store in database
     try {
         $stmt = $pdo->prepare("
-            INSERT INTO virtual_accounts (user_id, account_number, account_name, bank_name, customer_email, created_at) 
-            VALUES (?, ?, ?, ?, ?, NOW())
+            INSERT INTO virtual_accounts (user_id, account_number, account_name, bank_name, customer_email, full_customer_name, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, NOW())
         ");
-        $result = $stmt->execute([$userId, $accountNumber, $accountName, $bankName, $customerEmail]);
+        $result = $stmt->execute([$userId, $accountNumber, $accountName, $bankName, $customerEmail, $fullCustomerName]);
 
         if ($result) {
-            error_log("Permanent Virtual Account Success: Stored account $accountNumber for user $userId in database");
 
             return [
                 'user_id' => $userId,
@@ -242,6 +239,7 @@ function createPermanentVirtualAccount($token, $contractCode, $userId, $customer
                 'account_name' => $accountName,
                 'bank_name' => $bankName,
                 'customer_email' => $customerEmail,
+                'full_customer_name' => $fullCustomerName,
                 'created_at' => date('Y-m-d H:i:s')
             ];
         } else {

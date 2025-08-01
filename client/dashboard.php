@@ -15,7 +15,7 @@ $categories = getProductCategories($pdo);
         <div class="gradient-bg rounded-3xl p-6 text-white floating-card animate-slide-up">
             <div class="flex items-center justify-between mb-4">
                 <div>
-                    <h2 class="text-2xl font-bold mb-2">Welcome back!</h2>
+                    <h2 class="text-2xl font-bold mb-2">Welcome <?= $user['first_name']; ?>!</h2>
                     <p class="text-orange-100 text-sm">Discover fresh frozen foods for your family</p>
                 </div>
                 <div class="relative">

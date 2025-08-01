@@ -22,7 +22,7 @@ $total = $subtotal + $delivery_fee + $tax;
 $account = getUserVirtualAccount($pdo, $_SESSION['user_id']);
 
 $accountNumber = $account['account_number'] ?? 'Unavailable';
-$accountName = $account['account_name'] ?? 'Unavailable';
+$accountName = $account['full_customer_name'] ?? $account['account_name'] ?? 'Unavailable';
 $bankName = $account['bank_name'] ?? 'Unavailable';
 
 require_once 'partials/headers.php';

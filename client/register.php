@@ -307,7 +307,11 @@ require __DIR__ . '/../components/header.php';
         <div id="overlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden backdrop-blur-sm">
             <div class="text-white text-lg font-bold p-8 rounded-lg max-w-lg mx-4">
                 <div class="text-center">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                    <!-- Simple Orange Spinner -->
+                    <div class="relative mx-auto mb-4 w-12 h-12">
+                        <div class="absolute inset-0 border-4 border-orange-200 rounded-full"></div>
+                        <div class="absolute inset-0 border-4 border-transparent border-t-orange-500 rounded-full animate-spin"></div>
+                    </div>
                     <div class="text-white text-lg font-bold">Processing...</div>
                     <div class="text-white text-sm opacity-75 mt-2">Please wait, this may take a moment</div>
                 </div>
@@ -364,8 +368,11 @@ require __DIR__ . '/../components/header.php';
                     if (currentMessageIndex < progressMessages.length) {
                         overlayText.innerHTML = `
                     <div class="text-center">
-                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-                        <div class="text-white text-lg font-bold">${progressMessages[currentMessageIndex]}</div>
+                        <div class="relative mx-auto mb-4 w-12 h-12">
+                            <div class="absolute inset-0 border-4 border-orange-200 rounded-full"></div>
+                            <div class="absolute inset-0 border-4 border-transparent border-t-orange-500 rounded-full animate-spin"></div>
+                        </div>
+                        <div class="text-white text-lg font-bold">Processing...</div>
                         <div class="text-white text-sm opacity-75 mt-2">Please wait, this may take a moment</div>
                     </div>
                 `;
