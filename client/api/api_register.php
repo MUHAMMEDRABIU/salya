@@ -49,6 +49,13 @@ try {
         exit();
     }
 
+    // Check if Monnify credentials are configured BEFORE starting registration
+    if (!isset($_ENV['MONNIFY_API_KEY']) || !isset($_ENV['MONNIFY_SECRET_KEY']) || !isset($_ENV['MONNIFY_CONTRACT_CODE'])) {
+        error_log("Registration Failed: Monnify credentials not configured");
+        echo json_encode(['success' => false, 'message' => 'Payment service is not configured. Registration is temporarily unavailable.']);
+        exit();
+    }
+
     // Split fullName into first_name and last_name
     $nameParts = preg_split('/\s+/', trim($fullName));
     if (count($nameParts) === 1) {
@@ -74,80 +81,92 @@ try {
         $stmt->execute([$first_name, $last_name, $email, $phone, $hashedPassword]);
         $userId = $pdo->lastInsertId();
 
-        // Create user wallet
+        error_log("Registration: User $userId created successfully");
+
+        // Create user wallet - REQUIRED FOR REGISTRATION SUCCESS
         $walletCreated = createUserWallet($userId, $email, $phone, $pdo);
 
         if (!$walletCreated) {
-            error_log("Registration Warning: Wallet creation failed for user $userId");
+            error_log("Registration Failed: Wallet creation failed for user $userId");
+            throw new Exception('Failed to create user wallet. Registration cannot proceed.');
         }
 
-        // Initialize response
+        error_log("Registration: Wallet created successfully for user $userId");
+
+        // Create virtual account - REQUIRED FOR REGISTRATION SUCCESS
+        $apiKey = $_ENV['MONNIFY_API_KEY'];
+        $secretKey = $_ENV['MONNIFY_SECRET_KEY'];
+        $contractCode = $_ENV['MONNIFY_CONTRACT_CODE'];
+
+        error_log("Registration: Attempting to create virtual account for user $userId");
+
+        // Get Monnify token
+        $token = getMonnifyToken($apiKey, $secretKey);
+
+        if (!$token) {
+            error_log("Registration Failed: Failed to get Monnify token for user $userId");
+            throw new Exception('Failed to authenticate with payment service. Please try again later.');
+        }
+
+        error_log("Registration: Got Monnify token for user $userId");
+
+        // Create permanent virtual account
+        $virtualAccountData = createPermanentVirtualAccount(
+            $token,
+            $contractCode,
+            $userId,
+            $email,
+            $fullName,
+            $pdo
+        );
+
+        if (!$virtualAccountData) {
+            error_log("Registration Failed: Virtual account creation failed for user $userId");
+            throw new Exception('Failed to create payment account. Please try again later.');
+        }
+
+        error_log("Registration Success: Virtual account created for user $userId - Account: " . $virtualAccountData['account_number']);
+
+        // If we reach here, everything was successful
+        $pdo->commit();
+
+        // Success response
         $response = [
             'success' => true,
-            'message' => 'Registration successful.',
+            'message' => 'Registration successful! Your account and payment wallet have been created.',
             'user_id' => $userId,
-            'wallet_created' => $walletCreated,
-            'virtual_account_created' => false
+            'wallet_created' => true,
+            'virtual_account_created' => true,
+            'virtual_account' => [
+                'account_number' => $virtualAccountData['account_number'],
+                'account_name' => $virtualAccountData['account_name'],
+                'bank_name' => $virtualAccountData['bank_name']
+            ]
         ];
 
-        // Try to create virtual account
-        $virtualAccountData = null;
-        if (isset($_ENV['MONNIFY_API_KEY']) && isset($_ENV['MONNIFY_SECRET_KEY']) && isset($_ENV['MONNIFY_CONTRACT_CODE'])) {
-            try {
-
-                $apiKey = $_ENV['MONNIFY_API_KEY'];
-                $secretKey = $_ENV['MONNIFY_SECRET_KEY'];
-                $contractCode = $_ENV['MONNIFY_CONTRACT_CODE'];
-
-                // Get Monnify token
-                $token = getMonnifyToken($apiKey, $secretKey);
-
-                if ($token) {
-
-                    // Create permanent virtual account
-                    $virtualAccountData = createPermanentVirtualAccount(
-                        $token,
-                        $contractCode,
-                        $userId,
-                        $email,
-                        $fullName,
-                        $pdo
-                    );
-
-                    if ($virtualAccountData) {
-                        $response['virtual_account_created'] = true;
-                    } else {
-                        error_log("Registration Warning: Virtual account creation failed for user $userId");
-                        $response['virtual_account_error'] = 'Virtual account creation failed, but registration completed successfully.';
-                    }
-                } else {
-                    error_log("Registration Warning: Failed to get Monnify token for user $userId");
-                    $response['virtual_account_error'] = 'Failed to authenticate with payment service.';
-                }
-            } catch (Exception $e) {
-                error_log("Registration Monnify Error for user $userId: " . $e->getMessage());
-                $response['virtual_account_error'] = 'Payment service temporarily unavailable.';
-            }
-        } else {
-            error_log("Registration: Monnify credentials not configured");
-            $response['virtual_account_error'] = 'Payment service not configured.';
-        }
-
-        // Commit the transaction (user is created regardless of virtual account status)
-        $pdo->commit();
+        error_log("Registration Complete: User $userId registered successfully with wallet and virtual account");
 
         echo json_encode($response);
     } catch (Exception $e) {
-        // Rollback transaction on error
+        // Rollback transaction on any error
         $pdo->rollBack();
-        throw $e;
+
+        // Log the specific error
+        error_log("Registration Transaction Failed for user email $email: " . $e->getMessage());
+
+        // Return user-friendly error message
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+        exit();
     }
 } catch (PDOException $e) {
     error_log('Registration Database Error: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Database error occurred while processing your request.']);
+    echo json_encode(['success' => false, 'message' => 'Database error occurred. Please try again later.']);
 } catch (Exception $e) {
     error_log('Registration General Error: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'An unexpected error occurred during registration.']);
+    echo json_encode(['success' => false, 'message' => 'An unexpected error occurred during registration. Please try again.']);
 }
 
 /**
