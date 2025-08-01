@@ -341,31 +341,6 @@ function getUserActivityLog($user_id)
  * @return bool
  */
 
-function getUserCartItems($pdo, $user_id) {
-    try {
-        $stmt = $pdo->prepare("
-            SELECT 
-                ci.id as cart_id,
-                ci.quantity,
-                ci.created_at,
-                p.id as product_id,
-                p.name,
-                p.price,
-                p.image,
-                p.in_stock
-            FROM cart_items ci
-            JOIN products p ON ci.product_id = p.id
-            WHERE ci.user_id = ?
-            ORDER BY ci.created_at DESC
-        ");
-        $stmt->execute([$user_id]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        error_log("Error fetching cart items: " . $e->getMessage());
-        return [];
-    }
-}
-
 function removeFromCart($product_id)
 {
     if (isset($_SESSION['cart'][$product_id])) {

@@ -2,6 +2,20 @@
 // Get current page filename
 $currentPage = basename($_SERVER['PHP_SELF']);
 
+// Get cart count for logged in users
+$cartCount = 0;
+if (isset($_SESSION['user_id'])) {
+    try {
+        $stmt = $pdo->prepare("SELECT SUM(quantity) as total_items FROM cart_items WHERE user_id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $cartCount = (int)($result['total_items'] ?? 0);
+    } catch (Exception $e) {
+        error_log("Error getting cart count in top-nav: " . $e->getMessage());
+        $cartCount = 0;
+    }
+}
+
 // Set header and subheader based on page
 switch ($currentPage) {
     case 'cart.php':
@@ -20,7 +34,7 @@ switch ($currentPage) {
         $header = 'Product Details';
         $subheader = 'See product information';
         break;
-        case 'orders.php':
+    case 'orders.php':
         $header = 'Your Orders';
         $subheader = 'View your past orders';
         break;
@@ -55,7 +69,9 @@ switch ($currentPage) {
                     <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
                 </svg>
             </div>
-            <div class="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center shadow-medium animate-bounce-gentle">
+            <!-- Cart badge - hide if count is 0 -->
+            <div class="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center shadow-medium animate-bounce-gentle"
+                style="<?php echo $cartCount > 0 ? 'display: flex;' : 'display: none;'; ?>">
                 <span id="cartCount" class="cart-badge text-white text-xs font-bold"><?php echo $cartCount; ?></span>
             </div>
         </div>

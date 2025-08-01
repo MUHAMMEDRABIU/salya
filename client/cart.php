@@ -3,17 +3,93 @@ require_once 'util/util.php';
 require_once 'initialize.php';
 require_once 'partials/headers.php';
 
-// Get cart items from session (dynamic)
-$cart_items = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
-// var_dump($cart_items);
-// Calculate totals
-$subtotal = 0;
-foreach ($cart_items as $item) {
-    $subtotal += $item['price'] * $item['quantity'];
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header('Location: index.php');
+    exit();
 }
-$delivery_fee = $subtotal >= 10000 ? 0 : 500;
-$total = $subtotal + $delivery_fee;
-$cartCount = array_sum(array_column($cart_items, 'quantity'));
+
+/**
+ * Get user's cart items with product details from database
+ */
+function getUserCartItems($pdo, $user_id)
+{
+    try {
+        $stmt = $pdo->prepare("
+            SELECT 
+                ci.id as cart_id,
+                ci.quantity,
+                ci.created_at,
+                p.id as product_id,
+                p.name,
+                p.price,
+                p.image,
+                p.stock_quantity
+            FROM cart_items ci
+            JOIN products p ON ci.product_id = p.id
+            WHERE ci.user_id = ?
+            ORDER BY ci.created_at DESC
+        ");
+        $stmt->execute([$user_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error fetching cart items: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Get cart totals for user
+ */
+function getUserCartTotals($pdo, $user_id)
+{
+    try {
+        $stmt = $pdo->prepare("
+            SELECT 
+                SUM(ci.quantity * p.price) as subtotal,
+                SUM(ci.quantity) as total_items
+            FROM cart_items ci
+            JOIN products p ON ci.product_id = p.id
+            WHERE ci.user_id = ?
+        ");
+        $stmt->execute([$user_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $subtotal = $result['subtotal'] ?? 0;
+        $delivery_fee = $subtotal >= 10000 ? 0 : 500;
+        $tax = 0;
+        $total = $subtotal + $delivery_fee + $tax;
+
+        return [
+            'subtotal' => $subtotal,
+            'delivery_fee' => $delivery_fee,
+            'tax' => $tax,
+            'total' => $total,
+            'item_count' => $result['total_items'] ?? 0
+        ];
+    } catch (PDOException $e) {
+        error_log("Error calculating cart totals: " . $e->getMessage());
+        return [
+            'subtotal' => 0,
+            'delivery_fee' => 500,
+            'tax' => 0,
+            'total' => 500,
+            'item_count' => 0
+        ];
+    }
+}
+
+$user_id = $_SESSION['user_id'];
+
+// Get cart items from database
+$cart_items = getUserCartItems($pdo, $user_id);
+$cartTotals = getUserCartTotals($pdo, $user_id);
+
+// Extract values for backward compatibility
+$subtotal = $cartTotals['subtotal'];
+$delivery_fee = $cartTotals['delivery_fee'];
+$total = $cartTotals['total'];
+$cartCount = $cartTotals['item_count'];
 ?>
 
 <body class="font-dm bg-custom-gray min-h-screen blob-bg">
@@ -80,45 +156,49 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
                                     <i class="fas fa-shopping-bag mr-3 text-accent"></i>
                                     Cart Items
                                 </h2>
-                                 <button id="clear-cart-btn" class="text-orange-500 hover:text-orange-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-orange-50 transition-all duration-300 transform hover:scale-105">
-                                    <i class="fas fa-trash mr-2"></i>
-                                    Clear Cart
-                                </button>
+                                <?php if (!empty($cart_items)): ?>
+                                    <button id="clear-cart-btn" class="text-orange-500 hover:text-orange-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-orange-50 transition-all duration-300 transform hover:scale-105">
+                                        <i class="fas fa-trash mr-2"></i>
+                                        Clear Cart
+                                    </button>
+                                <?php endif; ?>
                             </div>
 
                             <!-- Cart Items List -->
                             <div id="cart-items" class="space-y-4">
-                                <?php foreach ($cart_items as $item): ?>
-                                    <div class="cart-item flex items-center space-x-4 p-4 bg-white/60 backdrop-blur-sm border border-white/30 rounded-xl shadow-soft hover:shadow-medium" data-item-id="<?php echo $item['product_id']; ?>" data-price="<?php echo $item['price']; ?>">
-                                        <div class="relative overflow-hidden rounded-xl">
-                                            <img src="../assets/uploads/<?php echo $item['image']; ?>" alt="<?php echo $item['name']; ?>" class="w-20 h-20 object-cover transition-transform duration-300 hover:scale-110">
-                                            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                                <?php if (!empty($cart_items)): ?>
+                                    <?php foreach ($cart_items as $item): ?>
+                                        <div class="cart-item flex items-center space-x-4 p-4 bg-white/60 backdrop-blur-sm border border-white/30 rounded-xl shadow-soft hover:shadow-medium" data-item-id="<?php echo $item['product_id']; ?>" data-price="<?php echo $item['price']; ?>">
+                                            <div class="relative overflow-hidden rounded-xl">
+                                                <img src="../assets/uploads/<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="w-20 h-20 object-cover transition-transform duration-300 hover:scale-110">
+                                                <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                                            </div>
+                                            <div class="flex-1">
+                                                <h3 class="font-semibold text-custom-dark text-lg"><?php echo htmlspecialchars($item['name']); ?></h3>
+                                                <p class="text-accent font-bold text-lg">₦<?php echo number_format($item['price']); ?></p>
+                                            </div>
+                                            <div class="flex items-center space-x-3">
+                                                <button class="quantity-btn decrease-btn w-10 h-10 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center hover:from-accent hover:to-orange-600 hover:text-white transition-all duration-300 shadow-soft" data-action="decrease">
+                                                    <i class="fas fa-minus text-sm"></i>
+                                                </button>
+                                                <span class="quantity-display font-bold text-custom-dark min-w-[3rem] text-center text-lg bg-white/80 px-3 py-1 rounded-lg shadow-soft"><?php echo $item['quantity']; ?></span>
+                                                <button class="quantity-btn increase-btn w-10 h-10 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center hover:from-accent hover:to-orange-600 hover:text-white transition-all duration-300 shadow-soft" data-action="increase">
+                                                    <i class="fas fa-plus text-sm"></i>
+                                                </button>
+                                            </div>
+                                            <div class="text-right">
+                                                <button class="remove-item-btn text-red-500 hover:text-red-700 text-sm mt-2 px-3 py-1 rounded-lg hover:bg-red-50 transition-all duration-300 transform hover:scale-105" data-item-id="<?php echo $item['product_id']; ?>">
+                                                    <i class="fas fa-times mr-1"></i>
+                                                    Remove
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div class="flex-1">
-                                            <h3 class="font-semibold text-custom-dark text-lg"><?php echo $item['name']; ?></h3>
-                                            <p class="text-accent font-bold text-lg">₦<?php echo number_format($item['price']); ?></p>
-                                        </div>
-                                        <div class="flex items-center space-x-3">
-                                            <button class="quantity-btn decrease-btn w-10 h-10 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center hover:from-accent hover:to-orange-600 hover:text-white transition-all duration-300 shadow-soft" data-action="decrease">
-                                                <i class="fas fa-minus text-sm"></i>
-                                            </button>
-                                            <span class="quantity-display font-bold text-custom-dark min-w-[3rem] text-center text-lg bg-white/80 px-3 py-1 rounded-lg shadow-soft"><?php echo $item['quantity']; ?></span>
-                                            <button class="quantity-btn increase-btn w-10 h-10 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center hover:from-accent hover:to-orange-600 hover:text-white transition-all duration-300 shadow-soft" data-action="increase">
-                                                <i class="fas fa-plus text-sm"></i>
-                                            </button>
-                                        </div>
-                                        <div class="text-right">
-                                            <button class="remove-item-btn text-red-500 hover:text-red-700 text-sm mt-2 px-3 py-1 rounded-lg hover:bg-red-50 transition-all duration-300 transform hover:scale-105" data-item-id="<?php echo $item['product_id']; ?>">
-                                                <i class="fas fa-times mr-1"></i>
-                                                Remove
-                                            </button>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </div>
 
                             <!-- Empty Cart State -->
-                            <div id="empty-cart" class="hidden text-center py-16">
+                            <div id="empty-cart" class="<?php echo empty($cart_items) ? '' : 'hidden'; ?> text-center py-16">
                                 <div class="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
                                     <i class="fas fa-shopping-cart text-gray-400 text-4xl"></i>
                                 </div>
@@ -143,7 +223,7 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
                             <div class="space-y-4 mb-6">
                                 <div class="flex justify-between items-center p-3 bg-white/50 rounded-lg">
                                     <span class="text-gray-700 font-medium">Subtotal</span>
-                                    <span id="subtotal" class="font-bold text-custom-dark text-lg">₦<?php echo number_format($subtotal); ?>.00</span>
+                                    <span id="subtotal" class="font-bold text-custom-dark text-lg">₦<?php echo number_format($subtotal); ?></span>
                                 </div>
                                 <div class="flex justify-between items-center p-3 bg-white/50 rounded-lg">
                                     <span class="text-gray-700 font-medium">Delivery Fee</span>
@@ -179,10 +259,17 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
                             </div>
 
                             <!-- Checkout Button -->
-                            <button id="checkout-btn" class="w-full btn-primary text-white py-4 rounded-xl font-semibold mb-4 flex items-center justify-center space-x-2 shadow-accent">
-                                <i class="fas fa-credit-card"></i>
-                                <span>Proceed to Checkout</span>
-                            </button>
+                            <?php if (!empty($cart_items)): ?>
+                                <button id="checkout-btn" class="w-full btn-primary text-white py-4 rounded-xl font-semibold mb-4 flex items-center justify-center space-x-2 shadow-accent">
+                                    <i class="fas fa-credit-card"></i>
+                                    <span>Proceed to Checkout</span>
+                                </button>
+                            <?php else: ?>
+                                <button disabled class="w-full bg-gray-300 text-gray-500 py-4 rounded-xl font-semibold mb-4 flex items-center justify-center space-x-2 cursor-not-allowed">
+                                    <i class="fas fa-shopping-cart"></i>
+                                    <span>Cart is Empty</span>
+                                </button>
+                            <?php endif; ?>
 
                             <a href="dashboard.php" class="block w-full text-center bg-white/80 text-custom-dark py-4 rounded-xl font-semibold hover:bg-white transition-all duration-300 transform hover:scale-105 shadow-soft backdrop-blur-sm">
                                 <i class="fas fa-arrow-left mr-2"></i>
@@ -200,7 +287,6 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
 
     <script src="../assets/js/toast.js"></script>
     <script>
-
         // Custom confirm modal functionality
         function showCustomConfirm(title, message, iconClass = 'fa-exclamation-triangle', iconColor = 'text-red-500') {
             return new Promise((resolve) => {
@@ -269,7 +355,6 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
 
         // Initialize cart page
         document.addEventListener('DOMContentLoaded', function() {
-            initializeSidebar();
             initializeCartActions();
             checkEmptyCart();
 
@@ -280,25 +365,6 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
                 el.classList.add('animate-slide-up');
             });
         });
-
-        // Sidebar functionality
-        function initializeSidebar() {
-            const menuToggle = document.getElementById('menu-toggle');
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-
-            if (!menuToggle || !sidebar || !overlay) return;
-
-            menuToggle.addEventListener('click', function() {
-                sidebar.classList.toggle('-translate-x-full');
-                overlay.classList.toggle('hidden');
-            });
-
-            overlay.addEventListener('click', function() {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('hidden');
-            });
-        }
 
         // Cart actions functionality
         function initializeCartActions() {
@@ -340,6 +406,7 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
                             }, 200);
 
                             updateTotals();
+                            updateCartCount(); // Update nav cart count
                             showToasted('Cart updated successfully', 'success');
                         } else {
                             showToasted(result.message || 'Failed to update cart', 'error');
@@ -390,6 +457,7 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
                             setTimeout(() => {
                                 cartItem.remove();
                                 updateTotals();
+                                updateCartCount(); // Update nav cart count
                                 checkEmptyCart();
                             }, 300);
                             showToasted('Item removed from cart', 'info');
@@ -408,54 +476,58 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
             });
 
             // Clear cart button with confirmation
-            document.getElementById('clear-cart-btn').addEventListener('click', async function() {
-                const itemCount = document.querySelectorAll('.cart-item').length;
-                const confirmed = await showCustomConfirm(
-                    'Clear Cart',
-                    `Are you sure you want to remove all ${itemCount} items from your cart? This action cannot be undone.`,
-                    'fa-trash-alt',
-                    'text-red-500'
-                );
+            const clearCartBtn = document.getElementById('clear-cart-btn');
+            if (clearCartBtn) {
+                clearCartBtn.addEventListener('click', async function() {
+                    const itemCount = document.querySelectorAll('.cart-item').length;
+                    const confirmed = await showCustomConfirm(
+                        'Clear Cart',
+                        `Are you sure you want to remove all ${itemCount} items from your cart? This action cannot be undone.`,
+                        'fa-trash-alt',
+                        'text-red-500'
+                    );
 
-                if (!confirmed) return;
+                    if (!confirmed) return;
 
-                const originalText = this.innerHTML;
-                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Clearing...';
-                this.disabled = true;
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Clearing...';
+                    this.disabled = true;
 
-                try {
-                    const res = await fetch('api/clear-cart.php', {
-                        method: 'POST'
-                    });
-                    const result = await res.json();
-
-                    if (result.success) {
-                        // Animate all items out
-                        const items = document.querySelectorAll('.cart-item');
-                        items.forEach((item, index) => {
-                            setTimeout(() => {
-                                item.style.transform = 'translateX(-100%)';
-                                item.style.opacity = '0';
-                                setTimeout(() => item.remove(), 300);
-                            }, index * 100);
+                    try {
+                        const res = await fetch('api/clear-cart.php', {
+                            method: 'POST'
                         });
+                        const result = await res.json();
 
-                        setTimeout(() => {
-                            updateTotals();
-                            checkEmptyCart();
-                        }, items.length * 100 + 300);
+                        if (result.success) {
+                            // Animate all items out
+                            const items = document.querySelectorAll('.cart-item');
+                            items.forEach((item, index) => {
+                                setTimeout(() => {
+                                    item.style.transform = 'translateX(-100%)';
+                                    item.style.opacity = '0';
+                                    setTimeout(() => item.remove(), 300);
+                                }, index * 100);
+                            });
 
-                        showToasted('Cart cleared successfully', 'info');
-                    } else {
-                        showToasted('Failed to clear cart', 'error');
+                            setTimeout(() => {
+                                updateTotals();
+                                updateCartCount(); // Update nav cart count
+                                checkEmptyCart();
+                            }, items.length * 100 + 300);
+
+                            showToasted('Cart cleared successfully', 'info');
+                        } else {
+                            showToasted('Failed to clear cart', 'error');
+                        }
+                    } catch (error) {
+                        showToasted('Network error occurred', 'error');
+                    } finally {
+                        this.innerHTML = originalText;
+                        this.disabled = false;
                     }
-                } catch (error) {
-                    showToasted('Network error occurred', 'error');
-                } finally {
-                    this.innerHTML = originalText;
-                    this.disabled = false;
-                }
-            });
+                });
+            }
 
             // Promo code with enhanced feedback
             document.getElementById('apply-promo-btn').addEventListener('click', function() {
@@ -498,35 +570,37 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
             });
 
             // Enhanced checkout button
-            document.getElementById('checkout-btn').addEventListener('click', function() {
-                const cartItems = document.querySelectorAll('.cart-item');
+            const checkoutBtn = document.getElementById('checkout-btn');
+            if (checkoutBtn) {
+                checkoutBtn.addEventListener('click', function() {
+                    const cartItems = document.querySelectorAll('.cart-item');
 
-                if (cartItems.length === 0) {
-                    showToasted('Your cart is empty', 'error');
-                    return;
-                }
+                    if (cartItems.length === 0) {
+                        showToasted('Your cart is empty', 'error');
+                        return;
+                    }
 
-                // Enhanced loading state
-                const originalContent = this.innerHTML;
-                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
-                this.disabled = true;
-                this.style.transform = 'scale(0.98)';
+                    // Enhanced loading state
+                    const originalContent = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+                    this.disabled = true;
+                    this.style.transform = 'scale(0.98)';
 
-                // Simulate checkout process
-                setTimeout(() => {
-
+                    // Simulate checkout process
                     setTimeout(() => {
-                        window.location.href = 'checkout.php';
-                    }, 1000);
+                        setTimeout(() => {
+                            window.location.href = 'checkout.php';
+                        }, 1000);
 
-                    // Reset button after delay
-                    setTimeout(() => {
-                        this.innerHTML = originalContent;
-                        this.disabled = false;
-                        this.style.transform = 'scale(1)';
+                        // Reset button after delay
+                        setTimeout(() => {
+                            this.innerHTML = originalContent;
+                            this.disabled = false;
+                            this.style.transform = 'scale(1)';
+                        }, 2000);
                     }, 2000);
-                }, 2000);
-            });
+                });
+            }
 
             // Back button functionality
             document.getElementById('backBtn').addEventListener('click', function() {
@@ -567,12 +641,6 @@ $cartCount = array_sum(array_column($cart_items, 'quantity'));
             subtotalEl.textContent = '₦' + subtotal.toLocaleString();
             deliveryEl.textContent = '₦' + deliveryFee.toLocaleString();
             totalEl.textContent = '₦' + total.toLocaleString();
-
-            // Update cart count
-            const cartCount = Array.from(cartItems).reduce((sum, item) => {
-                return sum + parseInt(item.querySelector('.quantity-display').textContent);
-            }, 0);
-            document.getElementById('cartCount').textContent = cartCount;
         }
 
         // Enhanced empty cart check
