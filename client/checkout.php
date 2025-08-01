@@ -301,6 +301,9 @@ require_once 'partials/headers.php';
         </div>
     </div>
 
+    <!-- Bottom navigation include -->
+    <?php include 'partials/bottom-nav.php'; ?>
+
     <script src="../assets/js/toast.js"></script>
     <script src="js/script.js"></script>
     <script>
@@ -507,10 +510,6 @@ require_once 'partials/headers.php';
                 selectedCircle.classList.add('border-accent');
             });
         });
-
-        // Initialize first option
-        document.querySelector('input[name="payment_method"]:checked').parentElement.querySelector('.radio-dot').style.opacity = '1';
-        document.querySelector('input[name="payment_method"]:checked').parentElement.classList.add('border-accent', 'bg-orange-50');
 
         function copyAccountNumber() {
             const accountNumber = document.getElementById('accountNumber').textContent.trim();
