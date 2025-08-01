@@ -649,10 +649,6 @@ input:checked + .slider:before {
   background-color: rgba(49, 130, 206, 0.1) !important;
 }
 
-.payment-option:checked + .payment-label {
-  border-color: #f97316 !important;
-  background-color: rgba(249, 115, 22, 0.1) !important;
-}
 .shadow-soft {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -695,5 +691,64 @@ input:checked + .slider:before {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* Enhanced payment method selection */
+.payment-label {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(0);
+}
+
+.payment-label:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.payment-label:active {
+    transform: translateY(0);
+}
+
+/* Active state with accent color shadow */
+.payment-label.border-accent {
+    box-shadow: 0 10px 25px -3px rgba(249, 115, 22, 0.2), 0 4px 6px -2px rgba(249, 115, 22, 0.1);
+}
+
+/* Radio button animations */
+.radio-dot {
+    transform: scale(0);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.radio-dot[style*="opacity: 1"] {
+    transform: scale(1);
+    animation: radioSelect 0.3s ease-out;
+}
+
+@keyframes radioSelect {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Pulse effect for active option */
+.payment-label.border-accent .radio-dot {
+    animation: radioPulse 2s infinite;
+}
+
+@keyframes radioPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
     }
 }
