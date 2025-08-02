@@ -1,11 +1,8 @@
 <?php
 require_once __DIR__ . '/../initialize.php';
 header('Content-Type: application/json');
-
-/**
- * Get user's total cart count from database
- */
-function getUserCartCount($pdo, $user_id) {
+function getUserCartCount($pdo, $user_id)
+{
     try {
         $stmt = $pdo->prepare("SELECT SUM(quantity) as total_items FROM cart_items WHERE user_id = ?");
         $stmt->execute([$user_id]);
@@ -23,17 +20,18 @@ try {
         echo json_encode(['success' => true, 'cart_count' => 0]);
         exit;
     }
-    
+
     $user_id = $_SESSION['user_id'];
     $cartCount = getUserCartCount($pdo, $user_id);
-    
+
     echo json_encode([
         'success' => true,
         'cart_count' => $cartCount
     ]);
-    
+} catch (PDOException $e) {
+    error_log('Get cart count database error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'cart_count' => 0, 'message' => 'Database error occurred']);
 } catch (Exception $e) {
     error_log('Get cart count error: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'cart_count' => 0]);
+    echo json_encode(['success' => false, 'cart_count' => 0, 'message' => 'An unexpected error occurred']);
 }
-?>

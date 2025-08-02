@@ -3,7 +3,8 @@ require_once 'util/util.php';
 require_once 'initialize.php';
 require_once '../helpers/monnify.php';
 
-$cart_items = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
+$cart_items = getUserCartItems($pdo, $user_id);
+$cartTotals = getUserCartTotals($pdo, $user_id);
 $cartCount = array_sum(array_column($cart_items, 'quantity'));
 
 if (empty($cart_items)) {
