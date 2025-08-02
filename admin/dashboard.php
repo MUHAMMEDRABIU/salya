@@ -106,6 +106,8 @@ $topProducts = getTopProducts($pdo, 3);
                                 $userIds = array_unique(array_column($recentOrders, 'user_id'));
                                 $userNames = [];
                                 if ($userIds) {
+                                    // Fix: Ensure array is numerically indexed
+                                    $userIds = array_values($userIds);
                                     $in  = str_repeat('?,', count($userIds) - 1) . '?';
                                     $userStmt = $pdo->prepare("SELECT id, first_name, last_name FROM users WHERE id IN ($in)");
                                     $userStmt->execute($userIds);
