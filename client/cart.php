@@ -337,11 +337,11 @@ $cartCount = $cartTotals['item_count'];
 
                             updateTotals();
                             updateCartCount(); // Update nav cart count
-                            showToasted('Cart updated successfully', 'success');
                         } else {
                             showToasted(result.message || 'Failed to update cart', 'error');
                         }
                     } catch (error) {
+                        console.log(error)
                         showToasted('Network error occurred', 'error');
                     } finally {
                         // Restore button
