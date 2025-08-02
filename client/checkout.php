@@ -3,22 +3,23 @@ require_once 'util/util.php';
 require_once 'initialize.php';
 require_once '../helpers/monnify.php';
 
+$user_id = $_SESSION['user_id'];
+
+// Get cart items from database
 $cart_items = getUserCartItems($pdo, $user_id);
 $cartTotals = getUserCartTotals($pdo, $user_id);
-$cartCount = array_sum(array_column($cart_items, 'quantity'));
+
+// Use database totals instead of manual calculation
+$subtotal = $cartTotals['subtotal'];
+$delivery_fee = $cartTotals['delivery_fee'];
+$tax = $cartTotals['tax'];
+$total = $cartTotals['total'];
+$cartCount = $cartTotals['item_count'];
 
 if (empty($cart_items)) {
     header('Location: cart.php');
     exit();
 }
-
-$subtotal = 0;
-foreach ($cart_items as $item) {
-    $subtotal += $item['price'] * $item['quantity'];
-}
-$delivery_fee = $subtotal >= 10000 ? 0 : 500;
-$tax = 0;
-$total = $subtotal + $delivery_fee + $tax;
 
 $account = getUserVirtualAccount($pdo, $_SESSION['user_id']);
 
@@ -157,9 +158,10 @@ require_once 'partials/headers.php';
                                     <h4 class="font-semibold text-yellow-800 mb-2">Important Instructions:</h4>
                                     <ul class="text-sm text-yellow-700 space-y-1">
                                         <li>• Transfer the exact amount: <strong>₦<?php echo number_format($total, 2); ?></strong></li>
-                                        <li>• This account number is unique to your order</li>
-                                        <li>• Payment will be confirmed automatically</li>
-                                        <li>• Account expires in 24 hours</li>
+                                        <li>• This account number is permanently yours for all orders</li>
+                                        <li>• Payment will be verified by our admin team</li>
+                                        <li>• Click "I Have Made Payment" after transferring</li>
+                                        <li>• Keep your transaction reference for verification</li>
                                     </ul>
                                 </div>
                             </div>
@@ -235,9 +237,6 @@ require_once 'partials/headers.php';
                                             <span class="font-semibold text-dark">₦<?= number_format($item['price'] * $item['quantity'], 2) ?></span>
                                         </div>
                                     </div>
-                                    <button class="remove-btn text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors" data-id="<?= $item['product_id'] ?>">
-                                        <i data-lucide="trash"></i>
-                                    </button>
                                 </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -451,7 +450,8 @@ require_once 'partials/headers.php';
         window.cartTotals = {
             subtotal: <?= $subtotal ?>,
             delivery_fee: <?= $delivery_fee ?>,
-            total: <?= $total ?>
+            total: <?= $total ?>,
+            cartCount: <?= $cartCount ?>
         };
         window.checkoutData = {
             customerName: '<?= htmlspecialchars($customerName) ?>',
@@ -460,7 +460,8 @@ require_once 'partials/headers.php';
             bankName: '<?= htmlspecialchars($bankName) ?>',
             accountName: '<?= htmlspecialchars($accountName) ?>',
             total: <?= $total ?>,
-            cartItems: <?= json_encode($cart_items) ?>
+            cartItems: <?= json_encode($cart_items) ?>,
+            isPermanentAccount: true
         };
 
         // Payment method selection logic (Fixed)

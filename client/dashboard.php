@@ -3,6 +3,20 @@ require_once 'util/util.php';
 require_once 'initialize.php';
 require_once 'partials/headers.php';
 
+// Get cart count for logged in users
+$cartCount = 0;
+if (isset($_SESSION['user_id'])) {
+    try {
+        $stmt = $pdo->prepare("SELECT SUM(quantity) as total_items FROM cart_items WHERE user_id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $cartCount = (int)($result['total_items'] ?? 0);
+    } catch (Exception $e) {
+        error_log("Error getting cart count in dashboard: " . $e->getMessage());
+        $cartCount = 0;
+    }
+}
+
 // Get all products for the dashboard
 $products = getAllProducts($pdo);
 $categories = getProductCategories($pdo);
@@ -18,45 +32,24 @@ $categories = getProductCategories($pdo);
                     <h2 class="text-2xl font-bold mb-2">Welcome <?= $user['first_name']; ?>!</h2>
                     <p class="text-orange-100 text-sm">Discover fresh frozen foods for your family</p>
                 </div>
-                <div class="relative">
-                    <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl border border-white/30 flex items-center justify-center">
-                        <!-- <i class="fas fa-snowflake text-white text-xl"></i> -->
-                        <div class="w-10 h-10 flex items-center justify-center">
-                            <!-- Cart Icon SVG -->
-                            <a href="cart.php">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <!-- Cart body -->
-                                    <path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.7 15.3C4.3 15.7 4.6 16.5 5.1 16.5H17M17 13V16.5"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round" />
 
-                                    <!-- Cart wheels -->
-                                    <circle cx="9" cy="20" r="1"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round" />
-
-                                    <circle cx="20" cy="20" r="1"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round" />
-
-                                    <!-- Premium accent line (optional highlight) -->
-                                    <path d="M8 9H19"
-                                        stroke="currentColor"
-                                        stroke-width="1.5"
-                                        stroke-linecap="round"
-                                        opacity="0.6" />
-                                </svg>
-                            </a>
+                <!-- Updated Cart Icon with Count -->
+                <a href="cart.php" class="transform hover:scale-105 transition-all duration-300">
+                    <div class="relative">
+                        <div id="cart-icon" class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl border border-white/30 flex items-center justify-center hover:bg-white/30 transition-all duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
+                                <circle cx="8" cy="21" r="1" />
+                                <circle cx="19" cy="21" r="1" />
+                                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+                            </svg>
                         </div>
-
+                        <!-- Cart Count Badge -->
+                        <div class="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-lg animate-bounce-gentle"
+                            style="<?php echo $cartCount > 0 ? 'display: flex;' : 'display: none;'; ?>">
+                            <span id="cartCount" class="cart-badge text-white text-xs font-bold"><?php echo $cartCount; ?></span>
+                        </div>
                     </div>
-                </div>
+                </a>
             </div>
             <div class="flex items-center space-x-4 text-orange-100 text-sm">
                 <div class="flex items-center">
@@ -70,34 +63,46 @@ $categories = getProductCategories($pdo);
             </div>
         </div>
 
-        <!-- Search Bar -->
+        <!-- Updated Search Bar with Register/Login styling -->
         <div class="search-container animate-slide-up" style="animation-delay: 0.1s;">
             <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg>
+                </div>
                 <input
                     type="text"
                     id="search-input"
                     placeholder="Search for chicken, fish, turkey..."
-                    class="w-full pl-14 pr-4 py-4 rounded-2xl border-0 bg-white shadow-lg focus:ring-2 focus:ring-accent focus:outline-none text-base transition-all duration-300 hover:shadow-xl">
-                <div class="absolute left-4 top-1/2 transform -translate-y-1/2">
-                    <i class="fas fa-search text-gray-400 text-lg"></i>
-                </div>
-                <button class="absolute right-3 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-accent rounded-xl flex items-center justify-center text-white hover:bg-orange-600 transition-colors">
-                    <i class="fas fa-sliders-h text-sm"></i>
+                    class="w-full pl-12 pr-16 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all duration-200 hover:bg-white">
+                <button class="absolute right-3 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center text-white hover:bg-orange-600 transition-all duration-300 hover:scale-105">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" x2="21" y1="6" y2="6" />
+                        <line x1="9" x2="21" y1="12" y2="12" />
+                        <line x1="9" x2="21" y1="18" y2="18" />
+                        <circle cx="5" cy="12" r="1" />
+                        <circle cx="5" cy="6" r="1" />
+                        <circle cx="5" cy="18" r="1" />
+                    </svg>
                 </button>
             </div>
         </div>
 
-        <!-- Category Tabs -->
-        <div class="overflow-x-auto hide-scrollbar animate-slide-up" style="animation-delay: 0.2s;">
-            <div class="flex space-x-3 pb-2">
-                <button class="tab-button active px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-accent text-white shadow-lg hover:shadow-xl transform hover:scale-105" data-category="all">
-                    All
-                </button>
-                <?php foreach ($categories as $category): ?>
-                    <button class="tab-button px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-gray-50 transform hover:scale-105" data-category="<?php echo strtolower($category); ?>">
-                        <?php echo ucfirst($category); ?>
+        <!-- Responsive Category Tabs (like notifications.php) -->
+        <div class="animate-slide-up" style="animation-delay: 0.2s;">
+            <div class="overflow-x-auto hide-scrollbar">
+                <div class="flex space-x-3 pb-2 min-w-max">
+                    <button class="tab-button active px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-orange-500 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300" data-category="all">
+                        All Products
                     </button>
-                <?php endforeach; ?>
+                    <?php foreach ($categories as $category): ?>
+                        <button class="tab-button px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-gray-50 transform hover:scale-105 transition-all duration-300" data-category="<?php echo strtolower($category); ?>">
+                            <?php echo ucfirst($category); ?>
+                        </button>
+                    <?php endforeach; ?>
+                </div>
             </div>
         </div>
 
@@ -108,9 +113,9 @@ $categories = getProductCategories($pdo);
                     <h3 class="text-xl font-bold text-dark">Popular Items</h3>
                     <p class="text-gray-500 text-sm">Fresh and quality guaranteed</p>
                 </div>
-                <button class="text-accent text-sm font-semibold bg-orange-50 px-4 py-2 rounded-xl hover:bg-orange-100 transition-colors">
+                <a href="products.php" class="text-orange-500 text-sm font-semibold bg-orange-50 px-4 py-2 rounded-xl hover:bg-orange-100 transition-all duration-300 hover:scale-105 transform">
                     See all
-                </button>
+                </a>
             </div>
 
             <!-- Product Grid -->
@@ -128,15 +133,19 @@ $categories = getProductCategories($pdo);
                     </div>
                 <?php else: ?>
                     <?php foreach ($products as $product): ?>
-                        <div class="product-card bg-white rounded-3xl shadow-lg overflow-hidden animate-scale-in" data-category="<?php echo strtolower($product['category']); ?>" data-name="<?php echo strtolower($product['name']); ?>" style="animation-delay: <?php echo rand(1, 6) * 0.1; ?>s;">
+                        <div class="product-card bg-white rounded-3xl shadow-lg overflow-hidden animate-scale-in hover:shadow-xl transition-all duration-300 cursor-pointer"
+                            data-category="<?php echo strtolower($product['category']); ?>"
+                            data-name="<?php echo strtolower($product['name']); ?>"
+                            onclick="viewProduct(<?php echo $product['id']; ?>)"
+                            style="animation-delay: <?php echo rand(1, 6) * 0.1; ?>s;">
                             <div class="relative">
                                 <img src="../assets/uploads/<?php echo $product['image']; ?>" alt="<?php echo $product['name']; ?>" class="w-full h-36 object-cover">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                                <button class="favorite-btn absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg flex items-center justify-center hover:bg-white hover:scale-110 transition-all duration-300">
+                                <button class="favorite-btn absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg flex items-center justify-center hover:bg-white hover:scale-110 transition-all duration-300" onclick="event.stopPropagation();">
                                     <i class="far fa-heart text-gray-600 text-sm"></i>
                                 </button>
                                 <div class="absolute bottom-3 left-3">
-                                    <span class="bg-accent text-white text-xs font-semibold px-2 py-1 rounded-lg">
+                                    <span class="bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded-lg">
                                         Fresh
                                     </span>
                                 </div>
@@ -145,10 +154,15 @@ $categories = getProductCategories($pdo);
                                 <h4 class="font-bold text-dark text-sm mb-1 line-clamp-1"><?php echo $product['name']; ?></h4>
                                 <p class="text-gray-500 text-xs mb-3 line-clamp-2"><?php echo $product['description']; ?></p>
                                 <div class="flex items-center justify-between">
-                                    <span class="text-lg font-bold text-accent">₦<?php echo number_format($product['price']); ?></span>
-                                    <a href="product.php?id=<?php echo $product['id']; ?>" class="bg-dark text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-gray-800 transition-all duration-300 hover:scale-105 active:scale-95">
-                                        View
-                                    </a>
+                                    <span class="text-lg font-bold text-orange-500">₦<?php echo number_format($product['price']); ?></span>
+                                    <!-- Updated Cart Icon Button -->
+                                    <button onclick="handleAddToCart(<?php echo $product['id']; ?>); event.stopPropagation();" class="add-to-cart-btn bg-gray-900 text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-gray-800 transition-all duration-300 hover:scale-110 active:scale-95 shadow-md" data-product-id="<?php echo $product['id']; ?>">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="8" cy="21" r="1" />
+                                            <circle cx="19" cy="21" r="1" />
+                                            <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -161,42 +175,169 @@ $categories = getProductCategories($pdo);
     <!-- Bottom navigation include -->
     <?php include 'partials/bottom-nav.php'; ?>
 
+    <script src="js/script.js"></script>
     <script src="js/dashboard.js"></script>
     <script>
-        // Premium mobile interactions with enhanced animations
-        document.addEventListener('DOMContentLoaded', function() {
-            // Enhanced tab functionality with smooth transitions
-            const tabButtons = document.querySelectorAll('.tab-button');
+        // Function to navigate to product details
+        function viewProduct(productId) {
+            window.location.href = `product.php?id=${productId}`;
+        }
 
+        // Enhanced dashboard functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize cart count on page load
+            updateCartCount();
+
+            // Get DOM elements once
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const productCards = document.querySelectorAll('.product-card');
+            const searchInput = document.getElementById('search-input');
+            const favoriteButtons = document.querySelectorAll('.favorite-btn');
+            const categoryContainer = document.querySelector('.overflow-x-auto');
+
+            // Enhanced add to cart function with immediate feedback
+            window.handleAddToCart = async function(productId) {
+                const button = document.querySelector(`[data-product-id="${productId}"]`);
+                const originalContent = button.innerHTML;
+
+                // Add loading state
+                button.innerHTML = '<svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>';
+                button.disabled = true;
+                button.style.transform = 'scale(0.95)';
+
+                try {
+                    const success = await addToCart(productId, 1);
+
+                    if (success) {
+                        // Success animation
+                        button.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+                        button.style.backgroundColor = '#22c55e';
+                        button.style.transform = 'scale(1.1)';
+
+                        // Update cart count with animation
+                        const cartBadge = document.getElementById('cartCount');
+                        if (cartBadge) {
+                            cartBadge.parentElement.classList.add('animate-bounce-gentle');
+                        }
+
+                        setTimeout(() => {
+                            button.innerHTML = originalContent;
+                            button.style.backgroundColor = '';
+                            button.style.transform = 'scale(1)';
+                            button.disabled = false;
+
+                            if (cartBadge) {
+                                cartBadge.parentElement.classList.remove('animate-bounce-gentle');
+                            }
+                        }, 1000);
+                    } else {
+                        // Error state
+                        button.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
+                        button.style.backgroundColor = '#ef4444';
+
+                        setTimeout(() => {
+                            button.innerHTML = originalContent;
+                            button.style.backgroundColor = '';
+                            button.style.transform = 'scale(1)';
+                            button.disabled = false;
+                        }, 1000);
+                    }
+                } catch (error) {
+                    console.error('Add to cart error:', error);
+                    button.innerHTML = originalContent;
+                    button.style.transform = 'scale(1)';
+                    button.disabled = false;
+                }
+            };
+
+            // Enhanced tab functionality with smooth transitions
             tabButtons.forEach(button => {
                 button.addEventListener('click', function() {
-                    // Remove active class from all buttons with animation
+                    const category = this.getAttribute('data-category');
+
+                    // Remove active class from all buttons
                     tabButtons.forEach(btn => {
-                        btn.classList.remove('active', 'bg-accent', 'text-white');
+                        btn.classList.remove('active', 'bg-orange-500', 'text-white');
                         btn.classList.add('bg-white', 'text-gray-600');
-                        btn.style.transform = 'scale(1)';
                     });
 
-                    // Add active class to clicked button with bounce animation
-                    this.classList.add('active', 'bg-accent', 'text-white');
+                    // Add active class to clicked button
+                    this.classList.add('active', 'bg-orange-500', 'text-white');
                     this.classList.remove('bg-white', 'text-gray-600');
-                    this.style.transform = 'scale(1.05)';
 
-                    // Add bounce animation
-                    this.classList.add('animate-bounce-gentle');
+                    // Smooth scroll active tab into view
+                    this.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest',
+                        inline: 'center'
+                    });
+
+                    // Filter products with stagger animation
+                    productCards.forEach((card, index) => {
+                        const cardCategory = card.getAttribute('data-category');
+
+                        if (category === 'all' || cardCategory === category) {
+                            card.style.display = 'block';
+                            card.style.opacity = '0';
+                            card.style.transform = 'translateY(20px)';
+
+                            setTimeout(() => {
+                                card.style.opacity = '1';
+                                card.style.transform = 'translateY(0)';
+                                card.style.transition = 'all 0.3s ease';
+                            }, index * 50);
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+
+                    // Add bounce animation to button
+                    this.style.transform = 'scale(1.05)';
                     setTimeout(() => {
-                        this.classList.remove('animate-bounce-gentle'); 
                         this.style.transform = 'scale(1)';
-                    }, 600);
+                    }, 150);
                 });
             });
 
-            // Enhanced favorite button functionality
-            const favoriteButtons = document.querySelectorAll('.favorite-btn');
+            // Enhanced search functionality
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
 
+                    productCards.forEach(card => {
+                        const productName = card.getAttribute('data-name');
+                        const isVisible = productName.includes(searchTerm);
+
+                        if (isVisible) {
+                            card.style.display = 'block';
+                            card.classList.add('animate-fade-in');
+                        } else {
+                            card.style.display = 'none';
+                            card.classList.remove('animate-fade-in');
+                        }
+                    });
+                });
+
+                // Enhanced search bar focus effects
+                searchInput.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'scale(1.02)';
+                    this.style.backgroundColor = '#ffffff';
+                });
+
+                searchInput.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'scale(1)';
+                    if (!this.value) {
+                        this.style.backgroundColor = '#f9fafb';
+                    }
+                });
+            }
+
+            // Enhanced favorite button functionality
             favoriteButtons.forEach(button => {
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
+
                     const icon = this.querySelector('i');
 
                     // Add scale animation
@@ -207,10 +348,10 @@ $categories = getProductCategories($pdo);
                         icon.classList.add('fas', 'text-red-500');
 
                         // Add heart beat animation
-                        icon.style.animation = 'bounce-gentle 0.6s ease-in-out';
+                        icon.style.animation = 'heartbeat 0.6s ease-in-out';
                     } else {
                         icon.classList.remove('fas', 'text-red-500');
-                        icon.classList.add('far');
+                        icon.classList.add('far', 'text-gray-600');
                         icon.style.animation = '';
                     }
 
@@ -221,87 +362,92 @@ $categories = getProductCategories($pdo);
                 });
             });
 
-            // Enhanced bottom navigation with premium interactions
-            const navItems = document.querySelectorAll('.nav-item');
-
-            navItems.forEach(item => {
-                item.addEventListener('click', function(e) {
-                    // Don't prevent default to allow navigation
-
-                    // Remove active class from all nav items
-                    navItems.forEach(nav => {
-                        nav.classList.remove('nav-item-active');
-                    });
-
-                    // Add active class to clicked item
-                    this.classList.add('nav-item-active');
-
-                    // Add ripple effect
-                    const ripple = document.createElement('div');
-                    ripple.style.position = 'absolute';
-                    ripple.style.borderRadius = '50%';
-                    ripple.style.background = 'rgba(249, 115, 22, 0.3)';
-                    ripple.style.transform = 'scale(0)';
-                    ripple.style.animation = 'ripple 0.6s linear';
-                    ripple.style.left = '50%';
-                    ripple.style.top = '50%';
-                    ripple.style.width = '60px';
-                    ripple.style.height = '60px';
-                    ripple.style.marginLeft = '-30px';
-                    ripple.style.marginTop = '-30px';
-
-                    this.appendChild(ripple);
-
-                    setTimeout(() => {
-                        ripple.remove();
-                    }, 600);
+            // Enhanced product card interactions
+            productCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-8px) scale(1.02)';
                 });
 
-                // Add hover effects for desktop
-                item.addEventListener('mouseenter', function() {
-                    if (!this.classList.contains('nav-item-active')) {
-                        const icon = this.querySelector('.nav-icon');
-                        icon.style.transform = 'translateY(-2px) scale(1.05)';
-                    }
-                });
-
-                item.addEventListener('mouseleave', function() {
-                    if (!this.classList.contains('nav-item-active')) {
-                        const icon = this.querySelector('.nav-icon');
-                        icon.style.transform = 'translateY(0) scale(1)';
-                    }
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
                 });
             });
 
-            // Enhanced search functionality with animations
-            const searchInput = document.getElementById('search-input');
+            // Responsive scroll behavior for category tabs
+            if (categoryContainer) {
+                let isScrolling = false;
 
-            searchInput.addEventListener('focus', function() {
-                this.parentElement.parentElement.style.transform = 'scale(1.02)';
-            });
-
-            searchInput.addEventListener('blur', function() {
-                this.parentElement.parentElement.style.transform = 'scale(1)';
-            });
-
-            // Stagger animation for product cards
-            const productCards = document.querySelectorAll('.product-card');
-            productCards.forEach((card, index) => {
-                card.style.animationDelay = `${index * 0.1}s`;
-            });
-
-            // Add CSS for ripple animation
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes ripple {
-                    to {
-                        transform: scale(2);
-                        opacity: 0;
+                categoryContainer.addEventListener('scroll', () => {
+                    if (!isScrolling) {
+                        isScrolling = true;
+                        requestAnimationFrame(() => {
+                            // Add any scroll-based animations here
+                            isScrolling = false;
+                        });
                     }
-                }
-            `;
-            document.head.appendChild(style);
+                });
+            }
         });
+
+        // CSS animations for enhanced interactions
+        const style = document.createElement('style');
+        style.textContent = `
+            .hide-scrollbar {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .hide-scrollbar::-webkit-scrollbar {
+                display: none;
+            }
+            
+            @keyframes heartbeat {
+                0%, 100% { transform: scale(1); }
+                25% { transform: scale(1.1); }
+                50% { transform: scale(1.2); }
+                75% { transform: scale(1.1); }
+            }
+            
+            .animate-bounce-gentle {
+                animation: bounce-gentle 0.6s ease-in-out;
+            }
+            
+            @keyframes bounce-gentle {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+            }
+            
+            .product-card {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            .tab-button {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            .line-clamp-1 {
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-line-clamp: 1;
+                -webkit-box-orient: vertical;
+            }
+            
+            .line-clamp-2 {
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+            }
+            
+            .animate-fade-in {
+                animation: fadeIn 0.4s ease-out;
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 
