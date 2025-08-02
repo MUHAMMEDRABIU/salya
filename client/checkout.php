@@ -3,27 +3,34 @@ require_once 'util/util.php';
 require_once 'initialize.php';
 require_once '../helpers/monnify.php';
 
-$cart_items = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
-$cartCount = array_sum(array_column($cart_items, 'quantity'));
+$user_id = $_SESSION['user_id'];
+
+// Get cart items from database
+$cart_items = getUserCartItems($pdo, $user_id);
+$cartTotals = getUserCartTotals($pdo, $user_id);
+
+// Use database totals instead of manual calculation
+$subtotal = $cartTotals['subtotal'];
+$delivery_fee = $cartTotals['delivery_fee'];
+$tax = $cartTotals['tax'];
+$total = $cartTotals['total'];
+$cartCount = $cartTotals['item_count'];
 
 if (empty($cart_items)) {
     header('Location: cart.php');
     exit();
 }
 
-$subtotal = 0;
-foreach ($cart_items as $item) {
-    $subtotal += $item['price'] * $item['quantity'];
-}
-$delivery_fee = $subtotal >= 10000 ? 0 : 500;
-$tax = 0;
-$total = $subtotal + $delivery_fee + $tax;
-
 $account = getUserVirtualAccount($pdo, $_SESSION['user_id']);
 
 $accountNumber = $account['account_number'] ?? 'Unavailable';
 $accountName = $account['full_customer_name'] ?? $account['account_name'] ?? 'Unavailable';
 $bankName = $account['bank_name'] ?? 'Unavailable';
+$customerName = $user['first_name'] . ' ' . $user['last_name'];
+$customerEmail = $user['email'];
+
+// format account number
+$accountNumber = formatAccountNumber($accountNumber);
 
 require_once 'partials/headers.php';
 ?>
@@ -59,7 +66,7 @@ require_once 'partials/headers.php';
                         <!-- Bank Transfer -->
                         <div>
                             <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" class="payment-option hidden" checked>
-                            <label for="bank_transfer" class="payment-label flex items-center p-4 border-2 border-gray-50 rounded-xl hover:border-accent cursor-pointer transition-all duration-200">
+                            <label for="bank_transfer" class="payment-label flex items-center p-4 border-2 border-transparent rounded-xl hover:border-accent cursor-pointer transition-all duration-300 hover:shadow-lg">
                                 <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mr-4">
                                     <i class="fas fa-university text-blue-600 text-xl"></i>
                                 </div>
@@ -67,8 +74,8 @@ require_once 'partials/headers.php';
                                     <h3 class="font-semibold text-dark">Bank Transfer</h3>
                                     <p class="text-sm text-gray-600">Transfer to our virtual account number</p>
                                 </div>
-                                <div class="w-5 h-5 border-2 border-gray-300 rounded-full flex items-center justify-center">
-                                    <div class="w-2 h-2 bg-accent rounded-full opacity-0 radio-dot transition-opacity duration-200"></div>
+                                <div class="w-5 h-5 border-2 border-gray-300 rounded-full flex items-center justify-center transition-all duration-300">
+                                    <div class="w-2 h-2 bg-accent rounded-full opacity-0 radio-dot transition-opacity duration-300"></div>
                                 </div>
                             </label>
                         </div>
@@ -76,7 +83,7 @@ require_once 'partials/headers.php';
                         <!-- Card Payment -->
                         <div>
                             <input type="radio" id="card_payment" name="payment_method" value="card_payment" class="payment-option hidden">
-                            <label for="card_payment" class="payment-label flex items-center p-4 border-2 border-gray-50 rounded-xl hover:border-accent cursor-pointer transition-all duration-200">
+                            <label for="card_payment" class="payment-label flex items-center p-4 border-2 border-transparent rounded-xl hover:border-accent cursor-pointer transition-all duration-300 hover:shadow-lg">
                                 <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mr-4">
                                     <i class="fas fa-credit-card text-green-600 text-xl"></i>
                                 </div>
@@ -84,8 +91,8 @@ require_once 'partials/headers.php';
                                     <h3 class="font-semibold text-dark">Card Payment</h3>
                                     <p class="text-sm text-gray-600">Pay with Visa, Mastercard, or Verve</p>
                                 </div>
-                                <div class="w-5 h-5 border-2 border-gray-300 rounded-full flex items-center justify-center">
-                                    <div class="w-2 h-2 bg-accent rounded-full opacity-0 radio-dot transition-opacity duration-200"></div>
+                                <div class="w-5 h-5 border-2 border-gray-300 rounded-full flex items-center justify-center transition-all duration-300">
+                                    <div class="w-2 h-2 bg-accent rounded-full opacity-0 radio-dot transition-opacity duration-300"></div>
                                 </div>
                             </label>
                         </div>
@@ -93,7 +100,7 @@ require_once 'partials/headers.php';
                         <!-- Mobile Money -->
                         <div>
                             <input type="radio" id="mobile_money" name="payment_method" value="mobile_money" class="payment-option hidden">
-                            <label for="mobile_money" class="payment-label flex items-center p-4 border-2 border-gray-50 rounded-xl hover:border-accent cursor-pointer transition-all duration-200">
+                            <label for="mobile_money" class="payment-label flex items-center p-4 border-2 border-transparent rounded-xl hover:border-accent cursor-pointer transition-all duration-300 hover:shadow-lg">
                                 <div class="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mr-4">
                                     <i class="fas fa-mobile-alt text-purple-600 text-xl"></i>
                                 </div>
@@ -101,8 +108,8 @@ require_once 'partials/headers.php';
                                     <h3 class="font-semibold text-dark">Mobile Money</h3>
                                     <p class="text-sm text-gray-600">Pay with Opay, PalmPay, Kuda, etc.</p>
                                 </div>
-                                <div class="w-5 h-5 border-2 border-gray-300 rounded-full flex items-center justify-center">
-                                    <div class="w-2 h-2 bg-accent rounded-full opacity-0 radio-dot transition-opacity duration-200"></div>
+                                <div class="w-5 h-5 border-2 border-gray-300 rounded-full flex items-center justify-center transition-all duration-300">
+                                    <div class="w-2 h-2 bg-accent rounded-full opacity-0 radio-dot transition-opacity duration-300"></div>
                                 </div>
                             </label>
                         </div>
@@ -151,9 +158,10 @@ require_once 'partials/headers.php';
                                     <h4 class="font-semibold text-yellow-800 mb-2">Important Instructions:</h4>
                                     <ul class="text-sm text-yellow-700 space-y-1">
                                         <li>• Transfer the exact amount: <strong>₦<?php echo number_format($total, 2); ?></strong></li>
-                                        <li>• This account number is unique to your order</li>
-                                        <li>• Payment will be confirmed automatically</li>
-                                        <li>• Account expires in 24 hours</li>
+                                        <li>• This account number is permanently yours for all orders</li>
+                                        <li>• Payment will be verified by our admin team</li>
+                                        <li>• Click "I Have Made Payment" after transferring</li>
+                                        <li>• Keep your transaction reference for verification</li>
                                     </ul>
                                 </div>
                             </div>
@@ -229,9 +237,6 @@ require_once 'partials/headers.php';
                                             <span class="font-semibold text-dark">₦<?= number_format($item['price'] * $item['quantity'], 2) ?></span>
                                         </div>
                                     </div>
-                                    <button class="remove-btn text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors" data-id="<?= $item['product_id'] ?>">
-                                        <i data-lucide="trash"></i>
-                                    </button>
                                 </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -295,6 +300,9 @@ require_once 'partials/headers.php';
             </div>
         </div>
     </div>
+
+    <!-- Bottom navigation include -->
+    <?php include 'partials/bottom-nav.php'; ?>
 
     <script src="../assets/js/toast.js"></script>
     <script src="js/script.js"></script>
@@ -394,11 +402,44 @@ require_once 'partials/headers.php';
             }
         }
 
-        // Add event listener for city change
+
+        // Initialize first option on page load
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('deliveryCity').addEventListener('change', updateAreas);
             lucide.createIcons();
+
+            // Remove any existing default styling
+            document.querySelectorAll('.payment-label').forEach(label => {
+                label.classList.remove('border-accent', 'bg-orange-50', 'shadow-lg', 'shadow-orange-200/50');
+                label.classList.add('border-transparent');
+            });
+
+            document.querySelectorAll('.radio-dot').forEach(dot => {
+                dot.style.opacity = '0';
+            });
+
+            document.querySelectorAll('.payment-label .rounded-full').forEach(circle => {
+                circle.classList.remove('border-accent');
+                circle.classList.add('border-gray-300');
+            });
+
+            // Apply active styles only to the checked option
+            const firstOption = document.querySelector('input[name="payment_method"]:checked');
+            if (firstOption) {
+                const firstLabel = firstOption.parentElement.querySelector('.payment-label');
+                const firstDot = firstOption.parentElement.querySelector('.radio-dot');
+                const firstCircle = firstOption.parentElement.querySelector('.rounded-full');
+
+                // Apply initial active styles
+                firstLabel.classList.remove('border-transparent');
+                firstLabel.classList.add('border-accent', 'bg-orange-50', 'shadow-lg', 'shadow-orange-200/50');
+                firstDot.style.opacity = '1';
+                firstCircle.classList.remove('border-gray-300');
+                firstCircle.classList.add('border-accent');
+            }
         });
+
+
 
         function showToast(message, type = 'success') {
             showToasted(message, type);
@@ -409,20 +450,21 @@ require_once 'partials/headers.php';
         window.cartTotals = {
             subtotal: <?= $subtotal ?>,
             delivery_fee: <?= $delivery_fee ?>,
-            total: <?= $total ?>
+            total: <?= $total ?>,
+            cartCount: <?= $cartCount ?>
         };
         window.checkoutData = {
-            orderRef: '<?= $orderRef ?>',
             customerName: '<?= htmlspecialchars($customerName) ?>',
             customerEmail: '<?= htmlspecialchars($customerEmail) ?>',
             accountNumber: '<?= htmlspecialchars($accountNumber) ?>',
             bankName: '<?= htmlspecialchars($bankName) ?>',
             accountName: '<?= htmlspecialchars($accountName) ?>',
             total: <?= $total ?>,
-            cartItems: <?= json_encode($cart_items) ?>
+            cartItems: <?= json_encode($cart_items) ?>,
+            isPermanentAccount: true
         };
 
-        // Payment method selection logic
+        // Payment method selection logic (Fixed)
         document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 // Hide all payment details
@@ -434,26 +476,42 @@ require_once 'partials/headers.php';
                 const selectedMethod = this.value;
                 document.getElementById(selectedMethod + 'Details').classList.remove('hidden');
 
-                // Update radio button styling
+                // Reset all labels to inactive state
+                document.querySelectorAll('.payment-label').forEach(label => {
+                    // Remove active styles
+                    label.classList.remove('border-accent', 'bg-orange-50', 'shadow-lg', 'shadow-orange-200/50');
+                    // Set to transparent border (inactive state)
+                    label.classList.add('border-transparent');
+                });
+
+                // Reset all radio dots
                 document.querySelectorAll('.radio-dot').forEach(dot => {
                     dot.style.opacity = '0';
                 });
-                this.parentElement.querySelector('.radio-dot').style.opacity = '1';
 
-                // Update payment label styling
-                document.querySelectorAll('.payment-label').forEach(label => {
-                    label.classList.remove('border-accent', 'bg-orange-50');
-                    label.classList.add('border-gray-50');
+                // Reset all radio button borders
+                document.querySelectorAll('.payment-label .rounded-full').forEach(circle => {
+                    circle.classList.remove('border-accent');
+                    circle.classList.add('border-gray-300');
                 });
-                this.parentElement.classList.add('border-accent', 'bg-orange-50');
-                this.parentElement.classList.remove('border-gray-50');
 
+                // Apply active styles to selected option
+                const selectedLabel = this.parentElement.querySelector('.payment-label');
+                const selectedDot = this.parentElement.querySelector('.radio-dot');
+                const selectedCircle = this.parentElement.querySelector('.rounded-full');
+
+                // Active state styles
+                selectedLabel.classList.remove('border-transparent');
+                selectedLabel.classList.add('border-accent', 'bg-orange-50', 'shadow-lg', 'shadow-orange-200/50');
+
+                // Show radio dot
+                selectedDot.style.opacity = '1';
+
+                // Update radio button border
+                selectedCircle.classList.remove('border-gray-300');
+                selectedCircle.classList.add('border-accent');
             });
         });
-
-        // Initialize first option
-        document.querySelector('input[name="payment_method"]:checked').parentElement.querySelector('.radio-dot').style.opacity = '1';
-        document.querySelector('input[name="payment_method"]:checked').parentElement.classList.add('border-accent', 'bg-orange-50');
 
         function copyAccountNumber() {
             const accountNumber = document.getElementById('accountNumber').textContent.trim();

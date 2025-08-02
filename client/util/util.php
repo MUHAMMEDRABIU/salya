@@ -19,6 +19,76 @@ function getUserProfile($pdo, $user_id)
 }
 
 /**
+ * Get user's cart items with product details from database
+ */
+function getUserCartItems($pdo, $user_id)
+{
+    try {
+        $stmt = $pdo->prepare("
+            SELECT 
+                ci.id as cart_id,
+                ci.quantity,
+                ci.created_at,
+                p.id as product_id,
+                p.name,
+                p.price,
+                p.image,
+                p.stock_quantity
+            FROM cart_items ci
+            JOIN products p ON ci.product_id = p.id
+            WHERE ci.user_id = ?
+            ORDER BY ci.created_at DESC
+        ");
+        $stmt->execute([$user_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error fetching cart items: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Get cart totals for user
+ */
+function getUserCartTotals($pdo, $user_id)
+{
+    try {
+        $stmt = $pdo->prepare("
+            SELECT 
+                SUM(ci.quantity * p.price) as subtotal,
+                SUM(ci.quantity) as total_items
+            FROM cart_items ci
+            JOIN products p ON ci.product_id = p.id
+            WHERE ci.user_id = ?
+        ");
+        $stmt->execute([$user_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $subtotal = $result['subtotal'] ?? 0;
+        $delivery_fee = $subtotal >= 10000 ? 0 : 500;
+        $tax = 0;
+        $total = $subtotal + $delivery_fee + $tax;
+
+        return [
+            'subtotal' => $subtotal,
+            'delivery_fee' => $delivery_fee,
+            'tax' => $tax,
+            'total' => $total,
+            'item_count' => $result['total_items'] ?? 0
+        ];
+    } catch (PDOException $e) {
+        error_log("Error calculating cart totals: " . $e->getMessage());
+        return [
+            'subtotal' => 0,
+            'delivery_fee' => 500,
+            'tax' => 0,
+            'total' => 500,
+            'item_count' => 0
+        ];
+    }
+}
+
+/**
  * Update user profile
  * @param PDO $pdo
  * @param int $user_id
@@ -61,6 +131,18 @@ function updateUserProfile($pdo, $user_id, $profile_data)
         error_log("Error updating user profile: " . $e->getMessage());
         return false;
     }
+}
+
+function formatAccountNumber($accountNumber)
+{
+    // Remove any existing spaces or hyphens
+    $cleanNumber = preg_replace('/[\s\-]/', '', $accountNumber);
+
+    // Add hyphens every 4 digits
+    $formatted = chunk_split($cleanNumber, 4, '-');
+
+    // Remove trailing hyphen
+    return rtrim($formatted, '-');
 }
 
 /**
@@ -328,6 +410,7 @@ function getUserActivityLog($user_id)
  * @param int $product_id
  * @return bool
  */
+
 function removeFromCart($product_id)
 {
     if (isset($_SESSION['cart'][$product_id])) {

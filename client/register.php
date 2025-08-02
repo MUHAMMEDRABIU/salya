@@ -422,7 +422,7 @@ require __DIR__ . '/../components/header.php';
                     `;
 
                             // Show toast message
-                            showToasted("Registration successful! Welcome to ShopEase! 🎉", 'success', 4000);
+                            showToasted("Registration successful!", 'success', 4000);
 
                             // Redirect to login page after 2 seconds
                             setTimeout(() => {
@@ -430,9 +430,16 @@ require __DIR__ . '/../components/header.php';
                                 window.location.href = "index.php";
                             }, 2000);
                         } else {
-                            // Hide overlay and show error
                             overlay.classList.add("hidden");
-                            showToasted(data.message || "Registration failed. Please try again.", 'error');
+
+                            // Handle specific error scenarios
+                            if (data.message.includes('payment service')) {
+                                showToasted("Payment service is temporarily unavailable. Please try again later.", 'error', 8000);
+                            } else if (data.message.includes('wallet')) {
+                                showToasted("Failed to create payment wallet. Please try again.", 'error', 6000);
+                            } else {
+                                showToasted(data.message || "Registration failed. Please try again.", 'error', 6000);
+                            }
                         }
                     })
                     .catch((error) => {
