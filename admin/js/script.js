@@ -1,5 +1,3 @@
-// Frozen Foods Admin Dashboard JavaScript
-
 // Initialize Lucide icons
 lucide.createIcons();
 
@@ -85,9 +83,6 @@ function makeTablesResponsive() {
     }
   });
 }
-
-// Initialize auto-refresh
-document.addEventListener("DOMContentLoaded", autoRefreshData);
 
 // Format currency
 function formatCurrency(amount) {
@@ -183,7 +178,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function handleSignOut() {
         // Show modal
-        signOutModal.classList.remove("hidden");
+        signOutModal.classList.remove("hidden");  
     }
 
     cancelSignOut.addEventListener("click", function () {

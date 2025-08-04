@@ -336,12 +336,12 @@ $cartCount = $cartTotals['item_count'];
                             }, 200);
 
                             updateTotals();
-                            updateCartCount(); // Update nav cart count
-                            showToasted('Cart updated successfully', 'success');
+                            updateCartCount();
                         } else {
                             showToasted(result.message || 'Failed to update cart', 'error');
                         }
                     } catch (error) {
+                        console.log(error)
                         showToasted('Network error occurred', 'error');
                     } finally {
                         // Restore button
@@ -387,7 +387,7 @@ $cartCount = $cartTotals['item_count'];
                             setTimeout(() => {
                                 cartItem.remove();
                                 updateTotals();
-                                updateCartCount(); // Update nav cart count
+                                updateCartCount();
                                 checkEmptyCart();
                             }, 300);
                             showToasted('Item removed from cart', 'info');
@@ -442,7 +442,7 @@ $cartCount = $cartTotals['item_count'];
 
                             setTimeout(() => {
                                 updateTotals();
-                                updateCartCount(); // Update nav cart count
+                                updateCartCount();
                                 checkEmptyCart();
                             }, items.length * 100 + 300);
 

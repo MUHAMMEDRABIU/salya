@@ -1,70 +1,8 @@
-<?php require __DIR__ . '/partials/headers.php'; ?>
-
-<style>
-    /* Settings-specific styles to avoid conflicts */
-    .settings-nav-link {
-        transition: all 0.2s ease-in-out;
-    }
-
-    .settings-nav-link:hover {
-        transform: translateX(2px);
-    }
-
-    .settings-nav-active {
-        color: #ea580c !important;
-        background-color: #fed7aa !important;
-    }
-
-    .settings-section {
-        transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-    }
-
-    .settings-section-hidden {
-        opacity: 0;
-        transform: translateX(-20px);
-        display: none;
-    }
-
-    .settings-toggle-switch {
-        transition: background-color 0.3s ease;
-    }
-
-    .settings-toggle-thumb {
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .settings-message-box {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .settings-btn-loading {
-        animation: settings-spin 1s linear infinite;
-    }
-
-    @keyframes settings-spin {
-        from {
-            transform: rotate(0deg);
-        }
-
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    .settings-input-focus:focus {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
-    }
-
-    .settings-btn-hover:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .settings-card-hover:hover {
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    }
-</style>
+<?php
+require __DIR__ . '/initialize.php';
+require __DIR__ . '/util/utilities.php';
+require __DIR__ . '/partials/headers.php';
+?>
 
 <body class="bg-gray-50 font-sans">
     <?php require __DIR__ . '/partials/sidebar.php'; ?>
@@ -73,7 +11,6 @@
     <div class="main-content lg:ml-64">
         <!-- Top Navigation -->
         <?php require __DIR__ . '/partials/top-navbar.php'; ?>
-
         <!-- Settings Content -->
         <main class="p-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
