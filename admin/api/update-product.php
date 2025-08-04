@@ -4,33 +4,10 @@ header('Content-Type: application/json');
 require __DIR__ . '/../initialize.php';
 require __DIR__ . '/../util/utilities.php';
 
-function logError($message, $data = [])
-{
-    $log = "[UPDATE PRODUCT ERROR] $message\n";
-    if (!empty($data)) {
-        $log .= print_r($data, true);
-    }
-    error_log($log);
-}
-
-function jsonError($message, $data = [])
-{
-    logError($message, $data);
-    echo json_encode([
-        'success' => false,
-        'message' => $message
-    ]);
-    exit;
-}
-
-function sanitize($input)
-{
-    return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
-}
-
 try {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        jsonError('Invalid request method');
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit;
     }
 
     $errors = [];
@@ -89,16 +66,17 @@ try {
     }
 
     if (!empty($errors)) {
-        jsonError(implode(', ', $errors), $_POST);
+        echo json_encode(['success' => false, 'message' => implode(', ', $errors)]);
+        exit;
     }
 
     // Sanitize optional fields
-    $sku = sanitize($_POST['sku'] ?? '');
-    $description = sanitize($_POST['description'] ?? '');
-    $weight = sanitize($_POST['weight'] ?? '');
-    $dimensions = sanitize($_POST['dimensions'] ?? '');
-    $meta_title = sanitize($_POST['meta_title'] ?? '');
-    $meta_description = sanitize($_POST['meta_description'] ?? '');
+    $sku = htmlspecialchars(trim($_POST['sku'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $description = htmlspecialchars(trim($_POST['description'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $weight = htmlspecialchars(trim($_POST['weight'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $dimensions = htmlspecialchars(trim($_POST['dimensions'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $meta_title = htmlspecialchars(trim($_POST['meta_title'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $meta_description = htmlspecialchars(trim($_POST['meta_description'] ?? ''), ENT_QUOTES, 'UTF-8');
     $is_active = isset($_POST['is_active']) ? 1 : 0;
     $is_featured = isset($_POST['is_featured']) ? 1 : 0;
 
@@ -114,11 +92,14 @@ try {
         $uploadPath = $uploadDir . $imageName;
 
         if (!move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath)) {
-            jsonError('Failed to upload new image', $_FILES);
+            echo json_encode(['success' => false, 'message' => 'Failed to upload new image']);
+            exit;
         }
 
-        // Optionally delete old image here (if it's not a default image)
-        // unlink($uploadDir . $existingProduct['image']);
+        // Delete old image if it exists and is not a default image
+        if ($existingProduct['image'] && file_exists($uploadDir . $existingProduct['image'])) {
+            unlink($uploadDir . $existingProduct['image']);
+        }
     }
 
     // Update the product in DB
@@ -130,7 +111,7 @@ try {
 
     $stmt = $pdo->prepare($sql);
     $success = $stmt->execute([
-        sanitize($name),
+        htmlspecialchars(trim($name), ENT_QUOTES, 'UTF-8'),
         $sku,
         $description,
         $category_id,
@@ -152,12 +133,14 @@ try {
             'message' => 'Product updated successfully'
         ]);
     } else {
-        jsonError('Failed to update product in database');
-        
+        echo json_encode(['success' => false, 'message' => 'Failed to update product in database']);
     }
+
 } catch (Exception $e) {
-    jsonError('Unexpected error: ' . $e->getMessage(), [
-        'trace' => $e->getTraceAsString(),
-        'input' => $_POST
+    error_log('Product update error: ' . $e->getMessage());
+    echo json_encode([
+        'success' => false,
+        'message' => 'An unexpected error occurred while updating the product'
     ]);
 }
+?>
