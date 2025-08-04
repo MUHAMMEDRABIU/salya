@@ -535,7 +535,7 @@ require_once 'partials/headers.php';
         function initializeFormHandlers() {
             // Delivery form submission
             document.getElementById('deliveryForm').addEventListener('submit', handleDeliveryFormSubmit);
-
+            
             // Delivery option selection
             document.querySelectorAll('input[name="delivery_option"]').forEach(radio => {
                 radio.addEventListener('change', function() {
@@ -763,71 +763,56 @@ require_once 'partials/headers.php';
         // Show order success
         function showOrderSuccess(orderNumber) {
             const checkoutContainer = document.getElementById('checkoutContainer');
-
+            
             checkoutContainer.innerHTML = `
-        <div class="lg:col-span-3 flex items-center justify-center min-h-[60vh]">
-            <div class="text-center max-w-md mx-auto">
-                <!-- Lottie Animation Container -->
-                <div class="w-32 h-32 mx-auto mb-6" id="success-animation-container">
-                    <lottie-player
-                        id="success-animation"
-                        src="../assets/animations/order-success.json"
-                        background="transparent"
-                        speed="1"
-                        style="width: 128px; height: 128px;"
-                        autoplay>
-                    </lottie-player>
-                </div>
+                <div class="lg:col-span-3 flex items-center justify-center min-h-[60vh]">
+                    <div class="text-center max-w-md mx-auto">
+                        <!-- Success Vector SVG -->
+                        <div class="w-32 h-32 mx-auto mb-6">
+                            <svg viewBox="0 0 200 200" class="w-full h-full">
+                                <circle cx="100" cy="100" r="90" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+                                <path d="M60 100 L85 125 L140 70" stroke="#22c55e" stroke-width="6" 
+                                      fill="none" stroke-linecap="round" stroke-linejoin="round"
+                                      class="animate-pulse"/>
+                                <circle cx="50" cy="50" r="3" fill="#fbbf24" class="animate-bounce"/>
+                                <circle cx="150" cy="60" r="2" fill="#f59e0b" class="animate-bounce" style="animation-delay: 0.2s"/>
+                                <circle cx="40" cy="140" r="2" fill="#fbbf24" class="animate-bounce" style="animation-delay: 0.4s"/>
+                                <circle cx="160" cy="130" r="3" fill="#f59e0b" class="animate-bounce" style="animation-delay: 0.6s"/>
+                            </svg>
+                        </div>
 
-                <h2 class="text-3xl font-bold text-green-600 mb-4">Order Placed Successfully!</h2>
-                <p class="text-gray-600 mb-6">
-                    Your order <strong>${orderNumber}</strong> has been confirmed and will be delivered to your specified address.
-                </p>
+                        <h2 class="text-3xl font-bold text-green-600 mb-4">Order Placed Successfully!</h2>
+                        <p class="text-gray-600 mb-6">
+                            Your order <strong>${orderNumber}</strong> has been confirmed and will be delivered to your specified address.
+                        </p>
 
-                <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm text-gray-600">Order Number:</span>
-                        <span class="font-bold text-green-800">${orderNumber}</span>
+                        <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-600">Order Number:</span>
+                                <span class="font-bold text-green-800">${orderNumber}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Total Amount:</span>
+                                <span class="font-bold text-green-800">₦<?php echo number_format($total); ?></span>
+                            </div>
+                        </div>
+
+                        <button onclick="redirectToOrders()" 
+                                class="w-full bg-custom-accent text-white py-4 rounded-xl font-semibold text-lg 
+                                       hover:opacity-90 transition-all duration-300 transform hover:scale-105 
+                                       shadow-lg hover:shadow-xl mb-4">
+                            <i class="fas fa-truck mr-2"></i>
+                            Track Your Order
+                        </button>
+
+                        <button onclick="continueShopping()" 
+                                class="w-full border border-gray-300 text-gray-700 py-3 rounded-xl 
+                                       hover:bg-gray-50 transition-colors">
+                            Continue Shopping
+                        </button>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm text-gray-600">Total Amount:</span>
-                        <span class="font-bold text-green-800">₦<?php echo number_format($total); ?></span>
-                    </div>
                 </div>
-
-                <button onclick="redirectToOrders()" 
-                        class="w-full bg-custom-accent text-white py-4 rounded-xl font-semibold text-lg 
-                               hover:opacity-90 transition-all duration-300 transform hover:scale-105 
-                               shadow-lg hover:shadow-xl mb-4">
-                    <i class="fas fa-truck mr-2"></i>
-                    Track Your Order
-                </button>
-
-                <button onclick="continueShopping()" 
-                        class="w-full border border-gray-300 text-gray-700 py-3 rounded-xl 
-                               hover:bg-gray-50 transition-colors">
-                    Continue Shopping
-                </button>
-            </div>
-        </div>
-    `;
-
-            // Initialize Lottie animation with callback
-            setTimeout(() => {
-                const lottiePlayer = document.getElementById('success-animation');
-                if (lottiePlayer) {
-                    // Add event listener for when animation completes
-                    lottiePlayer.addEventListener('complete', () => {
-                        // Optional: Add any post-animation effects
-                        console.log('Success animation completed');
-                    });
-
-                    // Optional: Add hover effects
-                    lottiePlayer.addEventListener('mouseenter', () => {
-                        lottiePlayer.play();
-                    });
-                }
-            }, 100);
+            `;
 
             // Update cart count to 0
             const cartBadge = document.getElementById('cartCount');
@@ -900,5 +885,4 @@ require_once 'partials/headers.php';
         }
     </script>
 </body>
-
 </html>
