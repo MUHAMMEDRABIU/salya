@@ -118,8 +118,8 @@ require_once 'partials/headers.php';
             <div class="relative z-10">
                 <div class="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
                     <div class="profile-avatar relative">
-                        <?php if (!empty($user['avatar']) && file_exists("../assets/img/" . $user['avatar'])): ?>
-                            <img src="../assets/img/<?php echo htmlspecialchars($user['avatar']); ?>"
+                        <?php if (!empty($user['avatar']) && file_exists("../assets/uploads/avatars/" . $user['avatar'])): ?>
+                            <img src="../assets/uploads/avatars/<?php echo htmlspecialchars($user['avatar']); ?>"
                                 alt="Profile"
                                 class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-white/20">
                         <?php else: ?>
@@ -132,7 +132,6 @@ require_once 'partials/headers.php';
                             <i class="fas fa-camera text-gray-600 text-xs md:text-sm"></i>
                         </button>
                     </div>
-
                     <div class="flex-1 text-center sm:text-left">
                         <h2 class="text-xl md:text-2xl lg:text-3xl font-bold mb-2">
                             <?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?>

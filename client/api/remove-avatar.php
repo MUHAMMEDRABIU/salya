@@ -11,12 +11,12 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 
 try {
-    // Get current avatar
+    // Get current avatar filename
     $stmt = $pdo->prepare("SELECT avatar FROM users WHERE id = ?");
     $stmt->execute([$user_id]);
     $currentAvatar = $stmt->fetchColumn();
 
-    // Update database to remove avatar
+    // Update database to remove avatar reference
     $stmt = $pdo->prepare("UPDATE users SET avatar = NULL, updated_at = NOW() WHERE id = ?");
     $result = $stmt->execute([$user_id]);
 
@@ -24,27 +24,30 @@ try {
         throw new Exception('Failed to remove avatar from database');
     }
 
-    // Delete avatar files
+    // Delete avatar file if it exists
     if ($currentAvatar) {
-        $uploadDir = __DIR__ . '/../../assets/img/avatars/';
+        $uploadDir = __DIR__ . '/../../assets/uploads/avatars/';
         $avatarPath = $uploadDir . $currentAvatar;
-        $thumbPath = $uploadDir . 'thumb_' . $currentAvatar;
         
         if (file_exists($avatarPath)) {
-            unlink($avatarPath);
-        }
-        if (file_exists($thumbPath)) {
-            unlink($thumbPath);
+            if (unlink($avatarPath)) {
+                error_log("Avatar file deleted: $avatarPath");
+            } else {
+                error_log("Failed to delete avatar file: $avatarPath");
+            }
         }
     }
 
+    // Log successful removal
+    error_log("Avatar removed successfully for user ID: $user_id");
+
     echo json_encode([
         'success' => true,
-        'message' => 'Avatar removed successfully'
+        'message' => 'Avatar removed successfully!'
     ]);
 
 } catch (Exception $e) {
-    error_log('Remove avatar error: ' . $e->getMessage());
+    error_log('Remove avatar error for user ' . $user_id . ': ' . $e->getMessage());
     echo json_encode([
         'success' => false,
         'message' => $e->getMessage()

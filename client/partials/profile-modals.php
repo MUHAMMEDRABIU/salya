@@ -824,32 +824,89 @@
     });
 
     // Avatar functions
+    // Add this to your profile-modals.php or separate JS file
+
+    // Preview avatar before upload
     function previewAvatar(input) {
+        const preview = document.getElementById('avatarPreview');
+        const uploadBtn = document.querySelector('#avatarUploadModal button[onclick="uploadAvatar()"]');
+
         if (input.files && input.files[0]) {
+            const file = input.files[0];
+
+            // Validate file size (2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                showToasted('File size too large. Maximum size is 2MB.', 'error');
+                input.value = '';
+                return;
+            }
+
+            // Validate file type
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                showToasted('Invalid file type. Only JPG, PNG, GIF, and WebP images are allowed.', 'error');
+                input.value = '';
+                return;
+            }
+
             const reader = new FileReader();
+
             reader.onload = function(e) {
-                document.getElementById('avatarPreview').innerHTML =
-                    `<img src="${e.target.result}" alt="Preview" class="w-full h-full object-cover rounded-full">`;
+                if (preview) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    preview.classList.add('animate-fade-in');
+                }
+
+                // Enable upload button
+                if (uploadBtn) {
+                    uploadBtn.disabled = false;
+                    uploadBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
             };
-            reader.readAsDataURL(input.files[0]);
+
+            reader.onerror = function() {
+                showToasted('Error reading file', 'error');
+                input.value = '';
+            };
+
+            reader.readAsDataURL(file);
+        } else {
+            // Hide preview and disable upload button
+            if (preview) {
+                preview.style.display = 'none';
+            }
+            if (uploadBtn) {
+                uploadBtn.disabled = true;
+                uploadBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
         }
     }
 
+    // Upload avatar function
     async function uploadAvatar() {
-        const fileInput = document.getElementById('avatarInput');
+        const fileInput = document.getElementById('avatarFile');
         const file = fileInput.files[0];
 
         if (!file) {
-            showToasted('Please select an image first', 'error');
+            showToasted('Please select a file to upload', 'error');
             return;
         }
 
+        // Create form data
         const formData = new FormData();
         formData.append('avatar', file);
 
-        try {
-            showToasted('Uploading avatar...', 'info');
+        // Get upload button and show loading state
+        const uploadBtn = document.querySelector('#avatarUploadModal button[onclick="uploadAvatar()"]');
+        const originalText = uploadBtn.innerHTML;
 
+        try {
+            // Show loading state
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
+            uploadBtn.disabled = true;
+
+            // Upload file
             const response = await fetch('api/upload-avatar.php', {
                 method: 'POST',
                 body: formData
@@ -858,21 +915,31 @@
             const result = await response.json();
 
             if (result.success) {
-                showToasted('Avatar updated successfully!', 'success');
+                showToasted(`Avatar uploaded successfully! (${result.file_size})`, 'success');
+
+                // Update avatar display in profile
+                updateAvatarDisplay(result.avatar_url);
+
+                // Close modal and reset form
                 closeModal('avatarUploadModal');
-                // Update avatar in UI
-                location.reload();
+                resetAvatarForm();
+
             } else {
-                throw new Error(result.message || 'Failed to upload avatar');
+                throw new Error(result.message || 'Upload failed');
             }
         } catch (error) {
             console.error('Avatar upload error:', error);
-            showToasted('Failed to upload avatar', 'error');
+            showToasted('Failed to upload avatar: ' + error.message, 'error');
+        } finally {
+            // Restore button state
+            uploadBtn.innerHTML = originalText;
+            uploadBtn.disabled = false;
         }
     }
 
+    // Remove avatar function
     async function removeAvatar() {
-        if (!confirm('Are you sure you want to remove your profile picture?')) {
+        if (!confirm('Are you sure you want to remove your avatar?')) {
             return;
         }
 
@@ -880,23 +947,127 @@
             showToasted('Removing avatar...', 'info');
 
             const response = await fetch('api/remove-avatar.php', {
-                method: 'POST'
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
 
             const result = await response.json();
 
             if (result.success) {
                 showToasted('Avatar removed successfully!', 'success');
-                closeModal('avatarUploadModal');
-                location.reload();
+
+                // Update avatar display to default
+                updateAvatarDisplay(null);
+
+                // Close modal if open
+                if (!document.getElementById('avatarUploadModal').classList.contains('hidden')) {
+                    closeModal('avatarUploadModal');
+                }
+
             } else {
                 throw new Error(result.message || 'Failed to remove avatar');
             }
         } catch (error) {
             console.error('Remove avatar error:', error);
-            showToasted('Failed to remove avatar', 'error');
+            showToasted('Failed to remove avatar: ' + error.message, 'error');
         }
     }
+
+    // Update avatar display throughout the page
+    function updateAvatarDisplay(avatarUrl) {
+        const avatarElements = document.querySelectorAll('.profile-avatar img, .user-avatar');
+        const avatarContainers = document.querySelectorAll('.profile-avatar');
+
+        if (avatarUrl) {
+            // Update existing image elements
+            avatarElements.forEach(img => {
+                img.src = avatarUrl + '?t=' + Date.now(); // Add timestamp to prevent caching
+                img.style.display = 'block';
+            });
+
+            // Update containers with new avatar
+            avatarContainers.forEach(container => {
+                container.innerHTML = `
+                <img src="${avatarUrl}?t=${Date.now()}" 
+                     alt="Profile" 
+                     class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-white/20">
+                <button onclick="openAvatarUpload()" class="absolute bottom-0 right-0 w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-camera text-gray-600 text-xs md:text-sm"></i>
+                </button>
+            `;
+            });
+        } else {
+            // Revert to default avatar
+            avatarContainers.forEach(container => {
+                container.innerHTML = `
+                <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/20 flex items-center justify-center border-4 border-white/20">
+                    <i class="fas fa-user text-white text-2xl md:text-3xl"></i>
+                </div>
+                <button onclick="openAvatarUpload()" class="absolute bottom-0 right-0 w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-camera text-gray-600 text-xs md:text-sm"></i>
+                </button>
+            `;
+            });
+        }
+    }
+
+    // Reset avatar upload form
+    function resetAvatarForm() {
+        const fileInput = document.getElementById('avatarFile');
+        const preview = document.getElementById('avatarPreview');
+        const uploadBtn = document.querySelector('#avatarUploadModal button[onclick="uploadAvatar()"]');
+
+        if (fileInput) {
+            fileInput.value = '';
+        }
+
+        if (preview) {
+            preview.style.display = 'none';
+            preview.src = '';
+        }
+
+        if (uploadBtn) {
+            uploadBtn.disabled = true;
+            uploadBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
+    // File drag and drop functionality
+    function setupAvatarDragDrop() {
+        const dropZone = document.getElementById('avatarDropZone');
+        const fileInput = document.getElementById('avatarFile');
+
+        if (!dropZone || !fileInput) return;
+
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropZone.classList.add('border-orange-500', 'bg-orange-50');
+        });
+
+        dropZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('border-orange-500', 'bg-orange-50');
+        });
+
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('border-orange-500', 'bg-orange-50');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                previewAvatar(fileInput);
+            }
+        });
+    }
+
+    // Initialize avatar functionality when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        setupAvatarDragDrop();
+    });
+
 
     // Address functions
     function openAddAddressForm() {

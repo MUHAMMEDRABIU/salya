@@ -11,33 +11,51 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 
 try {
+    // Check if file was uploaded
     if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
         throw new Exception('No file uploaded or upload error occurred');
     }
 
     $file = $_FILES['avatar'];
-    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    $maxSize = 5 * 1024 * 1024; // 5MB
 
-    // Validate file type
-    if (!in_array($file['type'], $allowedTypes)) {
-        throw new Exception('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.');
+    // Configuration
+    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    $maxSize = 2 * 1024 * 1024; // 2MB (reduced since no compression)
+
+    // Get file info
+    $originalName = $file['name'];
+    $fileSize = $file['size'];
+    $fileTmpPath = $file['tmp_name'];
+    $fileExtension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+    // Validate file extension
+    if (!in_array($fileExtension, $allowedExtensions)) {
+        throw new Exception('Invalid file type. Only JPG, PNG, GIF, and WebP images are allowed.');
     }
 
     // Validate file size
-    if ($file['size'] > $maxSize) {
-        throw new Exception('File size too large. Maximum size is 5MB.');
+    if ($fileSize > $maxSize) {
+        throw new Exception('File size too large. Maximum size is 2MB.');
+    }
+
+    // Additional security: Check actual file type
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $actualMimeType = finfo_file($finfo, $fileTmpPath);
+    finfo_close($finfo);
+
+    if (!in_array($actualMimeType, $allowedMimeTypes)) {
+        throw new Exception('Invalid file type detected. File content does not match extension.');
     }
 
     // Create upload directory if it doesn't exist
-    $uploadDir = __DIR__ . '/../../assets/uploads/';
+    $uploadDir = __DIR__ . '/../../assets/uploads/avatars/';
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
     }
 
-    // Generate unique filename
-    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename = 'avatar_' . $user_id . '_' . time() . '.' . $extension;
+    // Generate unique filename with timestamp and user ID
+    $filename = 'avatar_' . $user_id . '_' . time() . '.' . $fileExtension;
     $targetPath = $uploadDir . $filename;
 
     // Get current avatar to delete later
@@ -45,184 +63,62 @@ try {
     $stmt->execute([$user_id]);
     $currentAvatar = $stmt->fetchColumn();
 
-    // Move uploaded file
-    if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
-        throw new Exception('Failed to save uploaded file');
+    // Move uploaded file to destination
+    if (!move_uploaded_file($fileTmpPath, $targetPath)) {
+        throw new Exception('Failed to save uploaded file. Check directory permissions.');
     }
 
-    // Create thumbnail only if GD extension is available
-    if (extension_loaded('gd')) {
-        createThumbnail($targetPath, $uploadDir . 'thumb_' . $filename, 150, 150);
-    } else {
-        error_log('GD extension not available - skipping thumbnail creation');
-    }
-
-    // Update database
+    // Update database with new avatar filename
     $stmt = $pdo->prepare("UPDATE users SET avatar = ?, updated_at = NOW() WHERE id = ?");
     $result = $stmt->execute([$filename, $user_id]);
 
     if (!$result) {
-        // Delete uploaded file if database update fails
-        unlink($targetPath);
+        // If database update fails, delete the uploaded file
+        if (file_exists($targetPath)) {
+            unlink($targetPath);
+        }
         throw new Exception('Failed to update user avatar in database');
     }
 
-    // Delete old avatar file
+    // Delete old avatar file if it exists and is different
     if ($currentAvatar && $currentAvatar !== $filename) {
         $oldAvatarPath = $uploadDir . $currentAvatar;
-        $oldThumbPath = $uploadDir . 'thumb_' . $currentAvatar;
-
         if (file_exists($oldAvatarPath)) {
             unlink($oldAvatarPath);
         }
-        if (file_exists($oldThumbPath)) {
-            unlink($oldThumbPath);
-        }
     }
 
+    // Log successful upload
+    error_log("Avatar uploaded successfully for user ID: $user_id, filename: $filename");
+
+    // Return success response
     echo json_encode([
         'success' => true,
-        'message' => 'Avatar uploaded successfully',
-        'avatar_url' => '../assets/uploads/' . $filename,
-        'thumbnail_url' => extension_loaded('gd') ? '../assets/uploads/thumb_' . $filename : null
+        'message' => 'Avatar uploaded successfully!',
+        'avatar_url' => '../assets/uploads/avatars/' . $filename,
+        'file_size' => formatBytes($fileSize),
+        'file_type' => $actualMimeType
     ]);
 } catch (Exception $e) {
-    error_log('Avatar upload error: ' . $e->getMessage());
+    error_log('Avatar upload error for user ' . $user_id . ': ' . $e->getMessage());
     echo json_encode([
         'success' => false,
         'message' => $e->getMessage()
     ]);
 }
 
-function createThumbnail($source, $destination, $width, $height)
+/**
+ * Format bytes to human readable format
+ */
+function formatBytes($size, $precision = 2)
 {
-    try {
-        // Check if GD extension is loaded
-        if (!extension_loaded('gd')) {
-            throw new Exception('GD extension is not loaded');
-        }
+    $units = ['B', 'KB', 'MB', 'GB'];
+    $unitIndex = 0;
 
-        $info = getimagesize($source);
-        if (!$info) {
-            throw new Exception('Invalid image file');
-        }
-
-        $mime = $info['mime'];
-
-        // Create image resource based on type
-        switch ($mime) {
-            case 'image/jpeg':
-                if (!function_exists('imagecreatefromjpeg')) {
-                    throw new Exception('JPEG support not available in GD');
-                }
-                $image = imagecreatefromjpeg($source);
-                break;
-            case 'image/png':
-                if (!function_exists('imagecreatefrompng')) {
-                    throw new Exception('PNG support not available in GD');
-                }
-                $image = imagecreatefrompng($source);
-                break;
-            case 'image/gif':
-                if (!function_exists('imagecreatefromgif')) {
-                    throw new Exception('GIF support not available in GD');
-                }
-                $image = imagecreatefromgif($source);
-                break;
-            case 'image/webp':
-                if (!function_exists('imagecreatefromwebp')) {
-                    throw new Exception('WebP support not available in GD');
-                }
-                $image = imagecreatefromwebp($source);
-                break;
-            default:
-                throw new Exception('Unsupported image type: ' . $mime);
-        }
-
-        if (!$image) {
-            throw new Exception('Failed to create image resource');
-        }
-
-        $originalWidth = imagesx($image);
-        $originalHeight = imagesy($image);
-
-        // Calculate dimensions to maintain aspect ratio
-        $ratio = min($width / $originalWidth, $height / $originalHeight);
-        $newWidth = round($originalWidth * $ratio);
-        $newHeight = round($originalHeight * $ratio);
-
-        $thumbnail = imagecreatetruecolor($width, $height);
-
-        if (!$thumbnail) {
-            imagedestroy($image);
-            throw new Exception('Failed to create thumbnail canvas');
-        }
-
-        // Handle transparency for PNG and GIF
-        if ($mime == 'image/png' || $mime == 'image/gif') {
-            $transparent = imagecolorallocatealpha($thumbnail, 0, 0, 0, 127);
-            imagecolortransparent($thumbnail, $transparent);
-            imagealphablending($thumbnail, false);
-            imagesavealpha($thumbnail, true);
-            imagefill($thumbnail, 0, 0, $transparent);
-        } else {
-            // Fill background with white for other formats
-            $backgroundColor = imagecolorallocate($thumbnail, 255, 255, 255);
-            imagefill($thumbnail, 0, 0, $backgroundColor);
-        }
-
-        // Center the image
-        $x = ($width - $newWidth) / 2;
-        $y = ($height - $newHeight) / 2;
-
-        // Resample the image
-        $resampleResult = imagecopyresampled(
-            $thumbnail,
-            $image,
-            $x,
-            $y,
-            0,
-            0,
-            $newWidth,
-            $newHeight,
-            $originalWidth,
-            $originalHeight
-        );
-
-        if (!$resampleResult) {
-            imagedestroy($image);
-            imagedestroy($thumbnail);
-            throw new Exception('Failed to resample image');
-        }
-
-        // Save the thumbnail
-        $saveResult = false;
-        switch ($mime) {
-            case 'image/jpeg':
-                $saveResult = imagejpeg($thumbnail, $destination, 90);
-                break;
-            case 'image/png':
-                $saveResult = imagepng($thumbnail, $destination, 9);
-                break;
-            case 'image/gif':
-                $saveResult = imagegif($thumbnail, $destination);
-                break;
-            case 'image/webp':
-                $saveResult = imagewebp($thumbnail, $destination, 90);
-                break;
-        }
-
-        // Cleanup
-        imagedestroy($image);
-        imagedestroy($thumbnail);
-
-        if (!$saveResult) {
-            throw new Exception('Failed to save thumbnail');
-        }
-
-        return true;
-    } catch (Exception $e) {
-        error_log('Thumbnail creation error: ' . $e->getMessage());
-        return false;
+    while ($size >= 1024 && $unitIndex < count($units) - 1) {
+        $size /= 1024;
+        $unitIndex++;
     }
+
+    return round($size, $precision) . ' ' . $units[$unitIndex];
 }
