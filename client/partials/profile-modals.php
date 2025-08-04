@@ -823,90 +823,36 @@
         submitFeedback(feedbackType, message);
     });
 
-    // Avatar functions
-    // Add this to your profile-modals.php or separate JS file
+    // Add this to your profile-modals.php script section
 
-    // Preview avatar before upload
+    // Preview image when file is selected
     function previewAvatar(input) {
         const preview = document.getElementById('avatarPreview');
-        const uploadBtn = document.querySelector('#avatarUploadModal button[onclick="uploadAvatar()"]');
 
         if (input.files && input.files[0]) {
-            const file = input.files[0];
-
-            // Validate file size (2MB)
-            if (file.size > 2 * 1024 * 1024) {
-                showToasted('File size too large. Maximum size is 2MB.', 'error');
-                input.value = '';
-                return;
-            }
-
-            // Validate file type
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            if (!allowedTypes.includes(file.type)) {
-                showToasted('Invalid file type. Only JPG, PNG, GIF, and WebP images are allowed.', 'error');
-                input.value = '';
-                return;
-            }
-
             const reader = new FileReader();
-
             reader.onload = function(e) {
-                if (preview) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                    preview.classList.add('animate-fade-in');
-                }
-
-                // Enable upload button
-                if (uploadBtn) {
-                    uploadBtn.disabled = false;
-                    uploadBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                }
+                preview.src = e.target.result;
+                preview.style.display = 'block';
             };
-
-            reader.onerror = function() {
-                showToasted('Error reading file', 'error');
-                input.value = '';
-            };
-
-            reader.readAsDataURL(file);
-        } else {
-            // Hide preview and disable upload button
-            if (preview) {
-                preview.style.display = 'none';
-            }
-            if (uploadBtn) {
-                uploadBtn.disabled = true;
-                uploadBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            }
+            reader.readAsDataURL(input.files[0]);
         }
     }
 
-    // Upload avatar function
+    // Upload avatar
     async function uploadAvatar() {
         const fileInput = document.getElementById('avatarFile');
         const file = fileInput.files[0];
 
         if (!file) {
-            showToasted('Please select a file to upload', 'error');
+            alert('Please select a file first');
             return;
         }
 
-        // Create form data
         const formData = new FormData();
         formData.append('avatar', file);
 
-        // Get upload button and show loading state
-        const uploadBtn = document.querySelector('#avatarUploadModal button[onclick="uploadAvatar()"]');
-        const originalText = uploadBtn.innerHTML;
-
         try {
-            // Show loading state
-            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
-            uploadBtn.disabled = true;
-
-            // Upload file
             const response = await fetch('api/upload-avatar.php', {
                 method: 'POST',
                 body: formData
@@ -915,63 +861,58 @@
             const result = await response.json();
 
             if (result.success) {
-                showToasted(`Avatar uploaded successfully! (${result.file_size})`, 'success');
+                // Update avatar in page
+                const avatarImg = document.querySelector('.profile-avatar img');
+                if (avatarImg) {
+                    avatarImg.src = result.avatar_url + '?t=' + Date.now();
+                }
 
-                // Update avatar display in profile
-                updateAvatarDisplay(result.avatar_url);
-
-                // Close modal and reset form
+                // Close modal
                 closeModal('avatarUploadModal');
-                resetAvatarForm();
 
+                // Reset form
+                fileInput.value = '';
+                document.getElementById('avatarPreview').style.display = 'none';
+
+                alert('Avatar updated successfully!');
             } else {
-                throw new Error(result.message || 'Upload failed');
+                alert('Error: ' + result.message);
             }
         } catch (error) {
-            console.error('Avatar upload error:', error);
-            showToasted('Failed to upload avatar: ' + error.message, 'error');
-        } finally {
-            // Restore button state
-            uploadBtn.innerHTML = originalText;
-            uploadBtn.disabled = false;
+            alert('Upload failed. Please try again.');
         }
     }
 
-    // Remove avatar function
+    // Remove avatar
     async function removeAvatar() {
-        if (!confirm('Are you sure you want to remove your avatar?')) {
-            return;
-        }
+        if (!confirm('Remove your avatar?')) return;
 
         try {
-            showToasted('Removing avatar...', 'info');
-
             const response = await fetch('api/remove-avatar.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                method: 'POST'
             });
 
             const result = await response.json();
 
             if (result.success) {
-                showToasted('Avatar removed successfully!', 'success');
+                // Reset to default avatar
+                const avatarContainer = document.querySelector('.profile-avatar');
+                avatarContainer.innerHTML = `
+                <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/20 flex items-center justify-center border-4 border-white/20">
+                    <i class="fas fa-user text-white text-2xl md:text-3xl"></i>
+                </div>
+                <button onclick="openAvatarUpload()" class="absolute bottom-0 right-0 w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-camera text-gray-600 text-xs md:text-sm"></i>
+                </button>
+            `;
 
-                // Update avatar display to default
-                updateAvatarDisplay(null);
-
-                // Close modal if open
-                if (!document.getElementById('avatarUploadModal').classList.contains('hidden')) {
-                    closeModal('avatarUploadModal');
-                }
-
+                closeModal('avatarUploadModal');
+                alert('Avatar removed!');
             } else {
-                throw new Error(result.message || 'Failed to remove avatar');
+                alert('Error: ' + result.message);
             }
         } catch (error) {
-            console.error('Remove avatar error:', error);
-            showToasted('Failed to remove avatar: ' + error.message, 'error');
+            alert('Failed to remove avatar');
         }
     }
 

@@ -26,7 +26,7 @@ try {
     }
 
     // Verify current password
-    $stmt = $pdo->prepare("SELECT password FROM users WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT password_hash FROM users WHERE id = ?");
     $stmt->execute([$user_id]);
     $storedPassword = $stmt->fetchColumn();
 
@@ -38,7 +38,7 @@ try {
     $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
 
     // Update password
-    $stmt = $pdo->prepare("UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?");
+    $stmt = $pdo->prepare("UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?");
     $result = $stmt->execute([$hashedNewPassword, $user_id]);
 
     if (!$result) {
