@@ -1,7 +1,6 @@
 <?php
 require_once 'util/util.php';
 require_once 'initialize.php';
-require_once 'partials/headers.php';
 
 // Get cart count for logged in users
 $cartCount = 0;
@@ -27,7 +26,7 @@ $categories = getProductCategories($pdo);
 // Filter products based on selected category
 $filteredProducts = $products;
 if ($selectedCategory !== 'all') {
-    $filteredProducts = array_filter($products, function($product) use ($selectedCategory) {
+    $filteredProducts = array_filter($products, function ($product) use ($selectedCategory) {
         return strtolower($product['category']) === $selectedCategory;
     });
 }
@@ -38,15 +37,15 @@ $sortOrder = isset($_GET['order']) ? $_GET['order'] : 'asc';
 
 // Apply sorting
 if (!empty($filteredProducts)) {
-    usort($filteredProducts, function($a, $b) use ($sortBy, $sortOrder) {
+    usort($filteredProducts, function ($a, $b) use ($sortBy, $sortOrder) {
         $valueA = $a[$sortBy] ?? '';
         $valueB = $b[$sortBy] ?? '';
-        
+
         if ($sortBy === 'price') {
             $valueA = (float)$valueA;
             $valueB = (float)$valueB;
         }
-        
+
         $result = $valueA <=> $valueB;
         return $sortOrder === 'desc' ? -$result : $result;
     });
@@ -59,8 +58,9 @@ $totalItems = count($filteredProducts);
 $totalPages = ceil($totalItems / $itemsPerPage);
 $offset = ($page - 1) * $itemsPerPage;
 $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
-?>
 
+require_once 'partials/headers.php';
+?>
 <body class="bg-gray-50 font-dm pb-24 overflow-x-hidden">
     <!-- Background Blobs -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
@@ -80,7 +80,7 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
                 <div class="absolute inset-0 bg-black/10"></div>
                 <div class="relative z-10">
                     <div class="max-w-2xl">
-                        <h1 class="text-3xl md:text-4xl font-bold mb-4">Premium Frozen Foods</h1>
+                        <h1 class="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-4">Premium Frozen Foods</h1>
                         <p class="text-orange-100 text-lg mb-6">Discover our complete collection of fresh, high-quality frozen foods delivered right to your doorstep.</p>
                         <div class="flex items-center space-x-6 text-orange-100">
                             <div class="flex items-center">
@@ -108,8 +108,8 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400">
-                                    <circle cx="11" cy="11" r="8"/>
-                                    <path d="m21 21-4.35-4.35"/>
+                                    <circle cx="11" cy="11" r="8" />
+                                    <path d="m21 21-4.35-4.35" />
                                 </svg>
                             </div>
                             <input
@@ -135,7 +135,7 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
                                 </svg>
                             </div>
                         </div>
-                        
+
                         <!-- Grid/List Toggle -->
                         <div class="flex bg-gray-100 rounded-xl p-1">
                             <button id="grid-view" class="view-toggle active px-3 py-2 rounded-lg text-gray-600 hover:text-orange-500 transition-colors">
@@ -153,13 +153,13 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
             <div class="mb-8 animate-slide-up" style="animation-delay: 0.2s;">
                 <div class="overflow-x-auto hide-scrollbar">
                     <div class="flex space-x-3 pb-2 min-w-max">
-                        <a href="?category=all&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?>" 
-                           class="category-tab <?php echo $selectedCategory === 'all' ? 'active' : ''; ?> px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                        <a href="?category=all&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?>"
+                            class="category-tab <?php echo $selectedCategory === 'all' ? 'active' : ''; ?> px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
                             All Products
                         </a>
                         <?php foreach ($categories as $category): ?>
-                            <a href="?category=<?php echo strtolower($category); ?>&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?>" 
-                               class="category-tab <?php echo $selectedCategory === strtolower($category) ? 'active' : ''; ?> px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                            <a href="?category=<?php echo strtolower($category); ?>&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?>"
+                                class="category-tab <?php echo $selectedCategory === strtolower($category) ? 'active' : ''; ?> px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
                                 <?php echo ucfirst($category); ?>
                             </a>
                         <?php endforeach; ?>
@@ -180,11 +180,11 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
                         <?php endif; ?>
                     </p>
                 </div>
-                
+
                 <?php if ($totalPages > 1): ?>
-                <div class="text-sm text-gray-500">
-                    Page <?php echo $page; ?> of <?php echo $totalPages; ?>
-                </div>
+                    <div class="text-sm text-gray-500">
+                        Page <?php echo $page; ?> of <?php echo $totalPages; ?>
+                    </div>
                 <?php endif; ?>
             </div>
 
@@ -213,22 +213,22 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
                     </div>
                 <?php else: ?>
                     <?php foreach ($paginatedProducts as $index => $product): ?>
-                        <div class="product-card bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer animate-scale-in" 
-                             data-category="<?php echo strtolower($product['category']); ?>" 
-                             data-name="<?php echo strtolower($product['name']); ?>" 
-                             onclick="viewProduct(<?php echo $product['id']; ?>)"
-                             style="animation-delay: <?php echo ($index * 0.1); ?>s;">
+                        <div class="product-card bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer animate-scale-in"
+                            data-category="<?php echo strtolower($product['category']); ?>"
+                            data-name="<?php echo strtolower($product['name']); ?>"
+                            onclick="viewProduct(<?php echo $product['id']; ?>)"
+                            style="animation-delay: <?php echo ($index * 0.1); ?>s;">
                             <div class="relative">
-                                <img src="../assets/uploads/<?php echo $product['image']; ?>" 
-                                     alt="<?php echo $product['name']; ?>" 
-                                     class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300">
+                                <img src="../assets/uploads/<?php echo $product['image']; ?>"
+                                    alt="<?php echo $product['name']; ?>"
+                                    class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
-                                
+
                                 <!-- Favorite Button -->
                                 <button class="favorite-btn absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg flex items-center justify-center hover:bg-white hover:scale-110 transition-all duration-300" onclick="event.stopPropagation();">
                                     <i class="far fa-heart text-gray-600"></i>
                                 </button>
-                                
+
                                 <!-- Stock Badge -->
                                 <div class="absolute top-3 left-3">
                                     <?php if (isset($product['stock_quantity']) && $product['stock_quantity'] > 0): ?>
@@ -241,12 +241,12 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
                                         </span>
                                     <?php endif; ?>
                                 </div>
-                                
+
                                 <!-- Quick Add Button -->
                                 <div class="absolute bottom-3 right-3 opacity-0 hover:opacity-100 transition-opacity duration-300">
-                                    <button onclick="handleAddToCart(<?php echo $product['id']; ?>); event.stopPropagation();" 
-                                            class="quick-add-btn bg-orange-500 text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-orange-600 transition-all duration-300 hover:scale-110 shadow-lg" 
-                                            data-product-id="<?php echo $product['id']; ?>">
+                                    <button onclick="handleAddToCart(<?php echo $product['id']; ?>); event.stopPropagation();"
+                                        class="quick-add-btn bg-orange-500 text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-orange-600 transition-all duration-300 hover:scale-110 shadow-lg"
+                                        data-product-id="<?php echo $product['id']; ?>">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <circle cx="8" cy="21" r="1" />
                                             <circle cx="19" cy="21" r="1" />
@@ -255,7 +255,7 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
                                     </button>
                                 </div>
                             </div>
-                            
+
                             <div class="p-5">
                                 <div class="mb-3">
                                     <span class="text-xs font-medium text-orange-500 uppercase tracking-wide">
@@ -268,22 +268,20 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
                                 <p class="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
                                     <?php echo htmlspecialchars($product['description']); ?>
                                 </p>
-                                
+
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <span class="text-2xl font-bold text-orange-500">
                                             ₦<?php echo number_format($product['price']); ?>
                                         </span>
                                     </div>
-                                    
+
                                     <!-- Rating -->
                                     <div class="flex items-center space-x-1">
                                         <div class="flex text-yellow-400">
-                                            <?php for ($i = 0; $i < 5; $i++): ?>
-                                                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                                </svg>
-                                            <?php endfor; ?>
+                                            <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                            </svg>
                                         </div>
                                         <span class="text-sm text-gray-500 font-medium">4.9</span>
                                     </div>
@@ -296,35 +294,35 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
 
             <!-- Pagination -->
             <?php if ($totalPages > 1): ?>
-            <div class="flex justify-center items-center space-x-2 animate-slide-up">
-                <!-- Previous Button -->
-                <?php if ($page > 1): ?>
-                    <a href="?category=<?php echo $selectedCategory; ?>&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?>&page=<?php echo $page - 1; ?>" 
-                       class="pagination-btn px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-all duration-300">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-                <?php endif; ?>
+                <div class="flex justify-center items-center space-x-2 animate-slide-up">
+                    <!-- Previous Button -->
+                    <?php if ($page > 1): ?>
+                        <a href="?category=<?php echo $selectedCategory; ?>&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?>&page=<?php echo $page - 1; ?>"
+                            class="pagination-btn px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-all duration-300">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    <?php endif; ?>
 
-                <!-- Page Numbers -->
-                <?php
-                $startPage = max(1, $page - 2);
-                $endPage = min($totalPages, $page + 2);
-                
-                for ($i = $startPage; $i <= $endPage; $i++): ?>
-                    <a href="?category=<?php echo $selectedCategory; ?>&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?>&page=<?php echo $i; ?>" 
-                       class="pagination-btn px-4 py-2 rounded-lg transition-all duration-300 <?php echo $i === $page ? 'bg-orange-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-300'; ?>">
-                        <?php echo $i; ?>
-                    </a>
-                <?php endfor; ?>
+                    <!-- Page Numbers -->
+                    <?php
+                    $startPage = max(1, $page - 2);
+                    $endPage = min($totalPages, $page + 2);
 
-                <!-- Next Button -->
-                <?php if ($page < $totalPages): ?>
-                    <a href="?category=<?php echo $selectedCategory; ?>&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?>&page=<?php echo $page + 1; ?>" 
-                       class="pagination-btn px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-all duration-300">
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                <?php endif; ?>
-            </div>
+                    for ($i = $startPage; $i <= $endPage; $i++): ?>
+                        <a href="?category=<?php echo $selectedCategory; ?>&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?>&page=<?php echo $i; ?>"
+                            class="pagination-btn px-4 py-2 rounded-lg transition-all duration-300 <?php echo $i === $page ? 'bg-orange-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-300'; ?>">
+                            <?php echo $i; ?>
+                        </a>
+                    <?php endfor; ?>
+
+                    <!-- Next Button -->
+                    <?php if ($page < $totalPages): ?>
+                        <a href="?category=<?php echo $selectedCategory; ?>&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?>&page=<?php echo $page + 1; ?>"
+                            class="pagination-btn px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-all duration-300">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
         </div>
     </main>
@@ -359,15 +357,15 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
             // Search functionality
             const searchInput = document.getElementById('search-input');
             const productCards = document.querySelectorAll('.product-card');
-            
+
             if (searchInput) {
                 searchInput.addEventListener('input', function() {
                     const searchTerm = this.value.toLowerCase();
-                    
+
                     productCards.forEach(card => {
                         const productName = card.getAttribute('data-name');
                         const isVisible = productName.includes(searchTerm);
-                        
+
                         if (isVisible) {
                             card.style.display = 'block';
                             card.classList.add('animate-fade-in');
@@ -402,19 +400,19 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
             window.handleAddToCart = async function(productId) {
                 const button = document.querySelector(`[data-product-id="${productId}"]`);
                 const originalContent = button.innerHTML;
-                
+
                 // Add loading state
                 button.innerHTML = '<svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>';
                 button.disabled = true;
-                
+
                 try {
                     const success = await addToCart(productId, 1);
-                    
+
                     if (success) {
                         // Success animation
                         button.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
                         button.style.backgroundColor = '#22c55e';
-                        
+
                         setTimeout(() => {
                             button.innerHTML = originalContent;
                             button.style.backgroundColor = '';
@@ -424,7 +422,7 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
                         // Error state
                         button.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
                         button.style.backgroundColor = '#ef4444';
-                        
+
                         setTimeout(() => {
                             button.innerHTML = originalContent;
                             button.style.backgroundColor = '';
@@ -444,9 +442,9 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    
+
                     const icon = this.querySelector('i');
-                    
+
                     if (icon.classList.contains('far')) {
                         icon.classList.remove('far');
                         icon.classList.add('fas', 'text-red-500');
@@ -454,7 +452,7 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
                         icon.classList.remove('fas', 'text-red-500');
                         icon.classList.add('far', 'text-gray-600');
                     }
-                    
+
                     // Scale animation
                     this.style.transform = 'scale(1.2)';
                     setTimeout(() => {
@@ -467,17 +465,17 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
             productCards.forEach(card => {
                 card.addEventListener('mouseenter', function() {
                     this.style.transform = 'translateY(-8px)';
-                    
+
                     // Show quick add button
                     const quickAddBtn = this.querySelector('.quick-add-btn');
                     if (quickAddBtn) {
                         quickAddBtn.parentElement.style.opacity = '1';
                     }
                 });
-                
+
                 card.addEventListener('mouseleave', function() {
                     this.style.transform = 'translateY(0)';
-                    
+
                     // Hide quick add button
                     const quickAddBtn = this.querySelector('.quick-add-btn');
                     if (quickAddBtn) {

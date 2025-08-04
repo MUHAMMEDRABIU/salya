@@ -2,223 +2,503 @@
 require __DIR__ . '/initialize.php';
 require_once 'util/util.php';
 
-    $cart_items = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
-    $cartCount = array_sum(array_column($cart_items, 'quantity'));
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit();
+}
 
-// Mock data for orders - replace with your actual data source
-$orders = [
-    [
-        'id' => 'ORD-001',
-        'date' => '2024-01-15',
-        'status' => 'delivered',
-        'total' => 15500,
-        'items_count' => 3,
-        'items' => [
-            ['name' => 'Frozen Chicken Wings', 'quantity' => 2, 'price' => 5000],
-            ['name' => 'Fish Fillets', 'quantity' => 1, 'price' => 3500],
-            ['name' => 'Turkey Slices', 'quantity' => 1, 'price' => 7000]
-        ]
-    ],
-    [
-        'id' => 'ORD-002',
-        'date' => '2024-01-14',
-        'status' => 'processing',
-        'total' => 8500,
-        'items_count' => 2,
-        'items' => [
-            ['name' => 'Frozen Prawns', 'quantity' => 1, 'price' => 6000],
-            ['name' => 'Ice Cream', 'quantity' => 1, 'price' => 2500]
-        ]
-    ],
-    [
-        'id' => 'ORD-003',
-        'date' => '2024-01-13',
-        'status' => 'pending',
-        'total' => 12000,
-        'items_count' => 4,
-        'items' => [
-            ['name' => 'Frozen Beef', 'quantity' => 1, 'price' => 8000],
-            ['name' => 'Chicken Breast', 'quantity' => 2, 'price' => 2000]
-        ]
-    ],
-    [
-        'id' => 'ORD-004',
-        'date' => '2024-01-12',
-        'status' => 'cancelled',
-        'total' => 5500,
-        'items_count' => 1,
-        'items' => [
-            ['name' => 'Frozen Vegetables', 'quantity' => 3, 'price' => 1833]
-        ]
-    ]
-];
+$user_id = $_SESSION['user_id'];
+
+// Get cart count for logged in users
+$cartCount = 0;
+try {
+    $stmt = $pdo->prepare("SELECT SUM(quantity) as total_items FROM cart_items WHERE user_id = ?");
+    $stmt->execute([$user_id]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $cartCount = (int)($result['total_items'] ?? 0);
+} catch (Exception $e) {
+    error_log("Error getting cart count in orders: " . $e->getMessage());
+    $cartCount = 0;
+}
+
+// Get selected status from URL parameter
+$selectedStatus = isset($_GET['status']) ? strtolower(trim($_GET['status'])) : 'all';
+
+// Get all orders for the user
+function getUserOrders($pdo, $user_id, $status = 'all') {
+    try {
+        $sql = "
+            SELECT 
+                o.id,
+                o.order_number,
+                o.status,
+                o.total_amount,
+                o.subtotal,
+                o.delivery_fee,
+                o.created_at,
+                o.updated_at,
+                o.payment_status,
+                o.shipping_name,
+                o.shipping_address,
+                o.shipping_city,
+                o.shipping_state,
+                COUNT(oi.id) as items_count
+            FROM orders o
+            LEFT JOIN order_items oi ON o.id = oi.order_id
+            WHERE o.user_id = ?
+        ";
+        
+        $params = [$user_id];
+        
+        if ($status !== 'all') {
+            $sql .= " AND o.status = ?";
+            $params[] = $status;
+        }
+        
+        $sql .= " GROUP BY o.id ORDER BY o.created_at DESC";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Get order items for each order
+        foreach ($orders as &$order) {
+            $itemStmt = $pdo->prepare("
+                SELECT 
+                    oi.product_name as name,
+                    oi.quantity,
+                    oi.price,
+                    oi.subtotal,
+                    oi.product_image as image
+                FROM order_items oi
+                WHERE oi.order_id = ?
+            ");
+            $itemStmt->execute([$order['id']]);
+            $order['items'] = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        
+        return $orders;
+    } catch (PDOException $e) {
+        error_log("Error fetching user orders: " . $e->getMessage());
+        return [];
+    }
+}
+
+$orders = getUserOrders($pdo, $user_id, $selectedStatus);
+
+// Calculate stats
+$totalOrders = count(getUserOrders($pdo, $user_id, 'all'));
+$totalSpent = 0;
+$allOrders = getUserOrders($pdo, $user_id, 'all');
+foreach ($allOrders as $order) {
+    if ($order['status'] !== 'cancelled') {
+        $totalSpent += $order['total_amount'];
+    }
+}
 
 require_once 'partials/headers.php';
 ?>
 </head>
 
-<body class="bg-gray font-dm pb-24 overflow-x-hidden">
+<body class="bg-gray-50 font-dm pb-24 overflow-x-hidden">
+    <!-- Background Blobs -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-40 -right-40 w-80 h-80 bg-orange-500 opacity-5 rounded-full filter blur-3xl animate-float"></div>
+        <div class="absolute top-1/2 -left-32 w-64 h-64 bg-purple-500 opacity-5 rounded-full filter blur-3xl animate-float" style="animation-delay: 1s;"></div>
+        <div class="absolute bottom-20 right-1/4 w-48 h-48 bg-orange-500 opacity-8 rounded-full filter blur-3xl animate-float" style="animation-delay: 2s;"></div>
+    </div>
+
     <!-- Pull to Refresh Indicator -->
-    <div id="pull-indicator" class="pull-indicator fixed top-0 left-0 right-0 bg-accent text-white text-center py-3 z-50">
+    <div id="pull-indicator" class="pull-indicator fixed top-0 left-0 right-0 bg-orange-500 text-white text-center py-3 z-50 transform -translate-y-full transition-transform duration-300">
         <i class="fas fa-sync-alt mr-2"></i>
         <span>Release to refresh</span>
     </div>
 
     <!-- Main Content -->
-    <main class="px-4 pt-6 space-y-6 animate-fade-in">
-        <!-- Page Header -->
-        <?php include 'partials/top-nav.php'; ?>
+    <main class="relative z-10">
+        <div class="container mx-auto px-4 pt-6 space-y-6">
+            <!-- Page Header -->
+            <?php include 'partials/top-nav.php'; ?>
 
-        <!-- Order Stats -->
-        <div class="grid grid-cols-2 gap-4 animate-slide-up" style="animation-delay: 0.1s;">
-            <div class="bg-white rounded-2xl p-4 floating-card">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-sm">Total Orders</p>
-                        <p class="text-2xl font-bold text-dark"><?php echo count($orders); ?></p>
-                    </div>
-                    <div class="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center">
-                        <i class="fas fa-shopping-bag text-accent text-lg"></i>
+            <!-- Hero Section -->
+            <div class="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 rounded-3xl p-6 md:p-8 text-white mb-8 relative overflow-hidden animate-slide-up">
+                <div class="absolute inset-0 bg-black/10"></div>
+                <div class="relative z-10">
+                    <div class="max-w-2xl">
+                        <h1 class="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-4">Your Orders</h1>
+                        <p class="text-orange-100 text-sm md:text-base mb-6">Track and manage all your frozen food orders in one place.</p>
+                        <div class="flex flex-wrap items-center gap-4 md:gap-6 text-orange-100">
+                            <div class="flex items-center">
+                                <i class="fas fa-box mr-2"></i>
+                                <span class="text-xs md:text-sm">Order History</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-truck mr-2"></i>
+                                <span class="text-xs md:text-sm">Real-time Tracking</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-redo mr-2"></i>
+                                <span class="text-xs md:text-sm">Easy Reorder</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-2xl p-4 floating-card">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-sm">Total Spent</p>
-                        <p class="text-2xl font-bold text-dark">₦<?php echo number_format(array_sum(array_column($orders, 'total'))); ?></p>
+
+            <!-- Order Stats -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-slide-up" style="animation-delay: 0.1s;">
+                <div class="bg-white rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Orders</p>
+                            <p class="text-xl md:text-2xl font-bold text-gray-900"><?php echo $totalOrders; ?></p>
+                        </div>
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-orange-100 rounded-2xl flex items-center justify-center">
+                            <i class="fas fa-shopping-bag text-orange-500 text-lg"></i>
+                        </div>
                     </div>
-                    <div class="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center">
-                        <i class="fas fa-naira-sign text-green-600 text-lg"></i>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Spent</p>
+                            <p class="text-xl md:text-2xl font-bold text-gray-900">₦<?php echo number_format($totalSpent); ?></p>
+                        </div>
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-2xl flex items-center justify-center">
+                            <i class="fas fa-naira-sign text-green-600 text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Delivered</p>
+                            <p class="text-xl md:text-2xl font-bold text-gray-900">
+                                <?php 
+                                $delivered = count(getUserOrders($pdo, $user_id, 'delivered'));
+                                echo $delivered;
+                                ?>
+                            </p>
+                        </div>
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-2xl flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-600 text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Processing</p>
+                            <p class="text-xl md:text-2xl font-bold text-gray-900">
+                                <?php 
+                                $processing = count(getUserOrders($pdo, $user_id, 'processing'));
+                                echo $processing;
+                                ?>
+                            </p>
+                        </div>
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
+                            <i class="fas fa-clock text-blue-600 text-lg"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Filter Buttons -->
-        <div class="overflow-x-auto hide-scrollbar animate-slide-up" style="animation-delay: 0.2s;">
-            <div class="flex space-x-3 pb-2">
-                <button class="filter-button active px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-accent text-white shadow-lg hover:shadow-xl transform hover:scale-105" data-status="all">
-                    All Orders
-                </button>
-                <button class="filter-button px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-gray-50 transform hover:scale-105" data-status="delivered">
-                    Delivered
-                </button>
-                <button class="filter-button px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-gray-50 transform hover:scale-105" data-status="processing">
-                    Processing
-                </button>
-                <button class="filter-button px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-gray-50 transform hover:scale-105" data-status="pending">
-                    Pending
-                </button>
-            </div>
-        </div>
-
-        <!-- Orders List -->
-        <div id="orders-container" class="space-y-4 animate-slide-up" style="animation-delay: 0.3s;">
-            <?php foreach ($orders as $index => $order):
-                $statusInfo = getStatusInfo($order['status']);
-            ?>
-                <div class="order-card bg-white rounded-3xl shadow-lg overflow-hidden animate-scale-in"
-                    data-status="<?php echo $order['status']; ?>"
-                    style="animation-delay: <?php echo $index * 0.1; ?>s;">
-
-                    <!-- Order Header -->
-                    <div class="p-6 cursor-pointer" onclick="toggleOrderDetails('<?php echo $order['id']; ?>')">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <h3 class="font-bold text-dark text-lg"><?php echo $order['id']; ?></h3>
-                                <p class="text-gray-500 text-sm"><?php echo date('M d, Y', strtotime($order['date'])); ?></p>
+            <!-- Search and Filter Section -->
+            <div class="bg-white rounded-2xl p-4 md:p-6 shadow-lg animate-slide-up" style="animation-delay: 0.2s;">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                    <!-- Search Bar -->
+                    <div class="flex-1 lg:max-w-md">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400">
+                                    <circle cx="11" cy="11" r="8" />
+                                    <path d="m21 21-4.35-4.35" />
+                                </svg>
                             </div>
-                            <div class="text-right">
-                                <p class="text-2xl font-bold text-accent">₦<?php echo number_format($order['total']); ?></p>
-                                <p class="text-gray-500 text-sm"><?php echo $order['items_count']; ?> items</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center justify-between">
-                            <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold <?php echo $statusInfo['color'] . ' ' . $statusInfo['bg']; ?>">
-                                <i class="<?php echo $statusInfo['icon']; ?> mr-2 text-xs"></i>
-                                <?php echo ucfirst($order['status']); ?>
-                            </span>
-                            <button class="expand-btn w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
-                                <i class="fas fa-chevron-down text-gray-600 text-sm transition-transform duration-300"></i>
-                            </button>
+                            <input
+                                type="text"
+                                id="search-input"
+                                placeholder="Search orders by number or item..."
+                                class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all duration-200">
                         </div>
                     </div>
 
-                    <!-- Order Details (Expandable) -->
-                    <div id="details-<?php echo $order['id']; ?>" class="order-details">
-                        <div class="px-6 pb-6 border-t border-gray-100">
-                            <div class="pt-4 space-y-3">
-                                <h4 class="font-semibold text-dark mb-3">Order Items</h4>
-                                <?php foreach ($order['items'] as $item): ?>
-                                    <div class="flex items-center justify-between py-2">
-                                        <div class="flex-1">
-                                            <p class="font-medium text-dark text-sm"><?php echo $item['name']; ?></p>
-                                            <p class="text-gray-500 text-xs">Qty: <?php echo $item['quantity']; ?></p>
-                                        </div>
-                                        <span class="font-semibold text-accent">₦<?php echo number_format($item['price']); ?></span>
+                    <!-- Date Filter -->
+                    <div class="flex items-center space-x-4">
+                        <select id="date-filter" class="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="year">This Year</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Filter Tabs (Responsive Horizontal Scroll) -->
+            <div class="animate-slide-up" style="animation-delay: 0.3s;">
+                <div class="overflow-x-auto hide-scrollbar">
+                    <div class="flex space-x-3 pb-2 min-w-max">
+                        <a href="?status=all" 
+                            class="status-tab <?php echo $selectedStatus === 'all' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                            <i class="fas fa-list mr-2"></i>
+                            All Orders
+                        </a>
+                        <a href="?status=confirmed" 
+                            class="status-tab <?php echo $selectedStatus === 'confirmed' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Confirmed
+                        </a>
+                        <a href="?status=processing" 
+                            class="status-tab <?php echo $selectedStatus === 'processing' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                            <i class="fas fa-clock mr-2"></i>
+                            Processing
+                        </a>
+                        <a href="?status=shipped" 
+                            class="status-tab <?php echo $selectedStatus === 'shipped' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                            <i class="fas fa-truck mr-2"></i>
+                            Shipped
+                        </a>
+                        <a href="?status=delivered" 
+                            class="status-tab <?php echo $selectedStatus === 'delivered' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                            <i class="fas fa-check-double mr-2"></i>
+                            Delivered
+                        </a>
+                        <a href="?status=cancelled" 
+                            class="status-tab <?php echo $selectedStatus === 'cancelled' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                            <i class="fas fa-times-circle mr-2"></i>
+                            Cancelled
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Info -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-slide-up" style="animation-delay: 0.4s;">
+                <div>
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-1">
+                        <?php echo $selectedStatus === 'all' ? 'All Orders' : ucfirst($selectedStatus) . ' Orders'; ?>
+                    </h2>
+                    <p class="text-gray-600 text-sm md:text-base">
+                        Showing <?php echo count($orders); ?> orders
+                        <?php if ($selectedStatus !== 'all'): ?>
+                            with status "<?php echo ucfirst($selectedStatus); ?>"
+                        <?php endif; ?>
+                    </p>
+                </div>
+
+                <!-- Refresh Button -->
+                <button id="refresh-btn" class="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 transition-all duration-300 hover:scale-105">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    <span class="hidden sm:inline">Refresh</span>
+                </button>
+            </div>
+
+            <!-- Orders List -->
+            <div id="orders-container" class="space-y-4 animate-slide-up" style="animation-delay: 0.5s;">
+                <?php if (empty($orders)): ?>
+                    <!-- Empty State -->
+                    <div class="text-center py-16 animate-fade-in">
+                        <div class="w-24 h-24 md:w-32 md:h-32 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-shopping-bag text-gray-400 text-2xl md:text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-3">No Orders Found</h3>
+                        <p class="text-gray-600 text-sm md:text-base mb-6 max-w-md mx-auto">
+                            <?php if ($selectedStatus !== 'all'): ?>
+                                You don't have any <?php echo $selectedStatus; ?> orders yet.
+                            <?php else: ?>
+                                You haven't placed any orders yet. Start shopping to see your orders here!
+                            <?php endif; ?>
+                        </p>
+                        <a href="dashboard.php" class="inline-flex items-center px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-all duration-300 transform hover:scale-105">
+                            <i class="fas fa-shopping-cart mr-2"></i>
+                            Start Shopping
+                        </a>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($orders as $index => $order):
+                        $statusInfo = getStatusInfo($order['status']);
+                    ?>
+                        <div class="order-card bg-white rounded-3xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 animate-scale-in"
+                            data-status="<?php echo $order['status']; ?>"
+                            data-order-number="<?php echo strtolower($order['order_number']); ?>"
+                            data-items="<?php echo strtolower(implode(' ', array_column($order['items'], 'name'))); ?>"
+                            style="animation-delay: <?php echo $index * 0.1; ?>s;">
+
+                            <!-- Order Header -->
+                            <div class="p-4 md:p-6 cursor-pointer" onclick="toggleOrderDetails('<?php echo $order['order_number']; ?>')">
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                                    <div class="flex-1">
+                                        <h3 class="font-bold text-gray-900 text-base md:text-lg"><?php echo $order['order_number']; ?></h3>
+                                        <p class="text-gray-500 text-xs md:text-sm">
+                                            <?php echo date('M d, Y \a\t g:i A', strtotime($order['created_at'])); ?>
+                                        </p>
+                                        <?php if (!empty($order['shipping_city'])): ?>
+                                            <p class="text-gray-400 text-xs mt-1">
+                                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                                <?php echo $order['shipping_city'] . ', ' . $order['shipping_state']; ?>
+                                            </p>
+                                        <?php endif; ?>
                                     </div>
-                                <?php endforeach; ?>
+                                    <div class="text-left sm:text-right">
+                                        <p class="text-xl md:text-2xl font-bold text-orange-500">₦<?php echo number_format($order['total_amount']); ?></p>
+                                        <p class="text-gray-500 text-xs md:text-sm"><?php echo $order['items_count']; ?> item<?php echo $order['items_count'] > 1 ? 's' : ''; ?></p>
+                                        <?php if ($order['payment_status'] === 'verified'): ?>
+                                            <p class="text-green-600 text-xs mt-1">
+                                                <i class="fas fa-check-circle mr-1"></i>
+                                                Paid
+                                            </p>
+                                        <?php elseif ($order['payment_status'] === 'pending'): ?>
+                                            <p class="text-yellow-600 text-xs mt-1">
+                                                <i class="fas fa-clock mr-1"></i>
+                                                Payment Pending
+                                            </p>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
 
-                                <!-- Action Buttons -->
-                                <div class="flex space-x-3 mt-6">
-                                    <?php if ($order['status'] === 'delivered'): ?>
-                                        <button class="flex-1 bg-accent text-white py-3 rounded-2xl font-semibold hover:bg-orange-600 transition-colors">
-                                            Reorder
-                                        </button>
-                                        <button class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-2xl font-semibold hover:bg-gray-200 transition-colors">
-                                            Rate Order
-                                        </button>
-                                    <?php elseif ($order['status'] === 'processing'): ?>
-                                        <button class="flex-1 bg-blue-500 text-white py-3 rounded-2xl font-semibold hover:bg-blue-600 transition-colors">
-                                            Track Order
-                                        </button>
-                                        <button class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-2xl font-semibold hover:bg-gray-200 transition-colors">
-                                            Contact Support
-                                        </button>
-                                    <?php elseif ($order['status'] === 'pending'): ?>
-                                        <button class="flex-1 bg-red-500 text-white py-3 rounded-2xl font-semibold hover:bg-red-600 transition-colors">
-                                            Cancel Order
-                                        </button>
-                                        <button class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-2xl font-semibold hover:bg-gray-200 transition-colors">
-                                            Modify Order
-                                        </button>
-                                    <?php else: ?>
-                                        <button class="flex-1 bg-accent text-white py-3 rounded-2xl font-semibold hover:bg-orange-600 transition-colors">
-                                            Reorder
-                                        </button>
-                                    <?php endif; ?>
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                    <span class="status-badge inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-semibold <?php echo $statusInfo['color'] . ' ' . $statusInfo['bg']; ?> w-fit">
+                                        <i class="<?php echo $statusInfo['icon']; ?> mr-2 text-xs"></i>
+                                        <?php echo ucfirst($order['status']); ?>
+                                    </span>
+                                    <button class="expand-btn w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors self-end sm:self-center">
+                                        <i class="fas fa-chevron-down text-gray-600 text-sm transition-transform duration-300"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Order Details (Expandable) -->
+                            <div id="details-<?php echo $order['order_number']; ?>" class="order-details">
+                                <div class="px-4 md:px-6 pb-4 md:pb-6 border-t border-gray-100">
+                                    <div class="pt-4 space-y-4">
+                                        <h4 class="font-semibold text-gray-900 mb-3 text-sm md:text-base">Order Items</h4>
+                                        
+                                        <!-- Order Items Grid -->
+                                        <div class="space-y-3">
+                                            <?php foreach ($order['items'] as $item): ?>
+                                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl">
+                                                    <?php if (!empty($item['image'])): ?>
+                                                        <img src="../assets/uploads/<?php echo $item['image']; ?>" 
+                                                             alt="<?php echo htmlspecialchars($item['name']); ?>"
+                                                             class="w-12 h-12 md:w-16 md:h-16 rounded-lg object-cover flex-shrink-0">
+                                                    <?php else: ?>
+                                                        <div class="w-12 h-12 md:w-16 md:h-16 bg-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                            <i class="fas fa-image text-gray-400"></i>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="font-medium text-gray-900 text-sm md:text-base truncate">
+                                                            <?php echo htmlspecialchars($item['name']); ?>
+                                                        </p>
+                                                        <p class="text-gray-500 text-xs md:text-sm">
+                                                            Qty: <?php echo $item['quantity']; ?> × ₦<?php echo number_format($item['price']); ?>
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div class="text-right flex-shrink-0">
+                                                        <span class="font-semibold text-orange-500 text-sm md:text-base">
+                                                            ₦<?php echo number_format($item['subtotal']); ?>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+
+                                        <!-- Order Summary -->
+                                        <div class="bg-gray-50 rounded-xl p-4 space-y-2">
+                                            <div class="flex justify-between text-sm">
+                                                <span class="text-gray-600">Subtotal:</span>
+                                                <span class="text-gray-900">₦<?php echo number_format($order['subtotal']); ?></span>
+                                            </div>
+                                            <div class="flex justify-between text-sm">
+                                                <span class="text-gray-600">Delivery Fee:</span>
+                                                <span class="text-gray-900">₦<?php echo number_format($order['delivery_fee']); ?></span>
+                                            </div>
+                                            <div class="flex justify-between text-base font-semibold pt-2 border-t border-gray-200">
+                                                <span class="text-gray-900">Total:</span>
+                                                <span class="text-orange-500">₦<?php echo number_format($order['total_amount']); ?></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Action Buttons -->
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
+                                            <?php if ($order['status'] === 'delivered'): ?>
+                                                <button onclick="reorderItems('<?php echo $order['order_number']; ?>')" 
+                                                        class="w-full bg-orange-500 text-white py-3 rounded-2xl font-semibold hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
+                                                    <i class="fas fa-redo mr-2"></i>
+                                                    Reorder
+                                                </button>
+                                                <button onclick="rateOrder('<?php echo $order['order_number']; ?>')" 
+                                                        class="w-full bg-gray-100 text-gray-700 py-3 rounded-2xl font-semibold hover:bg-gray-200 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
+                                                    <i class="fas fa-star mr-2"></i>
+                                                    Rate Order
+                                                </button>
+                                            <?php elseif ($order['status'] === 'processing' || $order['status'] === 'confirmed'): ?>
+                                                <button onclick="trackOrder('<?php echo $order['order_number']; ?>')" 
+                                                        class="w-full bg-blue-500 text-white py-3 rounded-2xl font-semibold hover:bg-blue-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
+                                                    <i class="fas fa-truck mr-2"></i>
+                                                    Track Order
+                                                </button>
+                                                <button onclick="contactSupport('<?php echo $order['order_number']; ?>')" 
+                                                        class="w-full bg-gray-100 text-gray-700 py-3 rounded-2xl font-semibold hover:bg-gray-200 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
+                                                    <i class="fas fa-headset mr-2"></i>
+                                                    Contact Support
+                                                </button>
+                                            <?php elseif ($order['status'] === 'pending_payment'): ?>
+                                                <button onclick="cancelOrder('<?php echo $order['order_number']; ?>')" 
+                                                        class="w-full bg-red-500 text-white py-3 rounded-2xl font-semibold hover:bg-red-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
+                                                    <i class="fas fa-times mr-2"></i>
+                                                    Cancel Order
+                                                </button>
+                                                <button onclick="retryPayment('<?php echo $order['order_number']; ?>')" 
+                                                        class="w-full bg-orange-500 text-white py-3 rounded-2xl font-semibold hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
+                                                    <i class="fas fa-credit-card mr-2"></i>
+                                                    Complete Payment
+                                                </button>
+                                            <?php else: ?>
+                                                <button onclick="reorderItems('<?php echo $order['order_number']; ?>')" 
+                                                        class="w-full bg-orange-500 text-white py-3 rounded-2xl font-semibold hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
+                                                    <i class="fas fa-redo mr-2"></i>
+                                                    Reorder
+                                                </button>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
-
-        <!-- Empty State (Hidden by default) -->
-        <div id="empty-state" class="hidden text-center py-12 animate-fade-in">
-            <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-shopping-bag text-gray-400 text-3xl"></i>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
-            <h3 class="text-xl font-bold text-dark mb-2">No Orders Found</h3>
-            <p class="text-gray-500 mb-6">You haven't placed any orders yet</p>
-            <a href="index.php" class="bg-accent text-white px-8 py-3 rounded-2xl font-semibold hover:bg-orange-600 transition-colors inline-block">
-                Start Shopping
-            </a>
         </div>
     </main>
 
     <!-- Bottom navigation include -->
     <?php include 'partials/bottom-nav.php'; ?>
 
+    <!-- Scripts -->
+    <script src="../assets/js/toast.js"></script>
+    <script src="js/script.js"></script>
     <script>
-        // Premium mobile interactions with enhanced animations
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize cart count
+            updateCartCount();
+
             // Order details toggle functionality
-            window.toggleOrderDetails = function(orderId) {
-                const detailsElement = document.getElementById(`details-${orderId}`);
+            window.toggleOrderDetails = function(orderNumber) {
+                const detailsElement = document.getElementById(`details-${orderNumber}`);
                 const expandBtn = detailsElement.parentElement.querySelector('.expand-btn i');
 
                 if (detailsElement.classList.contains('expanded')) {
@@ -236,82 +516,91 @@ require_once 'partials/headers.php';
                 }
             };
 
-            // Filter functionality
-            const filterButtons = document.querySelectorAll('.filter-button');
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
             const orderCards = document.querySelectorAll('.order-card');
-            const emptyState = document.getElementById('empty-state');
-            const ordersContainer = document.getElementById('orders-container');
 
-            filterButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const status = this.dataset.status;
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
 
-                    // Update active button
-                    filterButtons.forEach(btn => {
-                        btn.classList.remove('active', 'bg-accent', 'text-white');
-                        btn.classList.add('bg-white', 'text-gray-600');
-                    });
+                    orderCards.forEach(card => {
+                        const orderNumber = card.getAttribute('data-order-number');
+                        const items = card.getAttribute('data-items');
+                        const isVisible = orderNumber.includes(searchTerm) || items.includes(searchTerm);
 
-                    this.classList.add('active', 'bg-accent', 'text-white');
-                    this.classList.remove('bg-white', 'text-gray-600');
-
-                    // Add bounce animation
-                    this.classList.add('animate-bounce-gentle');
-                    setTimeout(() => {
-                        this.classList.remove('animate-bounce-gentle');
-                    }, 600);
-
-                    // Filter orders
-                    let visibleCount = 0;
-                    orderCards.forEach((card, index) => {
-                        const cardStatus = card.dataset.status;
-
-                        if (status === 'all' || cardStatus === status) {
+                        if (isVisible) {
                             card.style.display = 'block';
-                            card.style.animationDelay = `${index * 0.1}s`;
-                            card.classList.add('animate-scale-in');
-                            visibleCount++;
+                            card.classList.add('animate-fade-in');
                         } else {
                             card.style.display = 'none';
+                            card.classList.remove('animate-fade-in');
                         }
                     });
 
-                    // Show/hide empty state
-                    if (visibleCount === 0) {
-                        ordersContainer.style.display = 'none';
-                        emptyState.classList.remove('hidden');
-                    } else {
-                        ordersContainer.style.display = 'block';
-                        emptyState.classList.add('hidden');
+                    // Show empty state if no results
+                    const visibleCards = Array.from(orderCards).filter(card => card.style.display !== 'none').length;
+                    const emptyState = document.getElementById('empty-state');
+                    const ordersContainer = document.getElementById('orders-container');
+                    
+                    if (visibleCards === 0 && searchTerm) {
+                        // Create dynamic empty state for search
+                        ordersContainer.innerHTML = `
+                            <div class="text-center py-16 animate-fade-in">
+                                <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <i class="fas fa-search text-gray-400 text-3xl"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-900 mb-3">No Orders Found</h3>
+                                <p class="text-gray-600 mb-6">No orders match your search for "${searchTerm}"</p>
+                                <button onclick="document.getElementById('search-input').value=''; document.getElementById('search-input').dispatchEvent(new Event('input'))" 
+                                        class="bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition-colors">
+                                    Clear Search
+                                </button>
+                            </div>
+                        `;
+                    } else if (visibleCards === 0 && !searchTerm) {
+                        // Restore original empty state
+                        location.reload();
                     }
                 });
-            });
+            }
+
+            // Date filter functionality
+            const dateFilter = document.getElementById('date-filter');
+            if (dateFilter) {
+                dateFilter.addEventListener('change', function() {
+                    // You can implement date filtering here
+                    console.log('Date filter changed to:', this.value);
+                    // For now, just show a toast
+                    showToasted(`Filtering orders for: ${this.options[this.selectedIndex].text}`, 'info');
+                });
+            }
 
             // Refresh functionality
             const refreshBtn = document.getElementById('refresh-btn');
-            refreshBtn.addEventListener('click', function() {
-                // Add rotation animation
-                const icon = this.querySelector('i');
-                icon.style.animation = 'spin 1s linear infinite';
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function() {
+                    const icon = this.querySelector('i');
+                    icon.style.animation = 'spin 1s linear infinite';
 
-                // Simulate refresh
-                setTimeout(() => {
-                    icon.style.animation = '';
-
-                    // Add success feedback
-                    this.classList.add('bg-green-500');
-                    icon.classList.remove('fa-sync-alt');
-                    icon.classList.add('fa-check');
-                    icon.style.color = 'white';
-
+                    // Simulate refresh
                     setTimeout(() => {
-                        this.classList.remove('bg-green-500');
-                        icon.classList.remove('fa-check');
-                        icon.classList.add('fa-sync-alt');
-                        icon.style.color = '';
-                    }, 1000);
-                }, 2000);
-            });
+                        icon.style.animation = '';
+                        showToasted('Orders refreshed successfully!', 'success');
+                        
+                        // Add success feedback
+                        this.classList.add('bg-green-500', 'text-white');
+                        icon.classList.remove('fa-sync-alt');
+                        icon.classList.add('fa-check');
+
+                        setTimeout(() => {
+                            this.classList.remove('bg-green-500', 'text-white');
+                            icon.classList.remove('fa-check');
+                            icon.classList.add('fa-sync-alt');
+                        }, 1000);
+                    }, 2000);
+                });
+            }
 
             // Pull to refresh functionality
             let startY = 0;
@@ -359,14 +648,7 @@ require_once 'partials/headers.php';
                     pullIndicator.innerHTML = '<i class="fas fa-sync-alt fa-spin mr-2"></i><span>Refreshing...</span>';
 
                     setTimeout(() => {
-                        pullIndicator.style.transform = 'translateY(-100%)';
-                        pullIndicator.style.opacity = '0';
-                        pullIndicator.classList.remove('visible');
-
-                        // Reset after animation
-                        setTimeout(() => {
-                            pullIndicator.innerHTML = '<i class="fas fa-arrow-down mr-2"></i><span>Pull to refresh</span>';
-                        }, 300);
+                        location.reload(); // Actual refresh
                     }, 1500);
                 } else {
                     pullIndicator.style.transform = 'translateY(-100%)';
@@ -379,71 +661,169 @@ require_once 'partials/headers.php';
                 currentY = 0;
             });
 
-            // Enhanced bottom navigation with premium interactions
-            const navItems = document.querySelectorAll('.nav-item');
-
-            navItems.forEach(item => {
-                item.addEventListener('click', function(e) {
-                    // Add ripple effect
-                    const ripple = document.createElement('div');
-                    ripple.style.position = 'absolute';
-                    ripple.style.borderRadius = '50%';
-                    ripple.style.background = 'rgba(249, 115, 22, 0.3)';
-                    ripple.style.transform = 'scale(0)';
-                    ripple.style.animation = 'ripple 0.6s linear';
-                    ripple.style.left = '50%';
-                    ripple.style.top = '50%';
-                    ripple.style.width = '60px';
-                    ripple.style.height = '60px';
-                    ripple.style.marginLeft = '-30px';
-                    ripple.style.marginTop = '-30px';
-
-                    this.appendChild(ripple);
-
-                    setTimeout(() => {
-                        ripple.remove();
-                    }, 600);
-                });
-
-                // Add hover effects for desktop
-                item.addEventListener('mouseenter', function() {
-                    if (!this.classList.contains('nav-item-active')) {
-                        const icon = this.querySelector('.nav-icon');
-                        icon.style.transform = 'translateY(-2px) scale(1.05)';
-                    }
-                });
-
-                item.addEventListener('mouseleave', function() {
-                    if (!this.classList.contains('nav-item-active')) {
-                        const icon = this.querySelector('.nav-icon');
-                        icon.style.transform = 'translateY(0) scale(1)';
-                    }
-                });
-            });
-
             // Stagger animation for order cards
-            const orderCards2 = document.querySelectorAll('.order-card');
-            orderCards2.forEach((card, index) => {
+            orderCards.forEach((card, index) => {
                 card.style.animationDelay = `${index * 0.1}s`;
             });
-
-            // Add CSS for ripple and spin animations
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes ripple {
-                    to {
-                        transform: scale(2);
-                        opacity: 0;
-                    }
-                }
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-            `;
-            document.head.appendChild(style);
         });
+
+        // Action button functions
+        window.reorderItems = async function(orderNumber) {
+            try {
+                showToasted('Adding items to cart...', 'info');
+                
+                // Simulate API call to reorder
+                setTimeout(() => {
+                    showToasted('Items added to cart successfully!', 'success');
+                    updateCartCount();
+                }, 1500);
+            } catch (error) {
+                showToasted('Failed to reorder items', 'error');
+            }
+        };
+
+        window.trackOrder = function(orderNumber) {
+            showToasted(`Tracking order ${orderNumber}...`, 'info');
+            // Implement order tracking
+        };
+
+        window.cancelOrder = async function(orderNumber) {
+            if (confirm('Are you sure you want to cancel this order?')) {
+                try {
+                    showToasted('Cancelling order...', 'info');
+                    
+                    // Simulate API call
+                    setTimeout(() => {
+                        showToasted('Order cancelled successfully', 'success');
+                        location.reload();
+                    }, 1500);
+                } catch (error) {
+                    showToasted('Failed to cancel order', 'error');
+                }
+            }
+        };
+
+        window.rateOrder = function(orderNumber) {
+            showToasted('Opening rating dialog...', 'info');
+            // Implement rating functionality
+        };
+
+        window.contactSupport = function(orderNumber) {
+            showToasted('Connecting to support...', 'info');
+            // Implement support contact
+        };
+
+        window.retryPayment = function(orderNumber) {
+            showToasted('Redirecting to payment...', 'info');
+            setTimeout(() => {
+                window.location.href = `checkout.php?retry=${orderNumber}`;
+            }, 1000);
+        };
+
+        // CSS Animations
+        const style = document.createElement('style');
+        style.textContent = `
+            .hide-scrollbar {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .hide-scrollbar::-webkit-scrollbar {
+                display: none;
+            }
+            
+            .status-tab {
+                background: white;
+                color: #6b7280;
+                border: 1px solid #e5e7eb;
+            }
+            
+            .status-tab.active {
+                background: linear-gradient(135deg, #f97316, #ea580c);
+                color: white;
+                border: 1px solid #f97316;
+                box-shadow: 0 10px 25px rgba(249, 115, 22, 0.3);
+            }
+
+            .order-details {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease-out;
+            }
+
+            .order-details.expanded {
+                max-height: 1000px;
+                transition: max-height 0.5s ease-in;
+            }
+            
+            .animate-float {
+                animation: float 6s ease-in-out infinite;
+            }
+            
+            @keyframes float {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(-20px); }
+            }
+            
+            .animate-scale-in {
+                animation: scaleIn 0.5s ease-out forwards;
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            
+            @keyframes scaleIn {
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+            
+            .animate-slide-up {
+                animation: slideUp 0.6s ease-out forwards;
+            }
+            
+            @keyframes slideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            .animate-fade-in {
+                animation: fadeIn 0.4s ease-out;
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+
+            .pull-indicator.visible {
+                background: #22c55e;
+            }
+
+            /* Responsive improvements */
+            @media (max-width: 640px) {
+                .order-card {
+                    margin: 0 -1rem;
+                    border-radius: 1.5rem;
+                }
+                
+                .container {
+                    padding-left: 1rem;
+                    padding-right: 1rem;
+                }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
-
 </html>

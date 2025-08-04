@@ -1,111 +1,15 @@
 <?php
 require_once 'util/util.php';
 require_once 'initialize.php';
-require_once 'partials/headers.php';
 
 // Get product ID from URL
 $product_id = isset($_GET['id']) ? (int)$_GET['id'] : 1;
 $product = getProductById($pdo, $product_id);
 
 // Cart count
-$cartCount = isset($_SESSION['cart']) ? array_sum(array_column($_SESSION['cart'], 'quantity')) : 0;
+$cartCount = getUserCartTotals($pdo, $_SESSION['user_id']);
+require_once 'partials/headers.php';
 ?>
-
-<style>
-  :root {
-    --primary-color: #6366f1;
-    --secondary-color: #8b5cf6;
-    --accent-color: #f59e0b;
-    --success-color: #10b981;
-    --error-color: #ef4444;
-    --warning-color: #f59e0b;
-    --custom-dark: #1f2937;
-    --custom-gray: #f9fafb;
-    --custom-accent: #6366f1;
-  }
-
-  .quantity-btn {
-    transition: all 0.3s ease;
-  }
-
-  .quantity-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  }
-
-  .product-image {
-    transition: transform 0.3s ease;
-  }
-
-  .product-image:hover {
-    transform: scale(1.05);
-  }
-
-  .action-button {
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .action-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
-  }
-
-  .action-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
-  }
-
-  .action-button:hover::before {
-    left: 100%;
-  }
-
-  .star-rating {
-    color: #fbbf24;
-  }
-
-  .loading-spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #ffffff;
-    border-top: 2px solid transparent;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-
-  .fade-in {
-    animation: fadeIn 0.5s ease-in;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-</style>
 
 <body class="bg-custom-gray min-h-screen">
   <div class="container mx-auto pt-6">
@@ -224,7 +128,7 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array_column($_SESSION['cart']
           <span id="orderBtnText">Order Now</span>
           <div id="orderBtnSpinner" class="loading-spinner ml-2 hidden"></div>
         </button>
-        <button id="addCartBtn" class="flex-1 border-2 border-custom-accent text-custom-accent py-4 px-8 rounded-2xl font-semibold text-base action-button hover:bg-custom-accent hover:text-white transition-all duration-300 min-w-[160px] flex items-center justify-center">
+        <button id="addCartBtn" class="flex-1 border-2 border-custom-accent text-custom-accent py-4 px-8 rounded-2xl font-semibold text-base action-button hover:bg-custom-accent hover:text-orange-600 transition-all duration-300 min-w-[160px] flex items-center justify-center">
           <span id="addCartBtnText">Add to Cart</span>
           <div id="addCartBtnSpinner" class="loading-spinner ml-2 hidden"></div>
         </button>

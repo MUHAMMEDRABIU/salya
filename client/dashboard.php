@@ -157,7 +157,7 @@ $categories = getProductCategories($pdo);
                                     <span class="text-lg font-bold text-orange-500">₦<?php echo number_format($product['price']); ?></span>
                                     <!-- Updated Cart Icon Button -->
                                     <button onclick="handleAddToCart(<?php echo $product['id']; ?>); event.stopPropagation();" class="add-to-cart-btn bg-gray-900 text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-gray-800 transition-all duration-300 hover:scale-110 active:scale-95 shadow-md" data-product-id="<?php echo $product['id']; ?>">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <circle cx="8" cy="21" r="1" />
                                             <circle cx="19" cy="21" r="1" />
                                             <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
