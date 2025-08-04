@@ -216,6 +216,7 @@ $cartCount = $cartTotals['item_count'];
     <?php include 'partials/bottom-nav.php'; ?>
 
     <script src="../assets/js/toast.js"></script>
+    <script src="js/script.js"></script>
     <script>
         // Custom confirm modal functionality
         function showCustomConfirm(title, message, iconClass = 'fa-exclamation-triangle', iconColor = 'text-red-500') {
@@ -314,34 +315,53 @@ $cartCount = $cartTotals['item_count'];
                     let quantity = parseInt(quantityDisplay.textContent);
                     quantity = action === 'increase' ? quantity + 1 : Math.max(1, quantity - 1);
 
+                    console.log('🔍 DEBUG - Cart operation:', {
+                        itemId,
+                        quantity,
+                        action
+                    }); // DEBUG
+
                     try {
+                        // ✅ FIXED: Use unified endpoint and correct parameter
                         const res = await fetch('api/update-cart.php', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({
-                                id: itemId,
-                                quantity
+                                product_id: itemId, // ✅ FIXED: Changed from 'id' to 'product_id'
+                                quantity: quantity,
+                                action: action
                             })
                         });
+
+                        console.log('🔍 DEBUG - Response status:', res.status); // DEBUG
+
+                        if (!res.ok) {
+                            const errorText = await res.text();
+                            console.error('🔍 DEBUG - Error response:', errorText);
+                            throw new Error(`HTTP error! status: ${res.status}`);
+                        }
+
                         const result = await res.json();
+                        console.log('🔍 DEBUG - API Response:', result); // DEBUG
 
                         if (result.success) {
                             // Animate quantity change
                             quantityDisplay.style.transform = 'scale(1.2)';
-                            quantityDisplay.textContent = quantity;
+                            quantityDisplay.textContent = result.quantity;
                             setTimeout(() => {
                                 quantityDisplay.style.transform = 'scale(1)';
                             }, 200);
 
-                            updateTotals();
+                            updateTotalsFromAPI(result);
                             updateCartCount();
+                            // showToasted(result.message, 'success');
                         } else {
                             showToasted(result.message || 'Failed to update cart', 'error');
                         }
                     } catch (error) {
-                        console.log(error)
+                        console.error('🔍 DEBUG - Error details:', error);
                         showToasted('Network error occurred', 'error');
                     } finally {
                         // Restore button
@@ -351,7 +371,7 @@ $cartCount = $cartTotals['item_count'];
                 });
             });
 
-            // Remove item with animation
+            // ✅ UPDATED: Remove item using unified endpoint
             document.querySelectorAll('.remove-item-btn').forEach(btn => {
                 btn.addEventListener('click', async function() {
                     const itemId = this.getAttribute('data-item-id');
@@ -372,13 +392,15 @@ $cartCount = $cartTotals['item_count'];
                     cartItem.style.opacity = '0';
 
                     try {
-                        const res = await fetch('api/remove-cart-item.php', {
+                        // ✅ FIXED: Use unified endpoint
+                        const res = await fetch('api/update-cart.php', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({
-                                id: itemId
+                                product_id: itemId, // ✅ FIXED: Changed from 'id' to 'product_id'
+                                action: 'remove'
                             })
                         });
 
@@ -386,16 +408,16 @@ $cartCount = $cartTotals['item_count'];
                         if (result.success) {
                             setTimeout(() => {
                                 cartItem.remove();
-                                updateTotals();
+                                updateTotalsFromAPI(result);
                                 updateCartCount();
                                 checkEmptyCart();
                             }, 300);
-                            showToasted('Item removed from cart', 'info');
+                            showToasted(result.message, 'info');
                         } else {
                             // Restore item if failed
                             cartItem.style.transform = 'translateX(0)';
                             cartItem.style.opacity = '1';
-                            showToasted('Failed to remove item', 'error');
+                            showToasted(result.message || 'Failed to remove item', 'error');
                         }
                     } catch (error) {
                         cartItem.style.transform = 'translateX(0)';
@@ -405,7 +427,7 @@ $cartCount = $cartTotals['item_count'];
                 });
             });
 
-            // Clear cart button with confirmation
+            // ✅ UPDATED: Clear cart using unified endpoint
             const clearCartBtn = document.getElementById('clear-cart-btn');
             if (clearCartBtn) {
                 clearCartBtn.addEventListener('click', async function() {
@@ -424,9 +446,18 @@ $cartCount = $cartTotals['item_count'];
                     this.disabled = true;
 
                     try {
-                        const res = await fetch('api/clear-cart.php', {
-                            method: 'POST'
+                        // ✅ FIXED: Use unified endpoint
+                        const res = await fetch('api/update-cart.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                product_id: 0, // Not used for clear action
+                                action: 'clear'
+                            })
                         });
+
                         const result = await res.json();
 
                         if (result.success) {
@@ -441,14 +472,14 @@ $cartCount = $cartTotals['item_count'];
                             });
 
                             setTimeout(() => {
-                                updateTotals();
+                                updateTotalsFromAPI(result);
                                 updateCartCount();
                                 checkEmptyCart();
                             }, items.length * 100 + 300);
 
-                            showToasted('Cart cleared successfully', 'info');
+                            showToasted(result.message, 'info');
                         } else {
-                            showToasted('Failed to clear cart', 'error');
+                            showToasted(result.message || 'Failed to clear cart', 'error');
                         }
                     } catch (error) {
                         showToasted('Network error occurred', 'error');
@@ -543,7 +574,7 @@ $cartCount = $cartTotals['item_count'];
         }
 
         // Enhanced update totals with animations
-        function updateTotals() {
+        function updateTotalsFromAPI() {
             const cartItems = document.querySelectorAll('.cart-item');
             let subtotal = 0;
 

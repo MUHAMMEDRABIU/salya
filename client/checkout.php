@@ -140,7 +140,7 @@ require_once 'partials/headers.php';
                             <div class="mt-4">
                                 <span class="text-gray-600 text-sm">Virtual Account Number:</span>
                                 <div class="flex items-center justify-between bg-white rounded-lg p-3 mt-2 border-2 border-accent">
-                                    <span class="text-2xl font-bold text-dark tracking-wider" id="accountNumber">
+                                    <span class="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-dark tracking-wider" id="accountNumber">
                                         <?php echo $accountNumber; ?>
                                     </span>
                                     <button onclick="copyAccountNumber()" class="bg-accent hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center transform hover:scale-105">
