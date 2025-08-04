@@ -336,7 +336,7 @@ $cartCount = $cartTotals['item_count'];
                             }, 200);
 
                             updateTotals();
-                            updateCartCount(); // Update nav cart count
+                            updateCartCount();
                         } else {
                             showToasted(result.message || 'Failed to update cart', 'error');
                         }
@@ -387,7 +387,7 @@ $cartCount = $cartTotals['item_count'];
                             setTimeout(() => {
                                 cartItem.remove();
                                 updateTotals();
-                                updateCartCount(); // Update nav cart count
+                                updateCartCount();
                                 checkEmptyCart();
                             }, 300);
                             showToasted('Item removed from cart', 'info');
@@ -442,7 +442,7 @@ $cartCount = $cartTotals['item_count'];
 
                             setTimeout(() => {
                                 updateTotals();
-                                updateCartCount(); // Update nav cart count
+                                updateCartCount();
                                 checkEmptyCart();
                             }, items.length * 100 + 300);
 
