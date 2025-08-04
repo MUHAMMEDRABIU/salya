@@ -30,7 +30,7 @@ try {
     }
 
     // Create upload directory if it doesn't exist
-    $uploadDir = __DIR__ . '/../../assets/img/avatars/';
+    $uploadDir = __DIR__ . '/../../assets/uploads/';
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
     }
@@ -50,8 +50,12 @@ try {
         throw new Exception('Failed to save uploaded file');
     }
 
-    // Create thumbnail (optional)
-    createThumbnail($targetPath, $uploadDir . 'thumb_' . $filename, 150, 150);
+    // Create thumbnail only if GD extension is available
+    if (extension_loaded('gd')) {
+        createThumbnail($targetPath, $uploadDir . 'thumb_' . $filename, 150, 150);
+    } else {
+        error_log('GD extension not available - skipping thumbnail creation');
+    }
 
     // Update database
     $stmt = $pdo->prepare("UPDATE users SET avatar = ?, updated_at = NOW() WHERE id = ?");
@@ -67,7 +71,7 @@ try {
     if ($currentAvatar && $currentAvatar !== $filename) {
         $oldAvatarPath = $uploadDir . $currentAvatar;
         $oldThumbPath = $uploadDir . 'thumb_' . $currentAvatar;
-        
+
         if (file_exists($oldAvatarPath)) {
             unlink($oldAvatarPath);
         }
@@ -79,9 +83,9 @@ try {
     echo json_encode([
         'success' => true,
         'message' => 'Avatar uploaded successfully',
-        'avatar_url' => '../assets/img/avatars/' . $filename
+        'avatar_url' => '../assets/uploads/' . $filename,
+        'thumbnail_url' => extension_loaded('gd') ? '../assets/uploads/thumb_' . $filename : null
     ]);
-
 } catch (Exception $e) {
     error_log('Avatar upload error: ' . $e->getMessage());
     echo json_encode([
@@ -90,26 +94,53 @@ try {
     ]);
 }
 
-function createThumbnail($source, $destination, $width, $height) {
+function createThumbnail($source, $destination, $width, $height)
+{
     try {
+        // Check if GD extension is loaded
+        if (!extension_loaded('gd')) {
+            throw new Exception('GD extension is not loaded');
+        }
+
         $info = getimagesize($source);
+        if (!$info) {
+            throw new Exception('Invalid image file');
+        }
+
         $mime = $info['mime'];
 
+        // Create image resource based on type
         switch ($mime) {
             case 'image/jpeg':
+                if (!function_exists('imagecreatefromjpeg')) {
+                    throw new Exception('JPEG support not available in GD');
+                }
                 $image = imagecreatefromjpeg($source);
                 break;
             case 'image/png':
+                if (!function_exists('imagecreatefrompng')) {
+                    throw new Exception('PNG support not available in GD');
+                }
                 $image = imagecreatefrompng($source);
                 break;
             case 'image/gif':
+                if (!function_exists('imagecreatefromgif')) {
+                    throw new Exception('GIF support not available in GD');
+                }
                 $image = imagecreatefromgif($source);
                 break;
             case 'image/webp':
+                if (!function_exists('imagecreatefromwebp')) {
+                    throw new Exception('WebP support not available in GD');
+                }
                 $image = imagecreatefromwebp($source);
                 break;
             default:
-                return false;
+                throw new Exception('Unsupported image type: ' . $mime);
+        }
+
+        if (!$image) {
+            throw new Exception('Failed to create image resource');
         }
 
         $originalWidth = imagesx($image);
@@ -121,46 +152,77 @@ function createThumbnail($source, $destination, $width, $height) {
         $newHeight = round($originalHeight * $ratio);
 
         $thumbnail = imagecreatetruecolor($width, $height);
-        
-        // Handle transparency for PNG and GIF
-        if ($mime == 'image/png' || $mime == 'image/gif') {
-            imagecolortransparent($thumbnail, imagecolorallocatealpha($thumbnail, 0, 0, 0, 127));
-            imagealphablending($thumbnail, false);
-            imagesavealpha($thumbnail, true);
+
+        if (!$thumbnail) {
+            imagedestroy($image);
+            throw new Exception('Failed to create thumbnail canvas');
         }
 
-        // Fill background
-        $backgroundColor = imagecolorallocate($thumbnail, 255, 255, 255);
-        imagefill($thumbnail, 0, 0, $backgroundColor);
+        // Handle transparency for PNG and GIF
+        if ($mime == 'image/png' || $mime == 'image/gif') {
+            $transparent = imagecolorallocatealpha($thumbnail, 0, 0, 0, 127);
+            imagecolortransparent($thumbnail, $transparent);
+            imagealphablending($thumbnail, false);
+            imagesavealpha($thumbnail, true);
+            imagefill($thumbnail, 0, 0, $transparent);
+        } else {
+            // Fill background with white for other formats
+            $backgroundColor = imagecolorallocate($thumbnail, 255, 255, 255);
+            imagefill($thumbnail, 0, 0, $backgroundColor);
+        }
 
         // Center the image
         $x = ($width - $newWidth) / 2;
         $y = ($height - $newHeight) / 2;
 
-        imagecopyresampled($thumbnail, $image, $x, $y, 0, 0, $newWidth, $newHeight, $originalWidth, $originalHeight);
+        // Resample the image
+        $resampleResult = imagecopyresampled(
+            $thumbnail,
+            $image,
+            $x,
+            $y,
+            0,
+            0,
+            $newWidth,
+            $newHeight,
+            $originalWidth,
+            $originalHeight
+        );
 
+        if (!$resampleResult) {
+            imagedestroy($image);
+            imagedestroy($thumbnail);
+            throw new Exception('Failed to resample image');
+        }
+
+        // Save the thumbnail
+        $saveResult = false;
         switch ($mime) {
             case 'image/jpeg':
-                imagejpeg($thumbnail, $destination, 90);
+                $saveResult = imagejpeg($thumbnail, $destination, 90);
                 break;
             case 'image/png':
-                imagepng($thumbnail, $destination, 9);
+                $saveResult = imagepng($thumbnail, $destination, 9);
                 break;
             case 'image/gif':
-                imagegif($thumbnail, $destination);
+                $saveResult = imagegif($thumbnail, $destination);
                 break;
             case 'image/webp':
-                imagewebp($thumbnail, $destination, 90);
+                $saveResult = imagewebp($thumbnail, $destination, 90);
                 break;
         }
 
+        // Cleanup
         imagedestroy($image);
         imagedestroy($thumbnail);
-        
+
+        if (!$saveResult) {
+            throw new Exception('Failed to save thumbnail');
+        }
+
         return true;
     } catch (Exception $e) {
         error_log('Thumbnail creation error: ' . $e->getMessage());
         return false;
     }
 }
-?>
