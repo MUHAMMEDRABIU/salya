@@ -4,9 +4,6 @@ header('Content-Type: application/json');
 require __DIR__ . '/../initialize.php';
 require __DIR__ . '/../util/utilities.php';
 
-error_reporting(E_ALL);
-ini_set('display_errors', 0);
-
 function logError($message, $data = [])
 {
     $log = "[UPDATE PRODUCT ERROR] $message\n";

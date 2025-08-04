@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 
-require __DIR__ . '/initialize.php';
+require __DIR__ . '/../initialize.php';
 require __DIR__ . '/../util/utilities.php';
 
 // Enable error reporting internally

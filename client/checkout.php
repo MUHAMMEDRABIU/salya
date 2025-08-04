@@ -36,9 +36,6 @@ $bankName = $account['bank_name'] ?? 'Unavailable';
 $customerName = $user['first_name'] . ' ' . $user['last_name'];
 $customerEmail = $user['email'];
 
-// Format account number
-$accountNumber = formatAccountNumber($accountNumber);
-
 require_once 'partials/headers.php';
 ?>
 

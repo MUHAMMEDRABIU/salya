@@ -133,18 +133,6 @@ function updateUserProfile($pdo, $user_id, $profile_data)
     }
 }
 
-function formatAccountNumber($accountNumber)
-{
-    // Remove any existing spaces or hyphens
-    $cleanNumber = preg_replace('/[\s\-]/', '', $accountNumber);
-
-    // Add hyphens every 4 digits
-    $formatted = chunk_split($cleanNumber, 4, '-');
-
-    // Remove trailing hyphen
-    return rtrim($formatted, '-');
-}
-
 /**
  * Change user password
  * @param PDO $pdo
