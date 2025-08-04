@@ -1,3 +1,9 @@
 // .gitignore
 .env
 *.sql
+*.log
+*.cache
+*.tmp
+*.bak
+avatars/
+uploads/
