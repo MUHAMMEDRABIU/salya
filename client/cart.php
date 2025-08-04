@@ -124,7 +124,7 @@ require_once 'partials/headers.php';
                                                     </button>
                                                 </div>
 
-                                                <!-- ✅ Quantity Controls Row (Subtotal removed) -->
+                                                <!-- ✅ FIXED: Quantity Controls Row with proper updating -->
                                                 <div class="flex items-center justify-between pt-2">
                                                     <div class="flex items-center space-x-2 xs:space-x-3">
                                                         <button class="quantity-btn decrease-btn w-7 h-7 xs:w-8 xs:h-8 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center hover:from-accent hover:to-orange-600 hover:text-white transition-all duration-300 shadow-soft" data-action="decrease">
@@ -134,10 +134,6 @@ require_once 'partials/headers.php';
                                                         <button class="quantity-btn increase-btn w-7 h-7 xs:w-8 xs:h-8 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center hover:from-accent hover:to-orange-600 hover:text-white transition-all duration-300 shadow-soft" data-action="increase">
                                                             <i class="fas fa-plus text-xs"></i>
                                                         </button>
-                                                    </div>
-                                                    <!-- ✅ Subtotal section removed - cleaner mobile layout -->
-                                                    <div class="text-right">
-                                                        <span class="text-xs text-gray-600">Qty: <?php echo $item['quantity']; ?></span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -705,6 +701,26 @@ require_once 'partials/headers.php';
                 cartBadge.parentElement.style.display = apiResponse.cart_count > 0 ? 'flex' : 'none';
             }
 
+            // ✅ ENHANCED: Update individual cart item quantity displays
+            if (apiResponse.product_id && apiResponse.quantity !== undefined) {
+                const cartItem = document.querySelector(`.cart-item[data-item-id="${apiResponse.product_id}"]`);
+                if (cartItem) {
+                    console.log('🔍 DEBUG - Updating item quantity display for product:', apiResponse.product_id, 'to qty:', apiResponse.quantity);
+
+                    // Method 2: Fallback - find by text content
+                    const qtyDisplays = cartItem.querySelectorAll('.text-right span');
+                    qtyDisplays.forEach(span => {
+                        if (span.textContent.includes('Qty:')) {
+                            span.textContent = `Qty: ${apiResponse.quantity}`;
+                            span.style.transform = 'scale(1.2)';
+                            setTimeout(() => span.style.transform = 'scale(1)', 200);
+                        }
+                    });
+
+                    // Method 3: Also update data attribute for consistency
+                    cartItem.setAttribute('data-current-qty', apiResponse.quantity);
+                }
+            }
         }
 
         // ✅ Enhanced empty cart check with Clear Cart button visibility

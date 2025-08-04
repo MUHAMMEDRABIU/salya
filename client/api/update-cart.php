@@ -5,10 +5,6 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
@@ -91,111 +87,140 @@ try {
         throw new Exception('Invalid JSON data received');
     }
 
-    // Validate required parameters
-    if (!isset($data['product_id'])) {
-        throw new Exception('Missing required parameter: product_id');
-    }
-
-    $product_id = (int)$data['product_id'];
-    $quantity = isset($data['quantity']) ? (int)$data['quantity'] : 1;
+    // ✅ FIXED: Get action first to determine validation requirements
     $action = isset($data['action']) ? $data['action'] : 'update';
-
-    // ✅ FIXED: Skip product_id validation for clear action
-    if ($action !== 'clear' && $product_id <= 0) {
-        throw new Exception('Invalid product ID');
-    }
-
-    // ✅ FIXED: Skip quantity validation for clear action
-    if ($action !== 'clear') {
-        // Validate quantity
+    
+    // ✅ ENHANCED: Conditional validation based on action
+    if ($action === 'clear') {
+        // Clear action doesn't need product_id
+        $product_id = 0; // Dummy value for clear action
+        $quantity = 0;   // Dummy value for clear action
+        
+        error_log("Clear cart action initiated for user: {$user_id}");
+    } else {
+        // All other actions require product_id
+        if (!isset($data['product_id'])) {
+            throw new Exception('Missing required parameter: product_id');
+        }
+        
+        $product_id = (int)$data['product_id'];
+        $quantity = isset($data['quantity']) ? (int)$data['quantity'] : 1;
+        
+        // Validate product_id for non-clear actions
+        if ($product_id <= 0) {
+            throw new Exception('Invalid product ID');
+        }
+        
+        // Validate quantity for non-clear actions
         if ($quantity < 0) {
             throw new Exception('Quantity cannot be negative');
         }
-
+        
         if ($quantity > 99) {
             throw new Exception('Quantity cannot exceed 99');
         }
     }
 
-    // Handle different actions
-    switch ($action) {
-        case 'update':
-        case 'increase':
-        case 'decrease':
-            if ($quantity === 0) {
-                // Remove item if quantity is 0
+    // ✅ ENHANCED: Handle different actions with transaction support
+    $pdo->beginTransaction();
+    
+    try {
+        switch ($action) {
+            case 'update':
+            case 'increase':
+            case 'decrease':
+                if ($quantity === 0) {
+                    // Remove item if quantity is 0
+                    $stmt = $pdo->prepare("DELETE FROM cart_items WHERE user_id = ? AND product_id = ?");
+                    $result = $stmt->execute([$user_id, $product_id]);
+                    $message = 'Item removed from cart';
+                } else {
+                    // Update or insert cart item
+                    $stmt = $pdo->prepare("
+                        INSERT INTO cart_items (user_id, product_id, quantity, created_at, updated_at)
+                        VALUES (?, ?, ?, NOW(), NOW())
+                        ON DUPLICATE KEY UPDATE 
+                        quantity = VALUES(quantity),
+                        updated_at = NOW()
+                    ");
+                    $result = $stmt->execute([$user_id, $product_id, $quantity]);
+                    $message = 'Cart updated successfully';
+                }
+                break;
+
+            case 'remove':
+                // Explicitly remove item
                 $stmt = $pdo->prepare("DELETE FROM cart_items WHERE user_id = ? AND product_id = ?");
                 $result = $stmt->execute([$user_id, $product_id]);
+                $quantity = 0;
                 $message = 'Item removed from cart';
-            } else {
-                // Update or insert cart item
-                $stmt = $pdo->prepare("
-                    INSERT INTO cart_items (user_id, product_id, quantity, created_at, updated_at)
-                    VALUES (?, ?, ?, NOW(), NOW())
-                    ON DUPLICATE KEY UPDATE 
-                    quantity = VALUES(quantity),
-                    updated_at = NOW()
-                ");
-                $result = $stmt->execute([$user_id, $product_id, $quantity]);
-                $message = 'Cart updated successfully';
-            }
-            break;
+                break;
 
-        case 'remove':
-            // Explicitly remove item
-            $stmt = $pdo->prepare("DELETE FROM cart_items WHERE user_id = ? AND product_id = ?");
-            $result = $stmt->execute([$user_id, $product_id]);
-            $quantity = 0;
-            $message = 'Item removed from cart';
-            break;
-
-        case 'clear':
-            // ✅ ENHANCED: Clear entire cart with better logging
-            try {
+            case 'clear':
+                // ✅ ENHANCED: Clear entire cart for the specific user
+                error_log("Executing clear cart for user: {$user_id}");
+                
+                // First, get count of items to be deleted
+                $countStmt = $pdo->prepare("SELECT COUNT(*) as item_count FROM cart_items WHERE user_id = ?");
+                $countStmt->execute([$user_id]);
+                $itemCount = $countStmt->fetch(PDO::FETCH_ASSOC)['item_count'];
+                
+                // Clear all cart items for this user
                 $stmt = $pdo->prepare("DELETE FROM cart_items WHERE user_id = ?");
                 $result = $stmt->execute([$user_id]);
-
-                // Log the number of affected rows
+                
+                // Get number of affected rows
                 $deletedRows = $stmt->rowCount();
-                error_log("Clear cart: Deleted {$deletedRows} items for user {$user_id}");
-
+                
                 $quantity = 0;
                 $product_id = 0; // Set to 0 for clear action
-                $message = "Cart cleared successfully!";
-
-                // Force success even if no rows affected (cart was already empty)
+                
+                if ($deletedRows > 0) {
+                    $message = "Cart cleared successfully! Removed {$deletedRows} items.";
+                } else {
+                    $message = 'Cart was already empty';
+                }
+                
+                // Always consider clear action successful
                 $result = true;
-            } catch (Exception $e) {
-                error_log("Clear cart error: " . $e->getMessage());
-                throw new Exception('Failed to clear cart: ' . $e->getMessage());
-            }
-            break;
+                break;
 
-        default:
-            throw new Exception('Invalid action specified');
+            default:
+                throw new Exception('Invalid action specified: ' . $action);
+        }
+
+        if (!$result) {
+            throw new Exception('Failed to execute cart operation');
+        }
+        
+        // Commit transaction
+        $pdo->commit();
+        
+    } catch (Exception $e) {
+        // Rollback transaction on error
+        $pdo->rollback();
+        throw $e;
     }
 
-    if (!$result) {
-        throw new Exception('Failed to update cart');
-    }
-
-    // Get updated totals
+    // Get updated totals after the operation
     $totals = getUserCartTotals($pdo, $user_id);
 
-    // ✅ FIXED: Get item details only for non-clear actions
+    // ✅ ENHANCED: Get item details only for non-clear actions
     $itemTotal = 0;
     $itemDetails = null;
-    if ($action !== 'clear' && $quantity > 0) {
+    
+    if ($action !== 'clear' && $quantity > 0 && $product_id > 0) {
         $itemDetails = getCartItemDetails($pdo, $user_id, $product_id);
         if ($itemDetails) {
             $itemTotal = $itemDetails['quantity'] * $itemDetails['price'];
         }
     }
 
-    // Success response
-    echo json_encode([
+    // ✅ ENHANCED: Success response with detailed logging
+    $response = [
         'success' => true,
         'message' => $message,
+        'action' => $action,
         'product_id' => $product_id,
         'quantity' => $action === 'clear' ? 0 : ($quantity > 0 ? ($itemDetails['quantity'] ?? 0) : 0),
         'item_total' => $itemTotal,
@@ -205,19 +230,42 @@ try {
         'total' => $totals['total'],
         'cart_count' => $totals['item_count'],
         'unique_items' => $totals['unique_items']
-    ]);
+    ];
+    
+    error_log("Cart operation success: " . json_encode([
+        'user_id' => $user_id,
+        'action' => $action,
+        'product_id' => $product_id,
+        'new_cart_count' => $totals['item_count']
+    ]));
+    
+    echo json_encode($response);
+
 } catch (PDOException $e) {
+    // Rollback if transaction is still active
+    if ($pdo->inTransaction()) {
+        $pdo->rollback();
+    }
+    
     error_log('Cart operation database error: ' . $e->getMessage());
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Database error occurred. Please try again.'
+        'message' => 'Database error occurred. Please try again.',
+        'error_type' => 'database_error'
     ]);
 } catch (Exception $e) {
+    // Rollback if transaction is still active
+    if ($pdo->inTransaction()) {
+        $pdo->rollback();
+    }
+    
     error_log('Cart operation error: ' . $e->getMessage());
     http_response_code(400);
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage()
+        'message' => $e->getMessage(),
+        'error_type' => 'validation_error'
     ]);
 }
+?>
