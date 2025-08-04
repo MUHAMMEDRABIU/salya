@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Sign out modal functionality
+// Enhanced admin sign out modal functionality
 document.addEventListener("DOMContentLoaded", function () {
     const signOutModal = document.getElementById("signOutModal");
     const cancelSignOut = document.getElementById("cancelSignOut");
@@ -186,10 +186,45 @@ document.addEventListener("DOMContentLoaded", function () {
         signOutModal.classList.add("hidden");
     });
 
-    confirmSignOut.addEventListener("click", function () {
-        // Redirect to login page
-        signOutModal.classList.add("hidden");
-        window.location.href = "logout.php";
+    confirmSignOut.addEventListener("click", async function () {
+        const originalText = confirmSignOut.innerHTML;
+        
+        // Show loading state
+        confirmSignOut.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Signing out...';
+        confirmSignOut.disabled = true;
+        
+        try {
+            // Clear any admin-specific local storage
+            localStorage.removeItem('admin_preferences');
+            localStorage.removeItem('dashboard_filters');
+            sessionStorage.clear();
+            
+            // Add fade effect
+            document.body.style.transition = 'opacity 0.3s ease-out';
+            document.body.style.opacity = '0.7';
+            
+            // Small delay for visual feedback
+            setTimeout(() => {
+                window.location.href = "logout.php";
+            }, 300);
+            
+        } catch (error) {
+            console.error('Admin logout error:', error);
+            
+            // Restore button state
+            confirmSignOut.innerHTML = originalText;
+            confirmSignOut.disabled = false;
+            
+            // Fallback: direct redirect
+            window.location.href = "logout.php";
+        }
+    });
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !signOutModal.classList.contains('hidden')) {
+            signOutModal.classList.add("hidden");
+        }
     });
 
     // Export the function for use in other files
