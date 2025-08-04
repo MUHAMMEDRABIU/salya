@@ -103,7 +103,7 @@ require_once 'partials/headers.php';
                             <div id="cart-items" class="space-y-3 sm:space-y-4">
                                 <?php if (!empty($cart_items)): ?>
                                     <?php foreach ($cart_items as $item): ?>
-                                        <!-- ✅ Enhanced responsive cart item layout -->
+                                        <!-- ✅ Enhanced responsive cart item layout (Subtotal removed) -->
                                         <div class="cart-item bg-white/60 backdrop-blur-sm border border-white/30 rounded-xl shadow-soft hover:shadow-medium p-3 sm:p-4 transition-all duration-300" data-item-id="<?php echo $item['product_id']; ?>" data-price="<?php echo $item['price']; ?>">
 
                                             <!-- Mobile Layout (< sm) -->
@@ -124,7 +124,7 @@ require_once 'partials/headers.php';
                                                     </button>
                                                 </div>
 
-                                                <!-- Quantity Controls Row -->
+                                                <!-- ✅ Quantity Controls Row (Subtotal removed) -->
                                                 <div class="flex items-center justify-between pt-2">
                                                     <div class="flex items-center space-x-2 xs:space-x-3">
                                                         <button class="quantity-btn decrease-btn w-7 h-7 xs:w-8 xs:h-8 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center hover:from-accent hover:to-orange-600 hover:text-white transition-all duration-300 shadow-soft" data-action="decrease">
@@ -135,9 +135,9 @@ require_once 'partials/headers.php';
                                                             <i class="fas fa-plus text-xs"></i>
                                                         </button>
                                                     </div>
+                                                    <!-- ✅ Subtotal section removed - cleaner mobile layout -->
                                                     <div class="text-right">
-                                                        <p class="text-xs text-gray-600">Subtotal</p>
-                                                        <p class="font-bold text-accent text-sm xs:text-base">₦<?php echo number_format($item['price'] * $item['quantity']); ?></p>
+                                                        <span class="text-xs text-gray-600">Qty: <?php echo $item['quantity']; ?></span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -161,10 +161,9 @@ require_once 'partials/headers.php';
                                                         <i class="fas fa-plus text-sm"></i>
                                                     </button>
                                                 </div>
+                                                <!-- ✅ Desktop section cleaned up (Subtotal removed) -->
                                                 <div class="text-right">
-                                                    <p class="text-sm text-gray-600 mb-1">Subtotal</p>
-                                                    <p class="font-bold text-accent text-lg">₦<?php echo number_format($item['price'] * $item['quantity']); ?></p>
-                                                    <button class="remove-item-btn text-red-500 hover:text-red-700 text-sm mt-2 px-3 py-1 rounded-lg hover:bg-red-50 transition-all duration-300 transform hover:scale-105" data-item-id="<?php echo $item['product_id']; ?>">
+                                                    <button class="remove-item-btn text-red-500 hover:text-red-700 text-sm px-3 py-1 rounded-lg hover:bg-red-50 transition-all duration-300 transform hover:scale-105" data-item-id="<?php echo $item['product_id']; ?>">
                                                         <i class="fas fa-times mr-1"></i>
                                                         Remove
                                                     </button>
@@ -272,460 +271,491 @@ require_once 'partials/headers.php';
         // Custom confirm modal functionality
         function showCustomConfirm(title, message, iconClass = 'fa-exclamation-triangle', iconColor = 'text-red-500') {
             return new Promise((resolve) => {
-                    const modal = document.getElementById('confirm-modal');
-                    const modalContent = document.getElementById('confirm-modal-content');
-                    const titleEl = document.getElementById('confirm-title');
-                    const messageEl = document.getElementById('confirm-message');
-                    const iconEl = document.getElementById('confirm-icon');
-                    const cancelBtn = document.getElementById('confirm-cancel');
-                    const okBtn = document.getElementById('confirm-ok');
+                const modal = document.getElementById('confirm-modal');
+                const modalContent = document.getElementById('confirm-modal-content');
+                const titleEl = document.getElementById('confirm-title');
+                const messageEl = document.getElementById('confirm-message');
+                const iconEl = document.getElementById('confirm-icon');
+                const cancelBtn = document.getElementById('confirm-cancel');
+                const okBtn = document.getElementById('confirm-ok');
 
-                    // Set content
-                    titleEl.textContent = title;
-                    messageEl.textContent = message;
-                    iconEl.className = `fas ${iconClass} ${iconColor} text-2xl`;
+                // Set content
+                titleEl.textContent = title;
+                messageEl.textContent = message;
+                iconEl.className = `fas ${iconClass} ${iconColor} text-2xl`;
 
-                    // Show modal with animation
-                    modal.classList.remove('hidden');
+                // Show modal with animation
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+
+                // Handle buttons
+                const handleCancel = () => {
+                    hideModal();
+                    resolve(false);
+                };
+
+                const handleConfirm = () => {
+                    hideModal();
+                    resolve(true);
+                };
+
+                const hideModal = () => {
+                    modalContent.classList.remove('scale-100', 'opacity-100');
+                    modalContent.classList.add('scale-95', 'opacity-0');
                     setTimeout(() => {
-                        modalContent.classList.remove('scale-95', 'opacity-0');
-                        modalContent.classList.add('scale-100', 'opacity-100');
-                    }, 10);
+                        modal.classList.add('hidden');
+                        cancelBtn.removeEventListener('click', handleCancel);
+                        okBtn.removeEventListener('click', handleConfirm);
+                    }, 300);
+                };
 
-                    // Handle buttons
-                    const handleCancel = () => {
-                        hideModal();
-                        resolve(false);
-                    };
+                // Add event listeners
+                cancelBtn.addEventListener('click', handleCancel);
+                okBtn.addEventListener('click', handleConfirm);
 
-                    const handleConfirm = () => {
-                        hideModal();
-                        resolve(true);
-                    };
+                // Close on backdrop click
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        handleCancel();
+                    }
+                });
 
-                    const hideModal = () => {
-                        modalContent.classList.remove('scale-100', 'opacity-100');
-                        modalContent.classList.add('scale-95', 'opacity-0');
-                        setTimeout(() => {
-                            modal.classList.add('hidden');
-                            cancelBtn.removeEventListener('click', handleCancel);
-                            okBtn.removeEventListener('click', handleConfirm);
-                        }, 300);
-                    };
+                // Close on escape key
+                const handleEscape = (e) => {
+                    if (e.key === 'Escape') {
+                        handleCancel();
+                        document.removeEventListener('keydown', handleEscape);
+                    }
+                };
+                document.addEventListener('keydown', handleEscape);
+            });
+        }
 
-                    // Add event listeners
-                    cancelBtn.addEventListener('click', handleCancel);
-                    okBtn.addEventListener('click', handleConfirm);
+        // Initialize cart page
+        document.addEventListener('DOMContentLoaded', function() {
+            const clearBtn = document.getElementById('clear-cart-btn');
+            console.log('🔍 DEBUG - Clear cart button found:', !!clearBtn); // DEBUG
+            console.log('🔍 DEBUG - Button element:', clearBtn); // DEBUG
 
-                    // Close on backdrop click
-                    modal.addEventListener('click', (e) => {
-                            if (e.target === modal) {
-                                handleCancel();
-                            }
+            initializeCartActions();
+            checkEmptyCart();
+
+            // Add loading animation to page elements
+            const elements = document.querySelectorAll('.cart-item');
+            elements.forEach((el, index) => {
+                el.style.animationDelay = `${index * 0.1}s`;
+                el.classList.add('animate-slide-up');
+            });
+        });
+
+        // Cart actions functionality
+        function initializeCartActions() {
+            // Quantity buttons with enhanced animations
+            document.querySelectorAll('.quantity-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const action = this.getAttribute('data-action');
+                    const cartItem = this.closest('.cart-item');
+                    const itemId = cartItem.getAttribute('data-item-id');
+                    const price = parseInt(cartItem.getAttribute('data-price'));
+                    const quantityDisplay = cartItem.querySelector('.quantity-display');
+
+                    // Add loading state
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    this.disabled = true;
+
+                    let quantity = parseInt(quantityDisplay.textContent);
+                    quantity = action === 'increase' ? quantity + 1 : Math.max(1, quantity - 1);
+
+                    console.log('🔍 DEBUG - Cart operation:', {
+                        itemId,
+                        quantity,
+                        action
+                    }); // DEBUG
+
+                    try {
+                        // ✅ FIXED: Use unified endpoint and correct parameter
+                        const res = await fetch('api/update-cart.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                product_id: itemId, // ✅ FIXED: Changed from 'id' to 'product_id'
+                                quantity: quantity,
+                                action: action
+                            })
                         });
 
-                        // Close on escape key
-                        const handleEscape = (e) => {
-                            if (e.key === 'Escape') {
-                                handleCancel();
-                                document.removeEventListener('keydown', handleEscape);
-                            }
-                        }; document.addEventListener('keydown', handleEscape);
-                    });
-            }
+                        console.log('🔍 DEBUG - Response status:', res.status); // DEBUG
 
-            // Initialize cart page
-            document.addEventListener('DOMContentLoaded', function() {
-                initializeCartActions();
-                checkEmptyCart();
+                        if (!res.ok) {
+                            const errorText = await res.text();
+                            console.error('🔍 DEBUG - Error response:', errorText);
+                            throw new Error(`HTTP error! status: ${res.status}`);
+                        }
 
-                // Add loading animation to page elements
-                const elements = document.querySelectorAll('.cart-item');
-                elements.forEach((el, index) => {
-                    el.style.animationDelay = `${index * 0.1}s`;
-                    el.classList.add('animate-slide-up');
+                        const result = await res.json();
+                        console.log('🔍 DEBUG - API Response:', result); // DEBUG
+
+                        if (result.success) {
+                            // Animate quantity change
+                            quantityDisplay.style.transform = 'scale(1.2)';
+                            quantityDisplay.textContent = result.quantity;
+                            setTimeout(() => {
+                                quantityDisplay.style.transform = 'scale(1)';
+                            }, 200);
+
+                            updateTotalsFromAPI(result);
+                            updateCartCount();
+                            // showToasted(result.message, 'success');
+                        } else {
+                            showToasted(result.message || 'Failed to update cart', 'error');
+                        }
+                    } catch (error) {
+                        console.error('🔍 DEBUG - Error details:', error);
+                        showToasted('Network error occurred', 'error');
+                    } finally {
+                        // Restore button
+                        this.innerHTML = action === 'increase' ? '<i class="fas fa-plus text-xs sm:text-sm"></i>' : '<i class="fas fa-minus text-xs sm:text-sm"></i>';
+                        this.disabled = false;
+                    }
                 });
             });
 
-            // Cart actions functionality
-            function initializeCartActions() {
-                // Quantity buttons with enhanced animations
-                document.querySelectorAll('.quantity-btn').forEach(btn => {
-                    btn.addEventListener('click', async function() {
-                        const action = this.getAttribute('data-action');
-                        const cartItem = this.closest('.cart-item');
-                        const itemId = cartItem.getAttribute('data-item-id');
-                        const price = parseInt(cartItem.getAttribute('data-price'));
-                        const quantityDisplay = cartItem.querySelector('.quantity-display');
+            // ✅ UPDATED: Remove item using unified endpoint
+            document.querySelectorAll('.remove-item-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const itemId = this.getAttribute('data-item-id');
+                    const cartItem = this.closest('.cart-item');
+                    const itemName = cartItem.querySelector('h3').textContent;
 
-                        // Add loading state
-                        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                        this.disabled = true;
+                    const confirmed = await showCustomConfirm(
+                        'Remove Item',
+                        `Are you sure you want to remove "${itemName}" from your cart?`,
+                        'fa-trash-alt',
+                        'text-red-500'
+                    );
 
-                        let quantity = parseInt(quantityDisplay.textContent);
-                        quantity = action === 'increase' ? quantity + 1 : Math.max(1, quantity - 1);
+                    if (!confirmed) return;
 
-                        console.log('🔍 DEBUG - Cart operation:', {
-                            itemId,
-                            quantity,
-                            action
-                        }); // DEBUG
+                    // Add removing animation
+                    cartItem.style.transform = 'translateX(-100%)';
+                    cartItem.style.opacity = '0';
 
-                        try {
-                            // ✅ FIXED: Use unified endpoint and correct parameter
-                            const res = await fetch('api/update-cart.php', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    product_id: itemId, // ✅ FIXED: Changed from 'id' to 'product_id'
-                                    quantity: quantity,
-                                    action: action
-                                })
-                            });
+                    try {
+                        // ✅ FIXED: Use unified endpoint
+                        const res = await fetch('api/update-cart.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                product_id: itemId, // ✅ FIXED: Changed from 'id' to 'product_id'
+                                action: 'remove'
+                            })
+                        });
 
-                            console.log('🔍 DEBUG - Response status:', res.status); // DEBUG
-
-                            if (!res.ok) {
-                                const errorText = await res.text();
-                                console.error('🔍 DEBUG - Error response:', errorText);
-                                throw new Error(`HTTP error! status: ${res.status}`);
-                            }
-
-                            const result = await res.json();
-                            console.log('🔍 DEBUG - API Response:', result); // DEBUG
-
-                            if (result.success) {
-                                // Animate quantity change
-                                quantityDisplay.style.transform = 'scale(1.2)';
-                                quantityDisplay.textContent = result.quantity;
-                                setTimeout(() => {
-                                    quantityDisplay.style.transform = 'scale(1)';
-                                }, 200);
-
+                        const result = await res.json();
+                        if (result.success) {
+                            setTimeout(() => {
+                                cartItem.remove();
                                 updateTotalsFromAPI(result);
                                 updateCartCount();
-                                // showToasted(result.message, 'success');
-                            } else {
-                                showToasted(result.message || 'Failed to update cart', 'error');
-                            }
-                        } catch (error) {
-                            console.error('🔍 DEBUG - Error details:', error);
-                            showToasted('Network error occurred', 'error');
-                        } finally {
-                            // Restore button
-                            this.innerHTML = action === 'increase' ? '<i class="fas fa-plus text-xs sm:text-sm"></i>' : '<i class="fas fa-minus text-xs sm:text-sm"></i>';
-                            this.disabled = false;
-                        }
-                    });
-                });
-
-                // ✅ UPDATED: Remove item using unified endpoint
-                document.querySelectorAll('.remove-item-btn').forEach(btn => {
-                    btn.addEventListener('click', async function() {
-                        const itemId = this.getAttribute('data-item-id');
-                        const cartItem = this.closest('.cart-item');
-                        const itemName = cartItem.querySelector('h3').textContent;
-
-                        const confirmed = await showCustomConfirm(
-                            'Remove Item',
-                            `Are you sure you want to remove "${itemName}" from your cart?`,
-                            'fa-trash-alt',
-                            'text-red-500'
-                        );
-
-                        if (!confirmed) return;
-
-                        // Add removing animation
-                        cartItem.style.transform = 'translateX(-100%)';
-                        cartItem.style.opacity = '0';
-
-                        try {
-                            // ✅ FIXED: Use unified endpoint
-                            const res = await fetch('api/update-cart.php', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    product_id: itemId, // ✅ FIXED: Changed from 'id' to 'product_id'
-                                    action: 'remove'
-                                })
-                            });
-
-                            const result = await res.json();
-                            if (result.success) {
-                                setTimeout(() => {
-                                    cartItem.remove();
-                                    updateTotalsFromAPI(result);
-                                    updateCartCount();
-                                    checkEmptyCart();
-                                }, 300);
-                                showToasted(result.message, 'info');
-                            } else {
-                                // Restore item if failed
-                                cartItem.style.transform = 'translateX(0)';
-                                cartItem.style.opacity = '1';
-                                showToasted(result.message || 'Failed to remove item', 'error');
-                            }
-                        } catch (error) {
+                                checkEmptyCart();
+                            }, 300);
+                            showToasted(result.message, 'info');
+                        } else {
+                            // Restore item if failed
                             cartItem.style.transform = 'translateX(0)';
                             cartItem.style.opacity = '1';
-                            showToasted('Network error occurred', 'error');
+                            showToasted(result.message || 'Failed to remove item', 'error');
                         }
-                    });
+                    } catch (error) {
+                        cartItem.style.transform = 'translateX(0)';
+                        cartItem.style.opacity = '1';
+                        showToasted('Network error occurred', 'error');
+                    }
                 });
+            });
 
-                // ✅ UPDATED: Clear cart using unified endpoint
-                const clearCartBtn = document.getElementById('clear-cart-btn');
-                if (clearCartBtn) {
-                    clearCartBtn.addEventListener('click', async function() {
-                        const itemCount = document.querySelectorAll('.cart-item').length;
-                        const confirmed = await showCustomConfirm(
-                            'Clear Cart',
-                            `Are you sure you want to remove all ${itemCount} items from your cart? This action cannot be undone.`,
-                            'fa-trash-alt',
-                            'text-red-500'
-                        );
+            // ✅ UPDATED: Enhanced clear cart with better debugging
+            const clearCartBtn = document.getElementById('clear-cart-btn');
+            if (clearCartBtn) {
+                clearCartBtn.addEventListener('click', async function() {
+                    console.log('🔍 DEBUG - Clear cart button clicked!'); // DEBUG
 
-                        if (!confirmed) return;
+                    const itemCount = document.querySelectorAll('.cart-item').length;
+                    console.log('🔍 DEBUG - Items to clear:', itemCount); // DEBUG
 
-                        const originalText = this.innerHTML;
-                        this.innerHTML = '<i class="fas fa-spinner fa-spin mr-1 sm:mr-2"></i><span class="hidden xs:inline text-xs sm:text-sm">Clearing...</span><span class="xs:hidden text-xs">...</span>';
-                        this.disabled = true;
-
-                        try {
-                            // ✅ FIXED: Use unified endpoint
-                            const res = await fetch('api/update-cart.php', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    product_id: 0, // Not used for clear action
-                                    action: 'clear'
-                                })
-                            });
-
-                            const result = await res.json();
-
-                            if (result.success) {
-                                // Animate all items out
-                                const items = document.querySelectorAll('.cart-item');
-                                items.forEach((item, index) => {
-                                    setTimeout(() => {
-                                        item.style.transform = 'translateX(-100%)';
-                                        item.style.opacity = '0';
-                                        setTimeout(() => item.remove(), 300);
-                                    }, index * 100);
-                                });
-
-                                setTimeout(() => {
-                                    updateTotalsFromAPI(result);
-                                    updateCartCount();
-                                    checkEmptyCart();
-                                }, items.length * 100 + 300);
-
-                                showToasted(result.message, 'info');
-                            } else {
-                                showToasted(result.message || 'Failed to clear cart', 'error');
-                            }
-                        } catch (error) {
-                            showToasted('Network error occurred', 'error');
-                        } finally {
-                            this.innerHTML = originalText;
-                            this.disabled = false;
-                        }
-                    });
-                }
-
-                // Promo code with enhanced feedback
-                document.getElementById('apply-promo-btn').addEventListener('click', function() {
-                    const promoCode = document.getElementById('promo-code').value.trim();
-                    const button = this;
-                    const originalText = button.textContent;
-
-                    if (!promoCode) {
-                        showToasted('Please enter a promo code', 'error');
+                    if (itemCount === 0) {
+                        console.log('🔍 DEBUG - No items to clear'); // DEBUG
+                        showToasted('Cart is already empty', 'info');
                         return;
                     }
 
-                    // Add loading state
-                    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                    button.disabled = true;
+                    const confirmed = await showCustomConfirm(
+                        'Clear Cart',
+                        `Are you sure you want to remove all ${itemCount} items from your cart? This action cannot be undone.`,
+                        'fa-trash-alt',
+                        'text-red-500'
+                    );
 
-                    // Simulate API call
-                    setTimeout(() => {
-                        const validCodes = ['SAVE10', 'WELCOME20', 'FROZEN15'];
+                    console.log('🔍 DEBUG - User confirmed:', confirmed); // DEBUG
 
-                        if (validCodes.includes(promoCode.toUpperCase())) {
-                            showToasted('Promo code applied successfully! 🎉', 'success');
-                            document.getElementById('promo-code').value = '';
-                            // Add visual feedback
-                            document.getElementById('promo-code').style.borderColor = '#22c55e';
+                    if (!confirmed) {
+                        console.log('🔍 DEBUG - User cancelled clear cart'); // DEBUG
+                        return;
+                    }
+
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-1 sm:mr-2"></i><span class="hidden xs:inline text-xs sm:text-sm">Clearing...</span><span class="xs:hidden text-xs">...</span>';
+                    this.disabled = true;
+
+                    console.log('🔍 DEBUG - Making API request to clear cart'); // DEBUG
+
+                    try {
+                        // ✅ FIXED: Use unified endpoint
+                        const res = await fetch('api/update-cart.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                action: 'clear'
+                            })
+                        });
+
+                        console.log('🔍 DEBUG - Clear cart response status:', res.status); // DEBUG
+                        console.log('🔍 DEBUG - Clear cart response ok:', res.ok); // DEBUG
+
+                        if (!res.ok) {
+                            const errorText = await res.text();
+                            console.error('🔍 DEBUG - Clear cart error response:', errorText); // DEBUG
+                            throw new Error(`HTTP error! status: ${res.status}`);
+                        }
+
+                        const result = await res.json();
+                        console.log('🔍 DEBUG - Clear cart API response:', result); // DEBUG
+
+                        if (result.success) {
+                            console.log('🔍 DEBUG - Clear cart successful, animating items out'); // DEBUG
+
+                            // Animate all items out
+                            const items = document.querySelectorAll('.cart-item');
+                            console.log('🔍 DEBUG - Found', items.length, 'items to animate'); // DEBUG
+
+                            items.forEach((item, index) => {
+                                setTimeout(() => {
+                                    console.log('🔍 DEBUG - Animating item', index); // DEBUG
+                                    item.style.transform = 'translateX(-100%)';
+                                    item.style.opacity = '0';
+                                    setTimeout(() => {
+                                        console.log('🔍 DEBUG - Removing item', index); // DEBUG
+                                        item.remove();
+                                    }, 300);
+                                }, index * 100);
+                            });
+
                             setTimeout(() => {
-                                document.getElementById('promo-code').style.borderColor = '';
-                            }, 2000);
+                                console.log('🔍 DEBUG - Updating totals and cart count'); // DEBUG
+                                updateTotalsFromAPI(result);
+                                updateCartCount();
+                                checkEmptyCart();
+                            }, items.length * 100 + 300);
+
+                            showToasted(result.message, 'success');
                         } else {
-                            showToasted('Invalid promo code', 'error');
-                            document.getElementById('promo-code').style.borderColor = '#ef4444';
-                            setTimeout(() => {
-                                document.getElementById('promo-code').style.borderColor = '';
-                            }, 2000);
+                            console.error('🔍 DEBUG - Clear cart failed:', result.message); // DEBUG
+                            showToasted(result.message || 'Failed to clear cart', 'error');
                         }
-
-                        button.textContent = originalText;
-                        button.disabled = false;
-                    }, 1500);
+                    } catch (error) {
+                        console.error('🔍 DEBUG - Clear cart network error:', error); // DEBUG
+                        showToasted('Network error occurred', 'error');
+                    } finally {
+                        console.log('🔍 DEBUG - Restoring clear cart button'); // DEBUG
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                    }
                 });
+            } else {
+                console.error('🔍 DEBUG - Clear cart button not found!'); // DEBUG
+            }
 
-                // Enhanced checkout button
-                const checkoutBtn = document.getElementById('checkout-btn');
-                if (checkoutBtn) {
-                    checkoutBtn.addEventListener('click', function() {
-                        const cartItems = document.querySelectorAll('.cart-item');
+            // Promo code with enhanced feedback
+            document.getElementById('apply-promo-btn').addEventListener('click', function() {
+                const promoCode = document.getElementById('promo-code').value.trim();
+                const button = this;
+                const originalText = button.textContent;
 
-                        if (cartItems.length === 0) {
-                            showToasted('Your cart is empty', 'error');
-                            return;
-                        }
+                if (!promoCode) {
+                    showToasted('Please enter a promo code', 'error');
+                    return;
+                }
 
-                        // Enhanced loading state
-                        const originalContent = this.innerHTML;
-                        this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
-                        this.disabled = true;
-                        this.style.transform = 'scale(0.98)';
+                // Add loading state
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                button.disabled = true;
 
-                        // Simulate checkout process
+                // Simulate API call
+                setTimeout(() => {
+                    const validCodes = ['SAVE10', 'WELCOME20', 'FROZEN15'];
+
+                    if (validCodes.includes(promoCode.toUpperCase())) {
+                        showToasted('Promo code applied successfully! 🎉', 'success');
+                        document.getElementById('promo-code').value = '';
+                        // Add visual feedback
+                        document.getElementById('promo-code').style.borderColor = '#22c55e';
                         setTimeout(() => {
-                            setTimeout(() => {
-                                window.location.href = 'checkout.php';
-                            }, 1000);
-
-                            // Reset button after delay
-                            setTimeout(() => {
-                                this.innerHTML = originalContent;
-                                this.disabled = false;
-                                this.style.transform = 'scale(1)';
-                            }, 2000);
+                            document.getElementById('promo-code').style.borderColor = '';
                         }, 2000);
-                    });
-                }
-
-                // Back button functionality
-                const backBtn = document.getElementById('backBtn');
-                if (backBtn) {
-                    backBtn.addEventListener('click', function() {
-                        this.style.transform = 'scale(0.95)';
+                    } else {
+                        showToasted('Invalid promo code', 'error');
+                        document.getElementById('promo-code').style.borderColor = '#ef4444';
                         setTimeout(() => {
-                            this.style.transform = 'scale(1)';
-                            window.history.back();
-                        }, 150);
-                    });
-                }
-            }
-
-            // Enhanced update totals with responsive calculation
-            function updateTotalsFromAPI(apiResponse) {
-                console.log('🔍 DEBUG - Updating UI from API:', apiResponse);
-
-                // Update subtotal
-                const subtotalEl = document.getElementById('subtotal');
-                if (subtotalEl && apiResponse.subtotal !== undefined) {
-                    subtotalEl.textContent = `₦${apiResponse.subtotal.toLocaleString()}`;
-                    subtotalEl.style.transform = 'scale(1.1)';
-                    setTimeout(() => subtotalEl.style.transform = 'scale(1)', 200);
-                }
-
-                // Update delivery fee
-                const deliveryEl = document.getElementById('delivery-fee');
-                if (deliveryEl && apiResponse.delivery_fee !== undefined) {
-                    deliveryEl.textContent = `₦${apiResponse.delivery_fee.toLocaleString()}`;
-                    deliveryEl.style.transform = 'scale(1.1)';
-                    setTimeout(() => deliveryEl.style.transform = 'scale(1)', 200);
-                }
-
-                // Update total
-                const totalEl = document.getElementById('total');
-                if (totalEl && apiResponse.total !== undefined) {
-                    totalEl.textContent = `₦${apiResponse.total.toLocaleString()}`;
-                    totalEl.style.transform = 'scale(1.1)';
-                    setTimeout(() => totalEl.style.transform = 'scale(1)', 200);
-                }
-
-                // Update cart count in badge
-                const cartBadge = document.getElementById('cartCount');
-                if (cartBadge && apiResponse.cart_count !== undefined) {
-                    cartBadge.textContent = apiResponse.cart_count;
-                    cartBadge.parentElement.style.display = apiResponse.cart_count > 0 ? 'flex' : 'none';
-                }
-
-                // Update individual item subtotals
-                const cartItems = document.querySelectorAll('.cart-item');
-                cartItems.forEach(item => {
-                    const price = parseInt(item.getAttribute('data-price'));
-                    const quantityDisplay = item.querySelector('.quantity-display');
-                    const quantity = parseInt(quantityDisplay.textContent);
-                    const subtotalElements = item.querySelectorAll('.cart-item p:last-child');
-
-                    subtotalElements.forEach(el => {
-                        if (el.textContent.includes('₦')) {
-                            el.textContent = `₦${(price * quantity).toLocaleString()}`;
-                        }
-                    });
-                });
-            }
-
-            // ✅ Enhanced empty cart check with Clear Cart button visibility
-            function checkEmptyCart() {
-                const cartItems = document.getElementById('cart-items');
-                const emptyCart = document.getElementById('empty-cart');
-                const items = document.querySelectorAll('.cart-item');
-                const clearCartBtn = document.getElementById('clear-cart-btn');
-
-                if (items.length === 0) {
-                    cartItems.classList.add('hidden');
-                    emptyCart.classList.remove('hidden');
-                    emptyCart.classList.add('animate-scale-in');
-
-                    // Hide clear cart button when cart is empty
-                    if (clearCartBtn) {
-                        clearCartBtn.style.display = 'none';
+                            document.getElementById('promo-code').style.borderColor = '';
+                        }, 2000);
                     }
-                } else {
-                    cartItems.classList.remove('hidden');
-                    emptyCart.classList.add('hidden');
 
-                    // Show clear cart button when cart has items
-                    if (clearCartBtn) {
-                        clearCartBtn.style.display = 'flex';
-                    }
-                }
-            }
-
-            // Add smooth scroll behavior
-            document.documentElement.style.scrollBehavior = 'smooth';
-
-            // Add intersection observer for animations
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('animate-slide-up');
-                    }
-                });
-            }, observerOptions);
-
-            // Observe elements for animation
-            document.addEventListener('DOMContentLoaded', () => {
-                const animateElements = document.querySelectorAll('.cart-item, .frosted-glass');
-                animateElements.forEach(el => observer.observe(el));
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }, 1500);
             });
+
+            // Enhanced checkout button
+            const checkoutBtn = document.getElementById('checkout-btn');
+            if (checkoutBtn) {
+                checkoutBtn.addEventListener('click', function() {
+                    const cartItems = document.querySelectorAll('.cart-item');
+
+                    if (cartItems.length === 0) {
+                        showToasted('Your cart is empty', 'error');
+                        return;
+                    }
+
+                    // Enhanced loading state
+                    const originalContent = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+                    this.disabled = true;
+                    this.style.transform = 'scale(0.98)';
+
+                    // Simulate checkout process
+                    setTimeout(() => {
+                        setTimeout(() => {
+                            window.location.href = 'checkout.php';
+                        }, 1000);
+
+                        // Reset button after delay
+                        setTimeout(() => {
+                            this.innerHTML = originalContent;
+                            this.disabled = false;
+                            this.style.transform = 'scale(1)';
+                        }, 2000);
+                    }, 2000);
+                });
+            }
+
+            // Back button functionality
+            const backBtn = document.getElementById('backBtn');
+            if (backBtn) {
+                backBtn.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                        window.history.back();
+                    }, 150);
+                });
+            }
+        }
+
+        // Enhanced update totals with responsive calculation
+        function updateTotalsFromAPI(apiResponse) {
+            console.log('🔍 DEBUG - Updating UI from API:', apiResponse);
+
+            // Update subtotal
+            const subtotalEl = document.getElementById('subtotal');
+            if (subtotalEl && apiResponse.subtotal !== undefined) {
+                subtotalEl.textContent = `₦${apiResponse.subtotal.toLocaleString()}`;
+                subtotalEl.style.transform = 'scale(1.1)';
+                setTimeout(() => subtotalEl.style.transform = 'scale(1)', 200);
+            }
+
+            // Update delivery fee
+            const deliveryEl = document.getElementById('delivery-fee');
+            if (deliveryEl && apiResponse.delivery_fee !== undefined) {
+                deliveryEl.textContent = `₦${apiResponse.delivery_fee.toLocaleString()}`;
+                deliveryEl.style.transform = 'scale(1.1)';
+                setTimeout(() => deliveryEl.style.transform = 'scale(1)', 200);
+            }
+
+            // Update total
+            const totalEl = document.getElementById('total');
+            if (totalEl && apiResponse.total !== undefined) {
+                totalEl.textContent = `₦${apiResponse.total.toLocaleString()}`;
+                totalEl.style.transform = 'scale(1.1)';
+                setTimeout(() => totalEl.style.transform = 'scale(1)', 200);
+            }
+
+            // Update cart count in badge
+            const cartBadge = document.getElementById('cartCount');
+            if (cartBadge && apiResponse.cart_count !== undefined) {
+                cartBadge.textContent = apiResponse.cart_count;
+                cartBadge.parentElement.style.display = apiResponse.cart_count > 0 ? 'flex' : 'none';
+            }
+
+        }
+
+        // ✅ Enhanced empty cart check with Clear Cart button visibility
+        function checkEmptyCart() {
+            const cartItems = document.getElementById('cart-items');
+            const emptyCart = document.getElementById('empty-cart');
+            const items = document.querySelectorAll('.cart-item');
+            const clearCartBtn = document.getElementById('clear-cart-btn');
+
+            if (items.length === 0) {
+                cartItems.classList.add('hidden');
+                emptyCart.classList.remove('hidden');
+                emptyCart.classList.add('animate-scale-in');
+
+                // Hide clear cart button when cart is empty
+                if (clearCartBtn) {
+                    clearCartBtn.style.display = 'none';
+                }
+            } else {
+                cartItems.classList.remove('hidden');
+                emptyCart.classList.add('hidden');
+
+                // Show clear cart button when cart has items
+                if (clearCartBtn) {
+                    clearCartBtn.style.display = 'flex';
+                }
+            }
+        }
+
+        // Add smooth scroll behavior
+        document.documentElement.style.scrollBehavior = 'smooth';
+
+        // Add intersection observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-slide-up');
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements for animation
+        document.addEventListener('DOMContentLoaded', () => {
+            const animateElements = document.querySelectorAll('.cart-item, .frosted-glass');
+            animateElements.forEach(el => observer.observe(el));
+        });
     </script>
 </body>
 

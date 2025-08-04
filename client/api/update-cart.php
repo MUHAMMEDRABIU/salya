@@ -100,18 +100,21 @@ try {
     $quantity = isset($data['quantity']) ? (int)$data['quantity'] : 1;
     $action = isset($data['action']) ? $data['action'] : 'update';
 
-    // Validate product_id
-    if ($product_id <= 0) {
+    // ✅ FIXED: Skip product_id validation for clear action
+    if ($action !== 'clear' && $product_id <= 0) {
         throw new Exception('Invalid product ID');
     }
 
-    // Validate quantity
-    if ($quantity < 0) {
-        throw new Exception('Quantity cannot be negative');
-    }
+    // ✅ FIXED: Skip quantity validation for clear action
+    if ($action !== 'clear') {
+        // Validate quantity
+        if ($quantity < 0) {
+            throw new Exception('Quantity cannot be negative');
+        }
 
-    if ($quantity > 99) {
-        throw new Exception('Quantity cannot exceed 99');
+        if ($quantity > 99) {
+            throw new Exception('Quantity cannot exceed 99');
+        }
     }
 
     // Handle different actions
@@ -147,11 +150,25 @@ try {
             break;
 
         case 'clear':
-            // Clear entire cart
-            $stmt = $pdo->prepare("DELETE FROM cart_items WHERE user_id = ?");
-            $result = $stmt->execute([$user_id]);
-            $quantity = 0;
-            $message = 'Cart cleared successfully';
+            // ✅ ENHANCED: Clear entire cart with better logging
+            try {
+                $stmt = $pdo->prepare("DELETE FROM cart_items WHERE user_id = ?");
+                $result = $stmt->execute([$user_id]);
+
+                // Log the number of affected rows
+                $deletedRows = $stmt->rowCount();
+                error_log("Clear cart: Deleted {$deletedRows} items for user {$user_id}");
+
+                $quantity = 0;
+                $product_id = 0; // Set to 0 for clear action
+                $message = "Cart cleared successfully!";
+
+                // Force success even if no rows affected (cart was already empty)
+                $result = true;
+            } catch (Exception $e) {
+                error_log("Clear cart error: " . $e->getMessage());
+                throw new Exception('Failed to clear cart: ' . $e->getMessage());
+            }
             break;
 
         default:
@@ -165,10 +182,10 @@ try {
     // Get updated totals
     $totals = getUserCartTotals($pdo, $user_id);
 
-    // Get item details if quantity > 0
+    // ✅ FIXED: Get item details only for non-clear actions
     $itemTotal = 0;
     $itemDetails = null;
-    if ($quantity > 0) {
+    if ($action !== 'clear' && $quantity > 0) {
         $itemDetails = getCartItemDetails($pdo, $user_id, $product_id);
         if ($itemDetails) {
             $itemTotal = $itemDetails['quantity'] * $itemDetails['price'];
@@ -180,7 +197,7 @@ try {
         'success' => true,
         'message' => $message,
         'product_id' => $product_id,
-        'quantity' => $quantity > 0 ? ($itemDetails['quantity'] ?? 0) : 0,
+        'quantity' => $action === 'clear' ? 0 : ($quantity > 0 ? ($itemDetails['quantity'] ?? 0) : 0),
         'item_total' => $itemTotal,
         'subtotal' => $totals['subtotal'],
         'delivery_fee' => $totals['delivery_fee'],
