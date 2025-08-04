@@ -1,7 +1,6 @@
 <?php
 require_once 'util/util.php';
 require_once 'initialize.php';
-require_once 'partials/headers.php';
 
 // Get product ID from URL
 $product_id = isset($_GET['id']) ? (int)$_GET['id'] : 1;
@@ -9,6 +8,7 @@ $product = getProductById($pdo, $product_id);
 
 // Cart count
 $cartCount = isset($_SESSION['cart']) ? array_sum(array_column($_SESSION['cart'], 'quantity')) : 0;
+require_once 'partials/headers.php';
 ?>
 
 <body class="bg-custom-gray min-h-screen">

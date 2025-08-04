@@ -1,7 +1,6 @@
 <?php
 require_once 'util/util.php';
 require_once 'initialize.php';
-require_once 'partials/headers.php';
 
 // Get cart count for logged in users
 $cartCount = 0;
@@ -59,8 +58,9 @@ $totalItems = count($filteredProducts);
 $totalPages = ceil($totalItems / $itemsPerPage);
 $offset = ($page - 1) * $itemsPerPage;
 $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
-?>
 
+require_once 'partials/headers.php';
+?>
 <body class="bg-gray-50 font-dm pb-24 overflow-x-hidden">
     <!-- Background Blobs -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">

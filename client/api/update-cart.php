@@ -1,5 +1,4 @@
 <?php
-// filepath: c:\xampp\htdocs\salya\client\api\update-cart.php
 require_once __DIR__ . '/../initialize.php';
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
