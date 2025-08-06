@@ -1,9 +1,4 @@
 <?php
-
-// =============================================================================
-// SALYA FROZEN FOODS - APPLICATION CONSTANTS
-// =============================================================================
-
 // Application Information
 define('APP_NAME', 'Salya Frozen Foods');
 define('APP_VERSION', '1.0.0');
@@ -53,58 +48,32 @@ define('DEFAULT_PRODUCT_IMAGE', 'default-product.png');
 define('DEFAULT_CATEGORY_IMAGE', 'default-category.png');
 
 // =============================================================================
-// ALLOWED FILE TYPES
+// ALLOWED FILE TYPES (as constants)
 // =============================================================================
 
-// Image file types
-$ALLOWED_IMAGE_TYPES = [
-    'image/jpeg',
-    'image/jpg', 
-    'image/png',
-    'image/gif',
-    'image/webp'
-];
+// Image MIME types
+define('ALLOWED_IMAGE_JPEG', 'image/jpeg');
+define('ALLOWED_IMAGE_JPG', 'image/jpg');
+define('ALLOWED_IMAGE_PNG', 'image/png');
+define('ALLOWED_IMAGE_GIF', 'image/gif');
+define('ALLOWED_IMAGE_WEBP', 'image/webp');
 
 // Image extensions
-$ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+define('EXT_JPG', 'jpg');
+define('EXT_JPEG', 'jpeg');
+define('EXT_PNG', 'png');
+define('EXT_GIF', 'gif');
+define('EXT_WEBP', 'webp');
 
-// Document file types
-$ALLOWED_DOCUMENT_TYPES = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-];
+// Document MIME types
+define('ALLOWED_DOC_PDF', 'application/pdf');
+define('ALLOWED_DOC_WORD', 'application/msword');
+define('ALLOWED_DOC_WORDX', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
 
 // Document extensions
-$ALLOWED_DOCUMENT_EXTENSIONS = ['pdf', 'doc', 'docx'];
-
-// =============================================================================
-// UPLOAD DIRECTORY MAPPING
-// =============================================================================
-
-$UPLOAD_DIRECTORIES = [
-    'user_avatars' => USER_AVATAR_DIR,
-    'admin_avatars' => ADMIN_AVATAR_DIR,
-    'products' => PRODUCT_IMAGE_DIR,
-    'product_gallery' => PRODUCT_GALLERY_DIR,
-    'product_thumbnails' => PRODUCT_THUMBNAIL_DIR,
-    'categories' => CATEGORY_IMAGE_DIR,
-    'order_receipts' => ORDER_RECEIPT_DIR,
-    'order_attachments' => ORDER_ATTACHMENT_DIR,
-    'banners' => BANNER_IMAGE_DIR,
-    'temp' => TEMP_UPLOAD_DIR
-];
-
-$UPLOAD_URLS = [
-    'user_avatars' => USER_AVATAR_URL,
-    'admin_avatars' => ADMIN_AVATAR_URL,
-    'products' => PRODUCT_IMAGE_URL,
-    'product_gallery' => PRODUCT_GALLERY_URL,
-    'product_thumbnails' => PRODUCT_THUMBNAIL_URL,
-    'categories' => CATEGORY_IMAGE_URL,
-    'order_receipts' => ORDER_RECEIPT_URL,
-    'banners' => BANNER_IMAGE_URL
-];
+define('EXT_PDF', 'pdf');
+define('EXT_DOC', 'doc');
+define('EXT_DOCX', 'docx');
 
 // =============================================================================
 // USER & ADMIN CONSTANTS
@@ -233,10 +202,8 @@ define('MAX_PASSWORD_LENGTH', 255);
 define('MIN_NAME_LENGTH', 2);
 define('MAX_NAME_LENGTH', 100);
 
-// Phone number validation
+// Phone number validation patterns
 define('PHONE_REGEX', '/^[\+]?[0-9\-\(\)\s]{10,15}$/');
-
-// Nigerian phone number validation
 define('NIGERIAN_PHONE_REGEX', '/^(\+234|234|0)(70|80|81|90|91|80|81|70)[0-9]{8}$/');
 
 // =============================================================================
@@ -265,81 +232,29 @@ define('ADMIN_EMAIL', 'admin@salya.com');
 define('NOREPLY_EMAIL', 'noreply@salya.com');
 
 // =============================================================================
-// HELPER FUNCTIONS
+// SIZE FORMATTING CONSTANTS
 // =============================================================================
 
-/**
- * Get upload directory path by type
- */
-function getUploadDir($type) {
-    global $UPLOAD_DIRECTORIES;
-    return $UPLOAD_DIRECTORIES[$type] ?? TEMP_UPLOAD_DIR;
-}
-
-/**
- * Get upload URL by type
- */
-function getUploadUrl($type) {
-    global $UPLOAD_URLS;
-    return $UPLOAD_URLS[$type] ?? BASE_UPLOAD_URL . 'temp/';
-}
-
-/**
- * Ensure directory exists
- */
-function ensureDirectoryExists($path) {
-    if (!is_dir($path)) {
-        mkdir($path, 0755, true);
-    }
-    return $path;
-}
-
-/**
- * Check if file type is allowed
- */
-function isAllowedImageType($mimeType) {
-    global $ALLOWED_IMAGE_TYPES;
-    return in_array($mimeType, $ALLOWED_IMAGE_TYPES);
-}
-
-/**
- * Check if document type is allowed
- */
-function isAllowedDocumentType($mimeType) {
-    global $ALLOWED_DOCUMENT_TYPES;
-    return in_array($mimeType, $ALLOWED_DOCUMENT_TYPES);
-}
-
-/**
- * Format file size
- */
-function formatFileSize($bytes) {
-    if ($bytes >= 1073741824) {
-        return number_format($bytes / 1073741824, 2) . ' GB';
-    } elseif ($bytes >= 1048576) {
-        return number_format($bytes / 1048576, 2) . ' MB';
-    } elseif ($bytes >= 1024) {
-        return number_format($bytes / 1024, 2) . ' KB';
-    } else {
-        return $bytes . ' bytes';
-    }
-}
-
-/**
- * Generate unique filename
- */
-function generateUniqueFilename($prefix, $extension) {
-    return $prefix . '_' . uniqid('', true) . '_' . time() . '.' . $extension;
-}
+define('SIZE_BYTE', 1);
+define('SIZE_KB', 1024);
+define('SIZE_MB', 1048576);
+define('SIZE_GB', 1073741824);
 
 // =============================================================================
-// INITIALIZE UPLOAD DIRECTORIES
+// INITIALIZE DIRECTORIES (Simple approach)
 // =============================================================================
 
-// Create upload directories if they don't exist
-foreach ($UPLOAD_DIRECTORIES as $dir) {
-    ensureDirectoryExists($dir);
-}
+// Create upload directories if they don't exist (simple approach)
+if (!is_dir(USER_AVATAR_DIR)) mkdir(USER_AVATAR_DIR, 0755, true);
+if (!is_dir(ADMIN_AVATAR_DIR)) mkdir(ADMIN_AVATAR_DIR, 0755, true);
+if (!is_dir(PRODUCT_IMAGE_DIR)) mkdir(PRODUCT_IMAGE_DIR, 0755, true);
+if (!is_dir(PRODUCT_GALLERY_DIR)) mkdir(PRODUCT_GALLERY_DIR, 0755, true);
+if (!is_dir(PRODUCT_THUMBNAIL_DIR)) mkdir(PRODUCT_THUMBNAIL_DIR, 0755, true);
+if (!is_dir(CATEGORY_IMAGE_DIR)) mkdir(CATEGORY_IMAGE_DIR, 0755, true);
+if (!is_dir(ORDER_RECEIPT_DIR)) mkdir(ORDER_RECEIPT_DIR, 0755, true);
+if (!is_dir(ORDER_ATTACHMENT_DIR)) mkdir(ORDER_ATTACHMENT_DIR, 0755, true);
+if (!is_dir(BANNER_IMAGE_DIR)) mkdir(BANNER_IMAGE_DIR, 0755, true);
+if (!is_dir(TEMP_UPLOAD_DIR)) mkdir(TEMP_UPLOAD_DIR, 0755, true);
 
 // Set timezone
 if (function_exists('date_default_timezone_set')) {

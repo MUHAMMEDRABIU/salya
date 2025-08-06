@@ -2,6 +2,7 @@
 require __DIR__ . '/initialize.php';
 require __DIR__ . '/util/utilities.php';
 require __DIR__ . '/partials/headers.php';
+require __DIR__ . '/../config/constants.php';
 
 // Fetch dashboard stats
 $stats = getDashboardStats($pdo);
