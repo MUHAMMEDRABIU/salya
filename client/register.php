@@ -321,7 +321,6 @@ require __DIR__ . '/../components/header.php';
     </main>
     <script src="../assets/js/toast.js"></script>
     <script src="../assets/js/toggle-password.js"></script>
-    // Replace the existing script section in register.php
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const form = document.querySelector("form");
