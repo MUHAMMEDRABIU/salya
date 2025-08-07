@@ -1,8 +1,7 @@
 <?php
 require __DIR__ . '/initialize.php';
-require __DIR__ . '/util/utilities.php';
-require __DIR__ . '/partials/headers.php';
 require __DIR__ . '/../config/constants.php';
+require __DIR__ . '/util/utilities.php';
 
 $getadmin = getAdminProfile($pdo, $_SESSION['admin_id']);
 $recentActivities = getAdminActivityLog($pdo, $_SESSION['admin_id']);
@@ -15,6 +14,7 @@ $productsLive = $overview['products_live'];
 $revenueToday = $overview['revenue_today'];
 $systemUptime = $overview['system_uptime'];
 $pendingTasks = $overview['pending_tasks'];
+require __DIR__ . '/partials/headers.php';
 ?>
 
 <body class="bg-gray-50 font-sans">
@@ -83,7 +83,7 @@ $pendingTasks = $overview['pending_tasks'];
                                     </div>
                                     <div class="flex items-center">
                                         <i data-lucide="calendar" class="w-4 h-4 mr-1"></i>
-                                        Admin since <?= isset($getadmin['created_at']) ? date('F Y', strtotime($getadmin['created_at'])) : '' ?>
+                                        Admin since <?= isset($getadmin['created_at']) ? date('F Y', strtotime($getadmin['created_at'])) : '0000' ?>
                                     </div>
                                 </div>
                             </div>
