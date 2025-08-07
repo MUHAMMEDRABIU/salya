@@ -328,15 +328,16 @@ require __DIR__ . '/../components/header.php';
             form.addEventListener("submit", (e) => {
                 e.preventDefault(); // Prevent default form submission
 
-                // Get form elements with better selectors
-                const fullNameInput = form.querySelector('input[placeholder="Enter your full name"]');
-                const emailInput = form.querySelector('input[type="email"]');
-                const phoneInput = form.querySelector('input[type="tel"]');
-                const passwordInputs = form.querySelectorAll('input[type="password"]');
-                const termsCheckbox = form.querySelector('input[type="checkbox"]');
+                // Get form elements using name attributes for reliability
+                const fullNameInput = form.querySelector('input[name="full_name"]') || form.querySelector('input[placeholder="Enter your full name"]');
+                const emailInput = form.querySelector('input[name="email"]') || form.querySelector('input[type="email"]');
+                const phoneInput = form.querySelector('input[name="phone"]') || form.querySelector('input[type="tel"]');
+                const passwordInput = form.querySelector('input[name="password"]') || form.querySelector('input[placeholder="Create a password"]');
+                const confirmPasswordInput = form.querySelector('input[name="confirm_password"]') || form.querySelector('input[placeholder="Confirm your password"]');
+                const termsCheckbox = form.querySelector('input[name="terms"]') || form.querySelector('input[type="checkbox"]');
 
                 // Validate elements exist
-                if (!fullNameInput || !emailInput || !phoneInput || !passwordInputs[0] || !passwordInputs[1] || !termsCheckbox) {
+                if (!fullNameInput || !emailInput || !phoneInput || !passwordInput || !confirmPasswordInput || !termsCheckbox) {
                     console.error('Form elements not found');
                     showToasted('Form validation error. Please refresh the page.', 'error');
                     return;
@@ -346,8 +347,8 @@ require __DIR__ . '/../components/header.php';
                 const fullName = fullNameInput.value.trim();
                 const email = emailInput.value.trim();
                 const phone = phoneInput.value.trim();
-                const password = passwordInputs[0].value;
-                const confirmPassword = passwordInputs[1].value;
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
                 const termsAccepted = termsCheckbox.checked;
 
                 // Validation
