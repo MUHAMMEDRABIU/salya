@@ -2,6 +2,7 @@
 require __DIR__ . '/initialize.php';
 require __DIR__ . '/util/utilities.php';
 require __DIR__ . '/partials/headers.php';
+require __DIR__ . '/../config/constants.php';
 
 $getadmin = getAdminProfile($pdo, $_SESSION['admin_id']);
 $recentActivities = getAdminActivityLog($pdo, $_SESSION['admin_id']);
@@ -23,7 +24,7 @@ $pendingTasks = $overview['pending_tasks'];
         <!-- Top Navigation -->
         <?php require __DIR__ . '/partials/top-navbar.php'; ?>
         <!-- Profile Content -->
-        <main class="py-6 max-w-7xl mx-auto">
+        <main class="p-6">
             <!-- Profile Header -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
                 <div class="relative">
@@ -41,7 +42,12 @@ $pendingTasks = $overview['pending_tasks'];
                         <div class="flex flex-col sm:flex-row sm:items-end sm:space-x-6">
                             <!-- Avatar -->
                             <div class="relative -mt-16 mb-4 sm:mb-0">
-                                <img id="avatarHeader" src="../assets/uploads/<?= htmlspecialchars($getadmin['avatar'] ?? 'avatar.jpg') ?>"
+                                <?php
+                                // Generate admin avatar URL with fallback
+                                $adminAvatarFile = $getadmin['avatar'] ?? DEFAULT_ADMIN_AVATAR;
+                                $adminAvatarUrl = ADMIN_AVATAR_URL . htmlspecialchars($adminAvatarFile);
+                                ?>
+                                <img id="avatarHeader" src="<?php echo $adminAvatarUrl; ?>"
                                     alt="<?= htmlspecialchars(($getadmin['first_name'] ?? '') . ' ' . ($getadmin['last_name'] ?? '')) ?>"
                                     class="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover">
                                 <button id="avatarButton" class="absolute bottom-2 right-2 bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-full shadow-lg transition-colors">
@@ -248,7 +254,7 @@ $pendingTasks = $overview['pending_tasks'];
                                     </div>
                                     <span class="text-sm text-gray-600">Revenue Today</span>
                                 </div>
-                                <span class="text-lg font-semibold text-gray-900">₦<?= number_format($revenueToday ?? 0, 2) ?></span>
+                                <span class="text-lg font-semibold text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?= number_format($revenueToday ?? 0, 2) ?></span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-3">
@@ -671,7 +677,7 @@ $pendingTasks = $overview['pending_tasks'];
 
             // Update avatar if you allow avatar changes
             const avatarHeader = document.getElementById('avatarHeader');
-            if (avatarHeader && profileData.avatar) avatarHeader.src = '../assets/uploads/' + profileData.avatar;
+            if (avatarHeader && profileData.avatar) avatarHeader.src = '<?php echo ADMIN_AVATAR_URL; ?>' + profileData.avatar;
         }
 
         // Function for rendering admin permissions
@@ -1009,7 +1015,7 @@ $pendingTasks = $overview['pending_tasks'];
                     setTimeout(() => {
                         if (avatarHeader) {
                             // Add cache buster to force reload
-                            avatarHeader.src = '../assets/uploads/' + result.avatar + '?t=' + Date.now();
+                            avatarHeader.src = '<?php echo ADMIN_AVATAR_URL; ?>' + result.avatar + '?t=' + Date.now();
                         }
                         showToasted('Profile photo updated!', 'success');
                         hideOverlayLoader();
@@ -1026,11 +1032,11 @@ $pendingTasks = $overview['pending_tasks'];
             }
         });
 
-        function updateNavbarProfile() {
+         function updateNavbarProfile() {
             // Avatar in navbar
             const navbarAvatar = document.getElementById('navbarAvatar');
             if (navbarAvatar && profileData.avatar)
-                navbarAvatar.src = '../assets/uploads/' + profileData.avatar + '?t=' + Date.now();
+                navbarAvatar.src = '<?php echo ADMIN_AVATAR_URL; ?>' + profileData.avatar + '?t=' + Date.now();
 
             // Name in navbar
             const navbarName = document.getElementById('navbarName');
@@ -1040,7 +1046,7 @@ $pendingTasks = $overview['pending_tasks'];
             // Avatar in dropdown
             const navbarDropdownAvatar = document.getElementById('navbarDropdownAvatar');
             if (navbarDropdownAvatar && profileData.avatar)
-                navbarDropdownAvatar.src = '../assets/uploads/' + profileData.avatar + '?t=' + Date.now();
+                navbarDropdownAvatar.src = '<?php echo ADMIN_AVATAR_URL; ?>' + profileData.avatar + '?t=' + Date.now();
 
             // Name in dropdown
             const navbarDropdownName = document.getElementById('navbarDropdownName');

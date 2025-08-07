@@ -1045,9 +1045,6 @@ function getSystemOverview(PDO $pdo): array
         $systemUptime = '99.9%';
         // Add pending tasks if you have a tasks table
         $pendingTasks = 0;
-        if ($pdo->query("SHOW TABLES LIKE 'tasks'")->fetch()) {
-            $pendingTasks = $pdo->query("SELECT COUNT(*) FROM tasks WHERE status = 'pending'")->fetchColumn() ?: 0;
-        }
 
         return [
             'total_users'   => (int)$totalUsers,

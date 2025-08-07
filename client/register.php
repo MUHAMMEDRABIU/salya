@@ -457,7 +457,7 @@ require __DIR__ . '/../components/header.php';
                 // Start progress message interval
                 progressInterval = setInterval(() => {
                     updateProgressMessage();
-                }, 1500); // Change message every 1.5 seconds
+                }, 1500);
 
                 // AJAX request
                 fetch("api/api_register.php", {
@@ -485,16 +485,16 @@ require __DIR__ . '/../components/header.php';
                         if (data.success) {
                             // Show success message
                             overlayText.innerHTML = `
-                    <div class="text-center">
-                        <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </div>
-                        <div class="text-white text-lg font-bold mb-2">Registration Successful!</div>
-                        <div class="text-white text-sm opacity-75">Redirecting to login page...</div>
-                    </div>
-                `;
+                                <div class="text-center">
+                                    <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="text-white text-lg font-bold mb-2">Registration Successful!</div>
+                                    <div class="text-white text-sm opacity-75">Redirecting to login page...</div>
+                                </div>
+                            `;
 
                             // Show toast message
                             showToasted("Registration successful!", 'success', 4000);
