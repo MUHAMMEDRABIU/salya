@@ -224,7 +224,7 @@ require __DIR__ . '/partials/headers.php';
     <script src="js/script.js"></script>
     <script src="js/analytics.js"></script>
     <script>
-        function animateCounter(id, targetValue, prefix = "₦", duration = 2000) {
+        function animateCounter(id, targetValue, prefix = "<?php echo CURRENCY_SYMBOL; ?>", duration = 2000) {
             const el = document.getElementById(id);
             const start = 0;
             const startTime = performance.now();
@@ -249,7 +249,10 @@ require __DIR__ . '/partials/headers.php';
         window.addEventListener('DOMContentLoaded', () => {
             const el = document.getElementById('revenueCounter');
             const target = parseFloat(el.getAttribute('data-target')) || 0;
-            animateCounter('revenueCounter', target);
+            animateCounter('revenueCounter', target, '<?php echo CURRENCY_SYMBOL; ?>');
+
+            // Set global currency symbol for charts
+            window.CURRENCY_SYMBOL = '<?php echo CURRENCY_SYMBOL; ?>';
         });
     </script>
 
