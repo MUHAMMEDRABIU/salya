@@ -11,12 +11,15 @@
         </div>
 
         <form id="editProfileForm" class="p-6 space-y-6">
+
+            <!-- Edit Profile Modal - Avatar Section -->
             <div class="text-center">
                 <div class="relative inline-block">
-                    <?php if (!empty($user['avatar']) && file_exists("../assets/img/" . $user['avatar'])): ?>
-                        <img src="../assets/img/<?php echo htmlspecialchars($user['avatar']); ?>"
+                    <?php if (!empty($user['avatar']) && $user['avatar'] !== DEFAULT_USER_AVATAR): ?>
+                        <img src="<?php echo USER_AVATAR_URL . htmlspecialchars($user['avatar']); ?>"
                             alt="Profile"
-                            class="w-20 h-20 rounded-full object-cover border-4 border-orange-200">
+                            class="w-20 h-20 rounded-full object-cover border-4 border-orange-200"
+                            onerror="this.src='<?php echo USER_AVATAR_URL . DEFAULT_USER_AVATAR; ?>';">
                     <?php else: ?>
                         <div class="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center border-4 border-orange-200">
                             <i class="fas fa-user text-orange-500 text-2xl"></i>
@@ -85,12 +88,15 @@
         </div>
 
         <div class="p-6 space-y-6">
+            <!-- Avatar Upload Modal - Preview Section -->
             <div class="text-center">
                 <div class="w-32 h-32 mx-auto mb-4 relative">
                     <div id="avatarPreview" class="w-full h-full rounded-full bg-gray-100 flex items-center justify-center border-4 border-gray-200 overflow-hidden">
-                        <?php if (!empty($user['avatar']) && file_exists("../assets/img/" . $user['avatar'])): ?>
-                            <img src="../assets/img/<?php echo htmlspecialchars($user['avatar']); ?>"
-                                alt="Profile" class="w-full h-full object-cover">
+                        <?php if (!empty($user['avatar']) && $user['avatar'] !== DEFAULT_USER_AVATAR): ?>
+                            <img src="<?php echo USER_AVATAR_URL . htmlspecialchars($user['avatar']); ?>"
+                                alt="Profile"
+                                class="w-full h-full object-cover"
+                                onerror="this.src='<?php echo USER_AVATAR_URL . DEFAULT_USER_AVATAR; ?>';">
                         <?php else: ?>
                             <i class="fas fa-user text-gray-400 text-4xl"></i>
                         <?php endif; ?>
@@ -754,8 +760,6 @@
 </div>
 
 <script>
-    // Modal-specific JavaScript functions
-
     // Edit Profile Form Handler
     document.getElementById('editProfileForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -823,7 +827,10 @@
         submitFeedback(feedbackType, message);
     });
 
-    // Add this to your profile-modals.php script section
+
+    // Constants from PHP
+    const USER_AVATAR_URL = '<?php echo USER_AVATAR_URL; ?>';
+    const DEFAULT_USER_AVATAR = '<?php echo DEFAULT_USER_AVATAR; ?>';
 
     // Preview image when file is selected
     function previewAvatar(input) {
@@ -832,20 +839,20 @@
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.style.display = 'block';
+                preview.innerHTML = `<img src="${e.target.result}" alt="Preview" class="w-full h-full object-cover">`;
             };
             reader.readAsDataURL(input.files[0]);
         }
     }
 
     // Upload avatar
+    // Upload avatar
     async function uploadAvatar() {
-        const fileInput = document.getElementById('avatarFile');
+        const fileInput = document.getElementById('avatarInput');
         const file = fileInput.files[0];
 
         if (!file) {
-            alert('Please select a file first');
+            showToasted('Please select a file first', 'error');
             return;
         }
 
@@ -853,6 +860,8 @@
         formData.append('avatar', file);
 
         try {
+            showToasted('Uploading avatar...', 'info');
+
             const response = await fetch('api/upload-avatar.php', {
                 method: 'POST',
                 body: formData
@@ -861,33 +870,28 @@
             const result = await response.json();
 
             if (result.success) {
-                // Update avatar in page
-                const avatarImg = document.querySelector('.profile-avatar img');
-                if (avatarImg) {
-                    avatarImg.src = result.avatar_url + '?t=' + Date.now();
-                }
+                // Update avatar throughout the page
+                updateAvatarDisplay(USER_AVATAR_URL + result.avatar_filename);
 
-                // Close modal
                 closeModal('avatarUploadModal');
-
-                // Reset form
-                fileInput.value = '';
-                document.getElementById('avatarPreview').style.display = 'none';
-
-                alert('Avatar updated successfully!');
+                resetAvatarForm();
+                showToasted('Avatar updated successfully!', 'success');
             } else {
-                alert('Error: ' + result.message);
+                throw new Error(result.message || 'Failed to upload avatar');
             }
         } catch (error) {
-            alert('Upload failed. Please try again.');
+            console.error('Avatar upload error:', error);
+            showToasted('Failed to upload avatar', 'error');
         }
     }
 
     // Remove avatar
     async function removeAvatar() {
-        if (!confirm('Remove your avatar?')) return;
+        if (!confirm('Are you sure you want to remove your avatar?')) return;
 
         try {
+            showToasted('Removing avatar...', 'info');
+
             const response = await fetch('api/remove-avatar.php', {
                 method: 'POST'
             });
@@ -896,82 +900,98 @@
 
             if (result.success) {
                 // Reset to default avatar
-                const avatarContainer = document.querySelector('.profile-avatar');
-                avatarContainer.innerHTML = `
-                <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/20 flex items-center justify-center border-4 border-white/20">
-                    <i class="fas fa-user text-white text-2xl md:text-3xl"></i>
-                </div>
-                <button onclick="openAvatarUpload()" class="absolute bottom-0 right-0 w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors">
-                    <i class="fas fa-camera text-gray-600 text-xs md:text-sm"></i>
-                </button>
-            `;
+                updateAvatarDisplay(null);
 
                 closeModal('avatarUploadModal');
-                alert('Avatar removed!');
+                showToasted('Avatar removed successfully!', 'success');
             } else {
-                alert('Error: ' + result.message);
+                throw new Error(result.message || 'Failed to remove avatar');
             }
         } catch (error) {
-            alert('Failed to remove avatar');
+            console.error('Remove avatar error:', error);
+            showToasted('Failed to remove avatar', 'error');
         }
     }
 
     // Update avatar display throughout the page
     function updateAvatarDisplay(avatarUrl) {
-        const avatarElements = document.querySelectorAll('.profile-avatar img, .user-avatar');
+        const avatarImages = document.querySelectorAll('.profile-avatar img, .user-avatar');
         const avatarContainers = document.querySelectorAll('.profile-avatar');
 
         if (avatarUrl) {
             // Update existing image elements
-            avatarElements.forEach(img => {
+            avatarImages.forEach(img => {
                 img.src = avatarUrl + '?t=' + Date.now(); // Add timestamp to prevent caching
                 img.style.display = 'block';
+                img.onerror = function() {
+                    this.src = USER_AVATAR_URL + DEFAULT_USER_AVATAR;
+                };
             });
 
-            // Update containers with new avatar
-            avatarContainers.forEach(container => {
-                container.innerHTML = `
-                <img src="${avatarUrl}?t=${Date.now()}" 
-                     alt="Profile" 
-                     class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-white/20">
-                <button onclick="openAvatarUpload()" class="absolute bottom-0 right-0 w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors">
-                    <i class="fas fa-camera text-gray-600 text-xs md:text-sm"></i>
-                </button>
-            `;
-            });
+            // Update preview in modals
+            const editModalAvatar = document.querySelector('#editProfileModal .relative img');
+            if (editModalAvatar) {
+                editModalAvatar.src = avatarUrl + '?t=' + Date.now();
+            }
+
+            const uploadModalPreview = document.querySelector('#avatarPreview');
+            if (uploadModalPreview) {
+                uploadModalPreview.innerHTML = `<img src="${avatarUrl}?t=${Date.now()}" alt="Profile" class="w-full h-full object-cover">`;
+            }
         } else {
             // Revert to default avatar
             avatarContainers.forEach(container => {
-                container.innerHTML = `
-                <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/20 flex items-center justify-center border-4 border-white/20">
-                    <i class="fas fa-user text-white text-2xl md:text-3xl"></i>
-                </div>
-                <button onclick="openAvatarUpload()" class="absolute bottom-0 right-0 w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors">
-                    <i class="fas fa-camera text-gray-600 text-xs md:text-sm"></i>
-                </button>
-            `;
+                const avatarSection = container.querySelector('.relative');
+                if (avatarSection) {
+                    avatarSection.innerHTML = `
+                        <div class="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center border-4 border-orange-200">
+                            <i class="fas fa-user text-orange-500 text-2xl"></i>
+                        </div>
+                        <button type="button" onclick="openAvatarUpload()" class="absolute bottom-0 right-0 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center shadow-lg hover:bg-orange-600 transition-colors">
+                            <i class="fas fa-camera text-white text-xs"></i>
+                        </button>
+                    `;
+                }
             });
+
+            // Update modals
+            const editModalAvatar = document.querySelector('#editProfileModal .relative');
+            if (editModalAvatar) {
+                editModalAvatar.innerHTML = `
+                    <div class="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center border-4 border-orange-200">
+                        <i class="fas fa-user text-orange-500 text-2xl"></i>
+                    </div>
+                    <button type="button" onclick="openAvatarUpload()" class="absolute bottom-0 right-0 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center shadow-lg hover:bg-orange-600 transition-colors">
+                        <i class="fas fa-camera text-white text-xs"></i>
+                    </button>
+                `;
+            }
+
+            const uploadModalPreview = document.querySelector('#avatarPreview');
+            if (uploadModalPreview) {
+                uploadModalPreview.innerHTML = `<i class="fas fa-user text-gray-400 text-4xl"></i>`;
+            }
         }
     }
 
     // Reset avatar upload form
     function resetAvatarForm() {
-        const fileInput = document.getElementById('avatarFile');
+        const fileInput = document.getElementById('avatarInput');
         const preview = document.getElementById('avatarPreview');
-        const uploadBtn = document.querySelector('#avatarUploadModal button[onclick="uploadAvatar()"]');
 
         if (fileInput) {
             fileInput.value = '';
         }
 
         if (preview) {
-            preview.style.display = 'none';
-            preview.src = '';
-        }
-
-        if (uploadBtn) {
-            uploadBtn.disabled = true;
-            uploadBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            // Reset to current user avatar or default
+            const currentAvatar = '<?php echo !empty($user["avatar"]) && $user["avatar"] !== DEFAULT_USER_AVATAR ? USER_AVATAR_URL . htmlspecialchars($user["avatar"]) : ""; ?>';
+            
+            if (currentAvatar) {
+                preview.innerHTML = `<img src="${currentAvatar}" alt="Profile" class="w-full h-full object-cover">`;
+            } else {
+                preview.innerHTML = `<i class="fas fa-user text-gray-400 text-4xl"></i>`;
+            }
         }
     }
 
@@ -1007,6 +1027,14 @@
     // Initialize avatar functionality when DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
         setupAvatarDragDrop();
+        
+        // Set up proper error handling for existing avatar images
+        const avatarImages = document.querySelectorAll('img[src*="avatar"], img[src*="profile"]');
+        avatarImages.forEach(img => {
+            img.onerror = function() {
+                this.src = USER_AVATAR_URL + DEFAULT_USER_AVATAR;
+            };
+        });
     });
 
 
@@ -1032,6 +1060,7 @@
 
         // Validation
         if (!addressData.address_name || !addressData.full_address || !addressData.city || !addressData.state) {
+
             showToasted('Please fill in all required fields', 'error');
             return;
         }

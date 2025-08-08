@@ -1,7 +1,8 @@
 <?php
 require_once __DIR__ . '/initialize.php';
 require_once __DIR__ . '/util/util.php';
-require_once __DIR__ . '/../config/constants.php';
+require __DIR__ . '/../config/constants.php';
+
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -254,7 +255,7 @@ require_once 'partials/headers.php';
         <div class="animate-slide-up" style="animation-delay: 0.3s;">
             <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-4 px-2">Account Settings</h3>
             <div class="bg-white rounded-3xl overflow-hidden floating-card shadow-lg">
-                <button onclick="openEditProfileModal()" class="menu-item w-full flex items-center justify-between p-4 md:p-6 hover:bg-gray-50 transition-colors">
+                <button onclick="openEditProfileModal()" class="menu-item w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
                     <div class="flex items-center">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-blue-100 rounded-2xl flex items-center justify-center mr-4">
                             <i class="fas fa-user text-blue-600 text-lg md:text-xl"></i>
@@ -267,9 +268,9 @@ require_once 'partials/headers.php';
                     <i class="fas fa-chevron-right text-gray-400"></i>
                 </button>
 
-                <div class="border-t border-gray-100"></div>
+                <div class="underline underline-thin underline-gray"></div>
 
-                <button onclick="openAddressModal()" class="menu-item w-full flex items-center justify-between p-4 md:p-6 hover:bg-gray-50 transition-colors">
+                <button onclick="openAddressModal()" class="menu-item w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
                     <div class="flex items-center">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-green-100 rounded-2xl flex items-center justify-center mr-4">
                             <i class="fas fa-map-marker-alt text-green-600 text-lg md:text-xl"></i>
@@ -284,9 +285,9 @@ require_once 'partials/headers.php';
                     <i class="fas fa-chevron-right text-gray-400"></i>
                 </button>
 
-                <div class="border-t border-gray-100"></div>
+                <div class="underline underline-thin underline-gray"></div>
 
-                <button onclick="openPaymentModal()" class="menu-item w-full flex items-center justify-between p-4 md:p-6 hover:bg-gray-50 transition-colors">
+                <button onclick="openPaymentModal()" class="menu-item w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
                     <div class="flex items-center">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-purple-100 rounded-2xl flex items-center justify-center mr-4">
                             <i class="fas fa-credit-card text-purple-600 text-lg md:text-xl"></i>
@@ -299,9 +300,9 @@ require_once 'partials/headers.php';
                     <i class="fas fa-chevron-right text-gray-400"></i>
                 </button>
 
-                <div class="border-t border-gray-100"></div>
+                <div class="underline underline-thin underline-gray"></div>
 
-                <button onclick="openSecurityModal()" class="menu-item w-full flex items-center justify-between p-4 md:p-6 hover:bg-gray-50 transition-colors">
+                <button onclick="openSecurityModal()" class="menu-item w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
                     <div class="flex items-center">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-red-100 rounded-2xl flex items-center justify-center mr-4">
                             <i class="fas fa-shield-alt text-red-600 text-lg md:text-xl"></i>
@@ -320,7 +321,7 @@ require_once 'partials/headers.php';
         <div class="animate-slide-up" style="animation-delay: 0.4s;">
             <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-4 px-2">Preferences</h3>
             <div class="bg-white rounded-3xl overflow-hidden floating-card shadow-lg">
-                <div class="menu-item flex items-center justify-between p-4 md:p-6">
+                <div class="menu-item flex items-center justify-between p-4">
                     <div class="flex items-center">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-yellow-100 rounded-2xl flex items-center justify-center mr-4">
                             <i class="fas fa-bell text-yellow-600 text-lg md:text-xl"></i>
@@ -337,9 +338,9 @@ require_once 'partials/headers.php';
                     </label>
                 </div>
 
-                <div class="border-t border-gray-100"></div>
+                <div class="underline underline-thin underline-gray"></div>
 
-                <div class="menu-item flex items-center justify-between p-4 md:p-6">
+                <div class="menu-item flex items-center justify-between p-4">
                     <div class="flex items-center">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-indigo-100 rounded-2xl flex items-center justify-center mr-4">
                             <i class="fas fa-envelope text-indigo-600 text-lg md:text-xl"></i>
@@ -356,9 +357,9 @@ require_once 'partials/headers.php';
                     </label>
                 </div>
 
-                <div class="border-t border-gray-100"></div>
+                <div class="underline underline-thin underline-gray"></div>
 
-                <button onclick="openLanguageModal()" class="menu-item w-full flex items-center justify-between p-4 md:p-6 hover:bg-gray-50 transition-colors">
+                <button onclick="openLanguageModal()" class="menu-item w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
                     <div class="flex items-center">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-teal-100 rounded-2xl flex items-center justify-center mr-4">
                             <i class="fas fa-globe text-teal-600 text-lg md:text-xl"></i>
@@ -382,7 +383,7 @@ require_once 'partials/headers.php';
         <div class="animate-slide-up" style="animation-delay: 0.5s;">
             <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-4 px-2">Support & Information</h3>
             <div class="bg-white rounded-3xl overflow-hidden floating-card shadow-lg">
-                <button onclick="openHelpModal()" class="menu-item w-full flex items-center justify-between p-4 md:p-6 hover:bg-gray-50 transition-colors">
+                <button onclick="openHelpModal()" class="menu-item w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
                     <div class="flex items-center">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-orange-100 rounded-2xl flex items-center justify-center mr-4">
                             <i class="fas fa-question-circle text-orange-600 text-lg md:text-xl"></i>
@@ -395,9 +396,9 @@ require_once 'partials/headers.php';
                     <i class="fas fa-chevron-right text-gray-400"></i>
                 </button>
 
-                <div class="border-t border-gray-100"></div>
+                <div class="underline underline-thin underline-gray"></div>
 
-                <button onclick="openContactModal()" class="menu-item w-full flex items-center justify-between p-4 md:p-6 hover:bg-gray-50 transition-colors">
+                <button onclick="openContactModal()" class="menu-item w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
                     <div class="flex items-center">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-pink-100 rounded-2xl flex items-center justify-center mr-4">
                             <i class="fas fa-headset text-pink-600 text-lg md:text-xl"></i>
@@ -410,9 +411,9 @@ require_once 'partials/headers.php';
                     <i class="fas fa-chevron-right text-gray-400"></i>
                 </button>
 
-                <div class="border-t border-gray-100"></div>
+                <div class="underline underline-thin underline-gray"></div>
 
-                <button onclick="openFeedbackModal()" class="menu-item w-full flex items-center justify-between p-4 md:p-6 hover:bg-gray-50 transition-colors">
+                <button onclick="openFeedbackModal()" class="menu-item w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
                     <div class="flex items-center">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-blue-100 rounded-2xl flex items-center justify-center mr-4">
                             <i class="fas fa-comment-alt text-blue-600 text-lg md:text-xl"></i>
@@ -425,9 +426,9 @@ require_once 'partials/headers.php';
                     <i class="fas fa-chevron-right text-gray-400"></i>
                 </button>
 
-                <div class="border-t border-gray-100"></div>
+                <div class="underline underline-thin underline-gray"></div>
 
-                <button onclick="openAboutModal()" class="menu-item w-full flex items-center justify-between p-4 md:p-6 hover:bg-gray-50 transition-colors">
+                <button onclick="openAboutModal()" class="menu-item w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
                     <div class="flex items-center">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-gray-100 rounded-2xl flex items-center justify-center mr-4">
                             <i class="fas fa-info-circle text-gray-600 text-lg md:text-xl"></i>
