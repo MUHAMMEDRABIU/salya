@@ -250,41 +250,40 @@ require_once 'partials/headers.php';
             <!-- Status Filter Tabs (Responsive Horizontal Scroll) -->
             <div class="animate-slide-up" style="animation-delay: 0.3s;">
                 <div class="overflow-x-auto hide-scrollbar">
-                    <div class="flex space-x-3 pb-2 min-w-max">
+                    <div class="flex space-x-3 pb-2 min-w-max px-1">
                         <a href="?status=all"
-                            class="status-tab <?php echo $selectedStatus === 'all' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                            class="status-tab <?php echo $selectedStatus === 'all' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
                             <i class="fas fa-list mr-2"></i>
                             All Orders
                         </a>
                         <a href="?status=confirmed"
-                            class="status-tab <?php echo $selectedStatus === 'confirmed' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                            class="status-tab <?php echo $selectedStatus === 'confirmed' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
                             <i class="fas fa-check-circle mr-2"></i>
                             Confirmed
                         </a>
                         <a href="?status=processing"
-                            class="status-tab <?php echo $selectedStatus === 'processing' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                            class="status-tab <?php echo $selectedStatus === 'processing' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
                             <i class="fas fa-clock mr-2"></i>
                             Processing
                         </a>
                         <a href="?status=shipped"
-                            class="status-tab <?php echo $selectedStatus === 'shipped' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                            class="status-tab <?php echo $selectedStatus === 'shipped' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
                             <i class="fas fa-truck mr-2"></i>
                             Shipped
                         </a>
                         <a href="?status=delivered"
-                            class="status-tab <?php echo $selectedStatus === 'delivered' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                            class="status-tab <?php echo $selectedStatus === 'delivered' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
                             <i class="fas fa-check-double mr-2"></i>
                             Delivered
                         </a>
                         <a href="?status=cancelled"
-                            class="status-tab <?php echo $selectedStatus === 'cancelled' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                            class="status-tab <?php echo $selectedStatus === 'cancelled' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
                             <i class="fas fa-times-circle mr-2"></i>
                             Cancelled
                         </a>
                     </div>
                 </div>
             </div>
-
             <!-- Results Info -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-slide-up" style="animation-delay: 0.4s;">
                 <div>
@@ -727,111 +726,6 @@ require_once 'partials/headers.php';
                 window.location.href = `checkout.php?retry=${orderNumber}`;
             }, 1000);
         };
-
-        // CSS Animations
-        const style = document.createElement('style');
-        style.textContent = `
-            .hide-scrollbar {
-                -ms-overflow-style: none;
-                scrollbar-width: none;
-            }
-            .hide-scrollbar::-webkit-scrollbar {
-                display: none;
-            }
-            
-            .status-tab {
-                background: white;
-                color: #6b7280;
-                border: 1px solid #e5e7eb;
-            }
-            
-            .status-tab.active {
-                background: linear-gradient(135deg, #f97316, #ea580c);
-                color: white;
-                border: 1px solid #f97316;
-                box-shadow: 0 10px 25px rgba(249, 115, 22, 0.3);
-            }
-
-            .order-details {
-                max-height: 0;
-                overflow: hidden;
-                transition: max-height 0.3s ease-out;
-            }
-
-            .order-details.expanded {
-                max-height: 1000px;
-                transition: max-height 0.5s ease-in;
-            }
-            
-            .animate-float {
-                animation: float 6s ease-in-out infinite;
-            }
-            
-            @keyframes float {
-                0%, 100% { transform: translateY(0px); }
-                50% { transform: translateY(-20px); }
-            }
-            
-            .animate-scale-in {
-                animation: scaleIn 0.5s ease-out forwards;
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            
-            @keyframes scaleIn {
-                to {
-                    opacity: 1;
-                    transform: scale(1);
-                }
-            }
-            
-            .animate-slide-up {
-                animation: slideUp 0.6s ease-out forwards;
-            }
-            
-            @keyframes slideUp {
-                from {
-                    opacity: 0;
-                    transform: translateY(30px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-            
-            .animate-fade-in {
-                animation: fadeIn 0.4s ease-out;
-            }
-            
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-
-            @keyframes spin {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
-            }
-
-            .pull-indicator.visible {
-                background: #22c55e;
-            }
-
-            /* Responsive improvements */
-            @media (max-width: 640px) {
-                .order-card {
-                    margin: 0 -1rem;
-                    border-radius: 1.5rem;
-                }
-                
-                .container {
-                    padding-left: 1rem;
-                    padding-right: 1rem;
-                }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
 </body>
 

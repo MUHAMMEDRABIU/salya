@@ -31,19 +31,25 @@ $unread_count = count(array_filter($notifications, function ($n) {
         </div>
 
         <!-- Notification Categories -->
-        <div class="flex space-x-4 mb-8 overflow-x-auto pb-2">
-            <button class="notification-filter active bg-custom-accent text-white px-6 py-3 rounded-2xl font-semibold whitespace-nowrap transition-all duration-300" data-filter="all">
-                All
-            </button>
-            <button class="notification-filter bg-white text-custom-dark px-6 py-3 rounded-2xl font-semibold whitespace-nowrap hover:bg-custom-accent hover:text-white transition-all duration-300" data-filter="orders">
-                Orders
-            </button>
-            <button class="notification-filter bg-white text-custom-dark px-6 py-3 rounded-2xl font-semibold whitespace-nowrap hover:bg-custom-accent hover:text-white transition-all duration-300" data-filter="promotions">
-                Promotions
-            </button>
-            <button class="notification-filter bg-white text-custom-dark px-6 py-3 rounded-2xl font-semibold whitespace-nowrap hover:bg-custom-accent hover:text-white transition-all duration-300" data-filter="updates">
-                Updates
-            </button>
+        <div class="overflow-x-auto hide-scrollbar mb-8">
+            <div class="flex space-x-3 pb-2 min-w-max px-1">
+                <button class="notification-filter active bg-orange-500 text-white px-4 md:px-6 py-3 rounded-2xl font-semibold whitespace-nowrap transition-all duration-300" data-filter="all">
+                    <i class="fas fa-bell mr-2"></i>
+                    All
+                </button>
+                <button class="notification-filter bg-white text-gray-600 px-4 md:px-6 py-3 rounded-2xl font-semibold whitespace-nowrap transition-all duration-300" data-filter="orders">
+                    <i class="fas fa-shopping-bag mr-2"></i>
+                    Orders
+                </button>
+                <button class="notification-filter bg-white text-gray-600 px-4 md:px-6 py-3 rounded-2xl font-semibold whitespace-nowrap transition-all duration-300" data-filter="promotions">
+                    <i class="fas fa-tags mr-2"></i>
+                    Promotions
+                </button>
+                <button class="notification-filter bg-white text-gray-600 px-4 md:px-6 py-3 rounded-2xl font-semibold whitespace-nowrap transition-all duration-300" data-filter="updates">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Updates
+                </button>
+            </div>
         </div>
 
         <!-- Notifications List -->
@@ -122,13 +128,28 @@ $unread_count = count(array_filter($notifications, function ($n) {
 
             // Update filter buttons
             filterButtons.forEach(btn => {
-                if (btn.dataset.filter === category) {
-                    btn.classList.add('active', 'bg-custom-accent', 'text-white');
-                    btn.classList.remove('bg-white', 'text-custom-dark');
-                } else {
-                    btn.classList.remove('active', 'bg-custom-accent', 'text-white');
-                    btn.classList.add('bg-white', 'text-custom-dark');
-                }
+                btn.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    filterButtons.forEach(button => {
+                        button.classList.remove('active');
+                        button.classList.add('bg-white', 'text-gray-600');
+                        button.classList.remove('bg-orange-500', 'text-white');
+                    });
+
+                    // Add active class to clicked button
+                    btn.classList.add('active');
+                    btn.classList.remove('bg-white', 'text-gray-600');
+                    btn.classList.add('bg-orange-500', 'text-white');
+
+                    // Smooth scroll active tab into view
+                    btn.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest',
+                        inline: 'center'
+                    });
+
+                    filterNotifications(btn.dataset.filter);
+                });
             });
 
             // Show/hide notifications

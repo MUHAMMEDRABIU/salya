@@ -91,15 +91,17 @@ require_once 'partials/headers.php';
             </div>
         </div>
 
-        <!-- Responsive Category Tabs (like notifications.php) -->
+        <!-- Responsive Category Tabs -->
         <div class="animate-slide-up" style="animation-delay: 0.2s;">
             <div class="overflow-x-auto hide-scrollbar">
-                <div class="flex space-x-3 pb-2 min-w-max">
-                    <button class="tab-button active px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-orange-500 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300" data-category="all">
+                <div class="flex space-x-3 pb-2 min-w-max px-1">
+                    <button class="tab-button active px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-orange-500 text-white transition-all duration-300" data-category="all">
+                        <i class="fas fa-th-large mr-2"></i>
                         All Products
                     </button>
                     <?php foreach ($categories as $category): ?>
-                        <button class="tab-button px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-gray-50 transform hover:scale-105 transition-all duration-300" data-category="<?php echo strtolower($category); ?>">
+                        <button class="tab-button px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-white text-gray-600 transition-all duration-300" data-category="<?php echo strtolower($category); ?>">
+                            <i class="fas fa-box mr-2"></i>
                             <?php echo ucfirst($category); ?>
                         </button>
                     <?php endforeach; ?>
@@ -257,20 +259,22 @@ require_once 'partials/headers.php';
                 }
             };
 
-            // Enhanced tab functionality with smooth transitions
+            // Enhanced tab functionality with consistent styling
             tabButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const category = this.getAttribute('data-category');
 
                     // Remove active class from all buttons
                     tabButtons.forEach(btn => {
-                        btn.classList.remove('active', 'bg-orange-500', 'text-white');
+                        btn.classList.remove('active');
                         btn.classList.add('bg-white', 'text-gray-600');
+                        btn.classList.remove('bg-orange-500', 'text-white');
                     });
 
                     // Add active class to clicked button
-                    this.classList.add('active', 'bg-orange-500', 'text-white');
+                    this.classList.add('active');
                     this.classList.remove('bg-white', 'text-gray-600');
+                    this.classList.add('bg-orange-500', 'text-white');
 
                     // Smooth scroll active tab into view
                     this.scrollIntoView({
@@ -297,12 +301,6 @@ require_once 'partials/headers.php';
                             card.style.display = 'none';
                         }
                     });
-
-                    // Add bounce animation to button
-                    this.style.transform = 'scale(1.05)';
-                    setTimeout(() => {
-                        this.style.transform = 'scale(1)';
-                    }, 150);
                 });
             });
 
@@ -395,66 +393,6 @@ require_once 'partials/headers.php';
                 });
             }
         });
-
-        // CSS animations for enhanced interactions
-        const style = document.createElement('style');
-        style.textContent = `
-            .hide-scrollbar {
-                -ms-overflow-style: none;
-                scrollbar-width: none;
-            }
-            .hide-scrollbar::-webkit-scrollbar {
-                display: none;
-            }
-            
-            @keyframes heartbeat {
-                0%, 100% { transform: scale(1); }
-                25% { transform: scale(1.1); }
-                50% { transform: scale(1.2); }
-                75% { transform: scale(1.1); }
-            }
-            
-            .animate-bounce-gentle {
-                animation: bounce-gentle 0.6s ease-in-out;
-            }
-            
-            @keyframes bounce-gentle {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.1); }
-            }
-            
-            .product-card {
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            
-            .tab-button {
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            
-            .line-clamp-1 {
-                overflow: hidden;
-                display: -webkit-box;
-                -webkit-line-clamp: 1;
-                -webkit-box-orient: vertical;
-            }
-            
-            .line-clamp-2 {
-                overflow: hidden;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-            }
-            
-            .animate-fade-in {
-                animation: fadeIn 0.4s ease-out;
-            }
-            
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
 </body>
 
