@@ -31,6 +31,21 @@ try {
 $preferences = getUserPreferences($pdo, $user_id);
 $addresses = getUserAddresses($pdo, $user_id);
 
+// Ensure preferences is always an array
+if (!$preferences || !is_array($preferences)) {
+    $preferences = [
+        'push_notifications' => 1,
+        'email_updates' => 0,
+        'language' => 'en',
+        'theme' => 'light'
+    ];
+}
+
+// Ensure addresses is always an array
+if (!$addresses || !is_array($addresses)) {
+    $addresses = [];
+}
+
 require_once 'partials/headers.php';
 ?>
 
@@ -401,8 +416,13 @@ require_once 'partials/headers.php';
     <script>
         // Global variables
         let currentUser = <?php echo json_encode($user); ?>;
-        let userPreferences = <?php echo json_encode($preferences); ?>;
-        let userAddresses = <?php echo json_encode($addresses); ?>;
+        let userPreferences = <?php echo json_encode($preferences); ?> || {
+            push_notifications: 1,
+            email_updates: 0,
+            language: 'en',
+            theme: 'light'
+        };
+        let userAddresses = <?php echo json_encode($addresses); ?> || [];
 
         document.addEventListener('DOMContentLoaded', function() {
             initializeProfile();
@@ -411,6 +431,16 @@ require_once 'partials/headers.php';
         });
 
         function initializeProfile() {
+            // Ensure userPreferences is properly initialized
+            if (!userPreferences || typeof userPreferences !== 'object') {
+                userPreferences = {
+                    push_notifications: 1,
+                    email_updates: 0,
+                    language: 'en',
+                    theme: 'light'
+                };
+            }
+
             // Update cart count
             updateCartCount();
 
@@ -571,10 +601,13 @@ require_once 'partials/headers.php';
         }
 
         // Update preferences
-        // Replace the updatePreference function (around line 570):
-
         async function updatePreference(key, value) {
             try {
+                // Ensure userPreferences exists
+                if (!userPreferences) {
+                    userPreferences = {};
+                }
+
                 showToasted('Updating preference...', 'info');
 
                 const response = await fetch('api/update-preferences.php', {
@@ -587,6 +620,10 @@ require_once 'partials/headers.php';
                         value: value
                     })
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const result = await response.json();
 
@@ -609,6 +646,12 @@ require_once 'partials/headers.php';
         }
 
         function updatePreferencesUI() {
+            // Ensure userPreferences exists before updating UI
+            if (!userPreferences || typeof userPreferences !== 'object') {
+                console.warn('userPreferences not properly initialized');
+                return;
+            }
+
             // Update UI elements based on current preferences
             Object.keys(userPreferences).forEach(key => {
                 const element = document.querySelector(`input[onchange*="${key}"]`);

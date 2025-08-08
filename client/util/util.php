@@ -624,19 +624,20 @@ function setDefaultAddress($pdo, $user_id, $address_id)
  * @param int $user_id
  * @return array
  */
+
 function getUserPreferences($pdo, $user_id)
 {
     try {
-        $stmt = $pdo->prepare("SELECT * FROM user_preferences WHERE user_id = ?");
+        $stmt = $pdo->prepare("SELECT push_notifications, email_updates, language, theme FROM user_preferences WHERE user_id = ?");
         $stmt->execute([$user_id]);
         $prefs = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        // Return defaults if no preferences found
-        return $prefs ?: [
-            'push_notifications' => 1,
-            'email_updates' => 0,
-            'language' => 'en',
-            'theme' => 'light'
+        // Always return a proper array with defaults
+        return [
+            'push_notifications' => (int)($prefs['push_notifications'] ?? 1),
+            'email_updates' => (int)($prefs['email_updates'] ?? 0),
+            'language' => $prefs['language'] ?? 'en',
+            'theme' => $prefs['theme'] ?? 'light'
         ];
     } catch (PDOException $e) {
         error_log("Error fetching user preferences: " . $e->getMessage());

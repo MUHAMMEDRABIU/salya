@@ -1228,7 +1228,7 @@
     }
 
     // Language functions
-    let selectedLanguage = userPreferences.language || 'en';
+    let selectedLanguage = '<?php echo $preferences['language'] ?? 'en'; ?>';
 
     document.querySelectorAll('.language-option').forEach(option => {
         option.addEventListener('click', function() {
@@ -1245,12 +1245,32 @@
 
     async function saveLanguagePreference() {
         try {
-            await updatePreference('language', selectedLanguage);
-            closeModal('languageModal');
-            // Update UI language text if needed
-            location.reload();
+            showToasted('Updating language...', 'info');
+
+            const response = await fetch('api/update-preferences.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    key: 'language',
+                    value: selectedLanguage
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToasted('Language updated successfully!', 'success');
+                closeModal('languageModal');
+                // Update UI language text if needed
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                throw new Error(result.message || 'Failed to update language');
+            }
         } catch (error) {
             console.error('Language update error:', error);
+            showToasted('Failed to update language', 'error');
         }
     }
 
@@ -1316,8 +1336,7 @@
                 throw new Error(result.message || 'Failed to update password');
             }
         } catch (error) {
-            console.error('Password change error:', error);
-            showToasted('Failed to update password', 'error');
+            showToasted(error.message || 'Failed to update password', 'error');
         }
     }
 
