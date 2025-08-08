@@ -118,9 +118,6 @@ try {
     // Commit transaction
     $pdo->commit();
 
-    // Log order creation
-    error_log("Order created: {$order_number} for user {$user_id} - Amount: ₦{$total_amount}");
-
     echo json_encode([
         'success' => true,
         'message' => 'Order created successfully',

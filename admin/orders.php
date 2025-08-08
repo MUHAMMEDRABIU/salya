@@ -98,7 +98,7 @@ require __DIR__ . '/partials/headers.php';
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
@@ -141,11 +141,7 @@ require __DIR__ . '/partials/headers.php';
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <?php
-                                            // Use your util function to get product details by ID
-                                            $product = getProductById($pdo, $order['product_id']);
-                                            echo $product ? htmlspecialchars($product['name']) : 'Unknown';
-                                            ?>
+                                            <?php echo htmlspecialchars($order['payment_reference'] ?? 'N/A'); ?>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             <?php echo CURRENCY_SYMBOL; ?><?php echo number_format($order['total_amount'], 2); ?>

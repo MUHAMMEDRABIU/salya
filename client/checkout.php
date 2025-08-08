@@ -334,15 +334,15 @@ require_once 'partials/headers.php';
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-                                <input type="text" id="fullName" 
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 focus:outline-none transition-all duration-200" 
-                                       placeholder="e.g John Doe" required>
+                                <input type="text" id="fullName"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 focus:outline-none transition-all duration-200"
+                                    placeholder="e.g John Doe" required>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
-                                <input type="tel" id="phoneNumber" 
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 focus:outline-none transition-all duration-200" 
-                                       placeholder="08012345678" required>
+                                <input type="tel" id="phoneNumber"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 focus:outline-none transition-all duration-200"
+                                    placeholder="08012345678" required>
                             </div>
                         </div>
                     </div>
@@ -353,9 +353,9 @@ require_once 'partials/headers.php';
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">State *</label>
-                                <select id="deliveryState" 
-                                        class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200" 
-                                        required onchange="updateCities()">
+                                <select id="deliveryState"
+                                    class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200"
+                                    required onchange="updateCities()">
                                     <option value="">Select State</option>
                                     <option value="fct">Federal Capital Territory (Abuja)</option>
                                     <option value="lagos">Lagos</option>
@@ -363,38 +363,38 @@ require_once 'partials/headers.php';
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">City *</label>
-                                <select id="deliveryCity" 
-                                        class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200" 
-                                        required onchange="updateAreas()">
+                                <select id="deliveryCity"
+                                    class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200"
+                                    required onchange="updateAreas()">
                                     <option value="">Select City</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Area/District *</label>
-                                <select id="deliveryArea" 
-                                        class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200" 
-                                        required>
+                                <select id="deliveryArea"
+                                    class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200"
+                                    required>
                                     <option value="">Select Area</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Street Address *</label>
-                                <textarea id="streetAddress" rows="3" 
-                                          class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200 resize-none" 
-                                          placeholder="e.g., 123 Main Street, Victoria Island" required></textarea>
+                                <textarea id="streetAddress" rows="3"
+                                    class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200 resize-none"
+                                    placeholder="e.g., 123 Main Street, Victoria Island" required></textarea>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Postal Code (Optional)</label>
-                                    <input type="text" id="postalCode" 
-                                           class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200" 
-                                           placeholder="e.g., 100001">
+                                    <input type="text" id="postalCode"
+                                        class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200"
+                                        placeholder="e.g., 100001">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Landmark (Optional)</label>
-                                    <input type="text" id="landmark" 
-                                           class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200" 
-                                           placeholder="e.g., Near First Bank">
+                                    <input type="text" id="landmark"
+                                        class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200"
+                                        placeholder="e.g., Near First Bank">
                                 </div>
                             </div>
                         </div>
@@ -430,9 +430,9 @@ require_once 'partials/headers.php';
                     <!-- Special Instructions -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Special Delivery Instructions (Optional)</label>
-                        <textarea id="specialInstructions" rows="3" 
-                                  class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 focus:outline-none transition-all duration-200 resize-none" 
-                                  placeholder="Any special instructions for delivery..."></textarea>
+                        <textarea id="specialInstructions" rows="3"
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 focus:outline-none transition-all duration-200 resize-none"
+                            placeholder="Any special instructions for delivery..."></textarea>
                     </div>
                 </form>
             </div>
@@ -440,12 +440,12 @@ require_once 'partials/headers.php';
             <!-- Fixed Action Buttons -->
             <div class="border-t border-gray-100 p-6 bg-white">
                 <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                    <button type="button" onclick="closeDeliveryForm()" 
-                            class="flex-1 px-6 py-4 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium text-center">
+                    <button type="button" onclick="closeDeliveryForm()"
+                        class="flex-1 px-6 py-4 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium text-center">
                         Cancel
                     </button>
-                    <button type="submit" form="deliveryForm"
-                            class="flex-1 px-6 py-4 bg-custom-accent text-white rounded-xl hover:opacity-90 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-center">
+                    <button type="submit" form="deliveryForm" id="deliverySubmitBtn"
+                        class="flex-1 px-6 py-4 bg-custom-accent text-white rounded-xl hover:opacity-90 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-center">
                         Complete Order
                     </button>
                 </div>
@@ -565,17 +565,24 @@ require_once 'partials/headers.php';
         // Initialize form handlers
         function initializeFormHandlers() {
             // Delivery form submission
-            document.getElementById('deliveryForm').addEventListener('submit', handleDeliveryFormSubmit);
+            const deliveryForm = document.getElementById('deliveryForm');
+            if (deliveryForm) {
+                deliveryForm.addEventListener('submit', handleDeliveryFormSubmit);
+            }
 
             // Delivery option selection
             document.querySelectorAll('input[name="delivery_option"]').forEach(radio => {
                 radio.addEventListener('change', function() {
                     document.querySelectorAll('.delivery-option-label').forEach(label => {
                         label.classList.remove('border-custom-accent', 'bg-blue-50');
-                        label.classList.add('border-gray-50');
+                        label.classList.add('border-gray-200', 'bg-white');
                     });
-                    this.parentElement.classList.add('border-custom-accent', 'bg-blue-50');
-                    this.parentElement.classList.remove('border-gray-50');
+
+                    const selectedLabel = this.closest('div').querySelector('.delivery-option-label');
+                    if (selectedLabel) {
+                        selectedLabel.classList.add('border-custom-accent', 'bg-blue-50');
+                        selectedLabel.classList.remove('border-gray-200', 'bg-white');
+                    }
                 });
             });
         }
@@ -676,9 +683,17 @@ require_once 'partials/headers.php';
         async function handleDeliveryFormSubmit(e) {
             e.preventDefault();
 
-            const submitBtn = e.target.querySelector('button[type="submit"]');
+            // Find the correct submit button - it's outside the form
+            const submitBtn = document.getElementById('deliverySubmitBtn');
+
+            if (!submitBtn) {
+                console.error('Submit button not found');
+                showToasted('Error: Submit button not found', 'error');
+                return;
+            }
+
             const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Processing...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
             submitBtn.disabled = true;
 
             try {
@@ -734,7 +749,7 @@ require_once 'partials/headers.php';
                     // Show payment verification
                     showPaymentVerification();
 
-                    // Simulate payment verification after delay
+                    // Start verification process
                     setTimeout(() => {
                         verifyPayment();
                     }, 3000);
