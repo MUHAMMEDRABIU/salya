@@ -324,7 +324,7 @@ require_once 'partials/headers.php';
                 </button>
             </div>
 
-            <form id="deliveryForm" class="space-y-6">
+            <form id="deliveryForm" class="space-y-6 mb-8">
                 <!-- Personal Information -->
                 <div class="bg-gray-50 rounded-xl p-4">
                     <h3 class="text-lg font-semibold text-custom-dark mb-4">Personal Information</h3>
@@ -412,7 +412,7 @@ require_once 'partials/headers.php';
                     <textarea id="specialInstructions" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" placeholder="Any special instructions for delivery..."></textarea>
                 </div>
 
-                <div class="flex space-x-4 pt-4">
+                <div class="flex space-x-4 pt-4 mb-6">
                     <button type="button" onclick="closeDeliveryForm()" class="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors">
                         Cancel
                     </button>

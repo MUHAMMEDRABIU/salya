@@ -16,7 +16,7 @@ define('BASE_UPLOAD_URL', APP_URL . '/assets/uploads/');
 // Upload directories
 define('USER_AVATAR_DIR', BASE_UPLOAD_DIR . 'avatars/users/');
 define('ADMIN_AVATAR_DIR', BASE_UPLOAD_DIR . 'avatars/admins/');
-define('PRODUCT_IMAGE_DIR', BASE_UPLOAD_DIR . 'products/main/');
+define('PRODUCT_IMAGE_DIR', BASE_UPLOAD_DIR . 'products/');
 define('PRODUCT_GALLERY_DIR', BASE_UPLOAD_DIR . 'products/gallery/');
 define('PRODUCT_THUMBNAIL_DIR', BASE_UPLOAD_DIR . 'products/thumbnails/');
 define('CATEGORY_IMAGE_DIR', BASE_UPLOAD_DIR . 'categories/');
@@ -28,7 +28,7 @@ define('TEMP_UPLOAD_DIR', BASE_UPLOAD_DIR . 'temp/');
 // Upload URLs (for web access)
 define('USER_AVATAR_URL', BASE_UPLOAD_URL . 'avatars/users/');
 define('ADMIN_AVATAR_URL', BASE_UPLOAD_URL . 'avatars/admins/');
-define('PRODUCT_IMAGE_URL', BASE_UPLOAD_URL . 'products/main/');
+define('PRODUCT_IMAGE_URL', BASE_UPLOAD_URL . 'products/');
 define('PRODUCT_GALLERY_URL', BASE_UPLOAD_URL . 'products/gallery/');
 define('PRODUCT_THUMBNAIL_URL', BASE_UPLOAD_URL . 'products/thumbnails/');
 define('CATEGORY_IMAGE_URL', BASE_UPLOAD_URL . 'categories/');
@@ -44,8 +44,8 @@ define('MAX_BANNER_SIZE', 15 * 1024 * 1024);     // 15MB
 // Default files
 define('DEFAULT_USER_AVATAR', 'default.png');
 define('DEFAULT_ADMIN_AVATAR', 'default.png');
-define('DEFAULT_PRODUCT_IMAGE', 'default-product.png');
-define('DEFAULT_CATEGORY_IMAGE', 'default-category.png');
+define('DEFAULT_PRODUCT_IMAGE', 'default-product.jpg');
+define('DEFAULT_CATEGORY_IMAGE', 'default-category.jpg');
 
 // =============================================================================
 // ALLOWED FILE TYPES (as constants)

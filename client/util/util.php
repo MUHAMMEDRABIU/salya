@@ -11,7 +11,7 @@ function getUserProfile($pdo, $user_id)
         $stmt = $pdo->prepare("SELECT * FROM users WHERE id = :user_id");
         $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);  
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
         error_log("Error fetching user profile: " . $e->getMessage());
         return null;
@@ -337,7 +337,7 @@ function isProductFavorite($pdo, $user_id, $product_id)
         $stmt->bindParam(':product_id', $product_id, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchColumn() > 0;
-    } catch (PDOException $e){
+    } catch (PDOException $e) {
         error_log($e->getMessage());
         return false;
     }
@@ -754,7 +754,7 @@ function formatPhoneNumber($phone)
 function getAllProducts($pdo)
 {
     try {
-        $stmt = $pdo->prepare("SELECT id, name, description, price, image, category_id FROM products");
+        $stmt = $pdo->prepare("SELECT id, name, slug, description, price, image, category_id FROM products");
         $stmt->execute();
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -765,13 +765,24 @@ function getAllProducts($pdo)
             $catStmt->execute();
             $cat = $catStmt->fetch(PDO::FETCH_ASSOC);
             $product['category'] = $cat ? $cat['name'] : '';
-        }
 
+            // Simple image fallback for development
+            if (empty($product['image_url'])) {
+                $product['image_url'] = "https://source.unsplash.com/400x300/?food," . urlencode($product['category']);
+            }
+        }
         return $products;
     } catch (PDOException $th) {
         error_log("Some error occured" . $th->getMessage());
         return [];
     }
+}
+
+function getProductImage($product)
+{
+    return !empty($product['image_url'])
+        ? $product['image_url']
+        : "https://source.unsplash.com/400x300/?food," . urlencode($product['category'] ?? 'frozen');
 }
 
 function getProductCategories($pdo)

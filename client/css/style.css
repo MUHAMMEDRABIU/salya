@@ -1108,6 +1108,7 @@ select {
    ============================ */
 
 /* Smooth refresh button animation */
+
 #refresh-btn.refreshing {
     pointer-events: none;
 }

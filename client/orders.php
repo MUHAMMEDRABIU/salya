@@ -286,7 +286,7 @@ require_once 'partials/headers.php';
             </div>
 
             <!-- Results Info -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-slide-up" style="animation-delay: 0.4s;">
+            <div class="flex justify-between sm:align-start animate-slide-up" style="animation-delay: 0.4s;">
                 <div class="flex-1">
                     <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-1">
                         <?php echo $selectedStatus === 'all' ? 'All Orders' : ucfirst($selectedStatus) . ' Orders'; ?>
@@ -302,8 +302,8 @@ require_once 'partials/headers.php';
                 <!-- Responsive Refresh Button -->
                 <div class="flex-shrink-0">
                     <button id="refresh-btn" class="flex items-center justify-center px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 transition-all duration-300 hover:scale-105 min-w-[44px] sm:min-w-auto">
-                        <i class="fas fa-sync-alt text-sm sm:mr-2"></i>
-                        <span class="hidden sm:inline text-sm font-medium">Refresh</span>
+                        <i class="fas fa-sync-alt text-sm leading-none"></i>
+                        <span class="hidden sm:inline text-sm font-medium ml-2">Refresh</span>
                     </button>
                 </div>
             </div>

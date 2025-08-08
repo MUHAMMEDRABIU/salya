@@ -129,7 +129,7 @@ require __DIR__ . '/partials/headers.php';
                                                 ? PRODUCT_IMAGE_URL . htmlspecialchars($product['image'])
                                                 : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
                                             ?>
-                                            <img src="<?php echo $productImage; ?>" alt="Product" class="w-12 h-12 rounded-lg object-cover mr-4">
+                                            <img onerror="this.src='<?= PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE ?>'" src="<?php echo $productImage; ?>" alt="Product" class="w-12 h-12 rounded-lg object-cover mr-4">
                                             <div>
                                                 <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($product['name']) ?></div>
                                                 <div class="text-sm text-gray-500"><?= htmlspecialchars($product['description']) ?></div>
