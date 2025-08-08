@@ -2,6 +2,7 @@
 require __DIR__ . '/initialize.php';
 require __DIR__ . '/util/utilities.php';
 require __DIR__ . '/partials/headers.php';
+require __DIR__ . '/../config/constants.php';
 
 // Fetch dashboard stats
 $stats = getDashboardStats($pdo);
@@ -36,7 +37,7 @@ $topProducts = getTopProducts($pdo, 3);
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-600">Revenue</p>
-                            <p class="text-3xl font-bold text-gray-900">₦<?php echo number_format($stats['total_revenue'] ?? 0, 2); ?></p>
+                            <p class="text-3xl font-bold text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($stats['total_revenue'] ?? 0, 2); ?></p>
                         </div>
                         <div class="bg-green-50 p-3 rounded-lg">
                             <i data-lucide="dollar-sign" class="w-6 h-6 text-green-600"></i>
@@ -133,7 +134,7 @@ $topProducts = getTopProducts($pdo, 3);
                                             </div>
                                         </div>
                                         <div class="text-right">
-                                            <p class="font-semibold text-gray-900">₦<?php echo number_format($order['total'] ?? 0, 2); ?></p>
+                                            <p class="font-semibold text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($order['total'] ?? 0, 2); ?></p>
                                             <?php
                                             $status = strtolower($order['status']);
                                             $statusColors = [
@@ -172,14 +173,20 @@ $topProducts = getTopProducts($pdo, 3);
                                 <?php foreach ($topProducts as $product): ?>
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center space-x-3">
-                                            <img src="../assets/uploads/<?php echo htmlspecialchars($product['image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-12 h-12 rounded-lg object-cover">
+                                            <?php
+                                            // Generate product image URL with fallback
+                                            $productImage = !empty($product['image']) && $product['image'] !== DEFAULT_PRODUCT_IMAGE 
+                                                ? PRODUCT_IMAGE_URL . htmlspecialchars($product['image'])
+                                                : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                                            ?>
+                                            <img src="<?php echo $productImage; ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-12 h-12 rounded-lg object-cover">
                                             <div>
                                                 <p class="font-medium text-gray-900"><?php echo htmlspecialchars($product['name']); ?></p>
                                                 <p class="text-sm text-gray-500"><?php echo (int)$product['orders_count']; ?> orders</p>
                                             </div>
                                         </div>
                                         <div class="text-right">
-                                            <p class="font-semibold text-gray-900">₦<?php echo number_format($product['total_revenue'] ?? 0, 2); ?></p>
+                                            <p class="font-semibold text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($product['total_revenue'] ?? 0, 2); ?></p>
                                             <div class="w-20 bg-gray-200 rounded-full h-2 mt-1">
                                                 <?php
                                                 $width = 0;
@@ -241,7 +248,7 @@ $topProducts = getTopProducts($pdo, 3);
                             },
                             ticks: {
                                 callback: function(value) {
-                                    return "$" + value.toLocaleString();
+                                    return "₦" + value.toLocaleString();
                                 },
                             },
                         },

@@ -1,6 +1,7 @@
 <?php
 require_once 'util/util.php';
 require_once 'initialize.php';
+require_once '../config/constants.php';
 
 // Get cart count for logged in users
 $cartCount = 0;
@@ -61,6 +62,7 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
 
 require_once 'partials/headers.php';
 ?>
+
 <body class="bg-gray-50 font-dm pb-24 overflow-x-hidden">
     <!-- Background Blobs -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
@@ -219,8 +221,14 @@ require_once 'partials/headers.php';
                             onclick="viewProduct(<?php echo $product['id']; ?>)"
                             style="animation-delay: <?php echo ($index * 0.1); ?>s;">
                             <div class="relative">
-                                <img src="../assets/uploads/<?php echo $product['image']; ?>"
-                                    alt="<?php echo $product['name']; ?>"
+                                <?php
+                                // Generate product image URL with fallback
+                                $productImage = !empty($product['image']) && $product['image'] !== DEFAULT_PRODUCT_IMAGE
+                                    ? PRODUCT_IMAGE_URL . htmlspecialchars($product['image'])
+                                    : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                                ?>
+                                <img src="<?php echo $productImage; ?>"
+                                    alt="<?php echo htmlspecialchars($product['name']); ?>"
                                     class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
 
@@ -259,7 +267,7 @@ require_once 'partials/headers.php';
                             <div class="p-5">
                                 <div class="mb-3">
                                     <span class="text-xs font-medium text-orange-500 uppercase tracking-wide">
-                                        <?php echo $product['category']; ?>
+                                        <?php echo htmlspecialchars($product['category']); ?>
                                     </span>
                                 </div>
                                 <h3 class="font-bold text-gray-900 text-lg mb-2 line-clamp-2 leading-tight">
@@ -272,7 +280,7 @@ require_once 'partials/headers.php';
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <span class="text-2xl font-bold text-orange-500">
-                                            ₦<?php echo number_format($product['price']); ?>
+                                            <?php echo CURRENCY_SYMBOL; ?><?php echo number_format($product['price']); ?>
                                         </span>
                                     </div>
 
@@ -489,99 +497,6 @@ require_once 'partials/headers.php';
                 card.style.animationDelay = `${index * 0.1}s`;
             });
         });
-
-        // CSS Animations
-        const style = document.createElement('style');
-        style.textContent = `
-            .hide-scrollbar {
-                -ms-overflow-style: none;
-                scrollbar-width: none;
-            }
-            .hide-scrollbar::-webkit-scrollbar {
-                display: none;
-            }
-            
-            .category-tab {
-                background: white;
-                color: #6b7280;
-                border: 1px solid #e5e7eb;
-            }
-            
-            .category-tab.active {
-                background: linear-gradient(135deg, #f97316, #ea580c);
-                color: white;
-                border: 1px solid #f97316;
-                box-shadow: 0 10px 25px rgba(249, 115, 22, 0.3);
-            }
-            
-            .view-toggle.active {
-                background: #f97316;
-                color: white;
-            }
-            
-            .line-clamp-2 {
-                overflow: hidden;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-            }
-            
-            .animate-float {
-                animation: float 6s ease-in-out infinite;
-            }
-            
-            @keyframes float {
-                0%, 100% { transform: translateY(0px); }
-                50% { transform: translateY(-20px); }
-            }
-            
-            .animate-scale-in {
-                animation: scaleIn 0.5s ease-out forwards;
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            
-            @keyframes scaleIn {
-                to {
-                    opacity: 1;
-                    transform: scale(1);
-                }
-            }
-            
-            .animate-slide-up {
-                animation: slideUp 0.6s ease-out forwards;
-            }
-            
-            @keyframes slideUp {
-                from {
-                    opacity: 0;
-                    transform: translateY(30px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-            
-            .animate-fade-in {
-                animation: fadeIn 0.4s ease-out;
-            }
-            
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-            
-            .product-card {
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            
-            .pagination-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-            }
-        `;
-        document.head.appendChild(style);
     </script>
 </body>
 

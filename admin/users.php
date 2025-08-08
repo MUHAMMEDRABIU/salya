@@ -1,12 +1,14 @@
 <?php
 require __DIR__ . '/initialize.php';
 require __DIR__ . '/util/utilities.php';
-require __DIR__ . '/partials/headers.php';
+require __DIR__ . '/../config/constants.php';
 
 // Fetch user data from the database
 $users = getUsersData($pdo);
 // fetch user stats
 $userStats = getAllUsersStats($pdo);
+
+require __DIR__ . '/partials/headers.php';
 ?>
 
 <body class="bg-gray-50 font-sans">
@@ -106,7 +108,14 @@ $userStats = getAllUsersStats($pdo);
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            <img src="../assets/uploads/<?= htmlspecialchars($user['avatar']) ?>" alt="User" class="w-10 h-10 rounded-full mr-4">
+                                            <?php
+                                            // Generate user avatar URL with fallback
+                                            $userAvatarFile = !empty($user['avatar']) && $user['avatar'] !== DEFAULT_USER_AVATAR
+                                                ? $user['avatar']
+                                                : DEFAULT_USER_AVATAR;
+                                            $userAvatarUrl = USER_AVATAR_URL . htmlspecialchars($userAvatarFile);
+                                            ?>
+                                            <img src="<?php echo $userAvatarUrl; ?>" alt="User" class="w-10 h-10 rounded-full mr-4">
                                             <div>
                                                 <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?></div>
                                                 <div class="text-sm text-gray-500 capitalize"><?= htmlspecialchars($user['role']) ?></div>
@@ -116,7 +125,7 @@ $userStats = getAllUsersStats($pdo);
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><?= htmlspecialchars($user['email']) ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><?= (int) $user['order_count'] ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        &#8358;<?= number_format((float) $user['total_spent'], 2) ?>
+                                        <?php echo CURRENCY_SYMBOL; ?><?= number_format((float) $user['total_spent'], 2) ?>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $user['status'] === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' ?>">

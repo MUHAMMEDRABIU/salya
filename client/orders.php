@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/initialize.php';
 require_once 'util/util.php';
+require __DIR__ . '/../config/constants.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -26,7 +27,8 @@ try {
 $selectedStatus = isset($_GET['status']) ? strtolower(trim($_GET['status'])) : 'all';
 
 // Get all orders for the user
-function getUserOrders($pdo, $user_id, $status = 'all') {
+function getUserOrders($pdo, $user_id, $status = 'all')
+{
     try {
         $sql = "
             SELECT 
@@ -48,20 +50,20 @@ function getUserOrders($pdo, $user_id, $status = 'all') {
             LEFT JOIN order_items oi ON o.id = oi.order_id
             WHERE o.user_id = ?
         ";
-        
+
         $params = [$user_id];
-        
+
         if ($status !== 'all') {
             $sql .= " AND o.status = ?";
             $params[] = $status;
         }
-        
+
         $sql .= " GROUP BY o.id ORDER BY o.created_at DESC";
-        
+
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // Get order items for each order
         foreach ($orders as &$order) {
             $itemStmt = $pdo->prepare("
@@ -77,7 +79,7 @@ function getUserOrders($pdo, $user_id, $status = 'all') {
             $itemStmt->execute([$order['id']]);
             $order['items'] = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
         }
-        
+
         return $orders;
     } catch (PDOException $e) {
         error_log("Error fetching user orders: " . $e->getMessage());
@@ -159,12 +161,12 @@ require_once 'partials/headers.php';
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="bg-white rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-gray-500 text-sm">Total Spent</p>
-                            <p class="text-xl md:text-2xl font-bold text-gray-900">₦<?php echo number_format($totalSpent); ?></p>
+                            <p class="text-xl md:text-2xl font-bold text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($totalSpent); ?></p>
                         </div>
                         <div class="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-2xl flex items-center justify-center">
                             <i class="fas fa-naira-sign text-green-600 text-lg"></i>
@@ -177,7 +179,7 @@ require_once 'partials/headers.php';
                         <div>
                             <p class="text-gray-500 text-sm">Delivered</p>
                             <p class="text-xl md:text-2xl font-bold text-gray-900">
-                                <?php 
+                                <?php
                                 $delivered = count(getUserOrders($pdo, $user_id, 'delivered'));
                                 echo $delivered;
                                 ?>
@@ -194,7 +196,7 @@ require_once 'partials/headers.php';
                         <div>
                             <p class="text-gray-500 text-sm">Processing</p>
                             <p class="text-xl md:text-2xl font-bold text-gray-900">
-                                <?php 
+                                <?php
                                 $processing = count(getUserOrders($pdo, $user_id, 'processing'));
                                 echo $processing;
                                 ?>
@@ -209,7 +211,7 @@ require_once 'partials/headers.php';
 
             <!-- Search and Filter Section -->
             <div class="bg-white rounded-2xl p-4 md:p-6 shadow-lg animate-slide-up" style="animation-delay: 0.2s;">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-6">
                     <!-- Search Bar -->
                     <div class="flex-1 lg:max-w-md">
                         <div class="relative">
@@ -228,15 +230,15 @@ require_once 'partials/headers.php';
                     </div>
 
                     <!-- Date Filter -->
-                    <div class="flex items-center space-x-4">
-                        <select id="date-filter" class="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                    <div class="relative">
+                        <select id="date-filter" class="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-12 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent min-w-[140px] cursor-pointer">
                             <option value="all">All Time</option>
                             <option value="today">Today</option>
                             <option value="week">This Week</option>
                             <option value="month">This Month</option>
                             <option value="year">This Year</option>
                         </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
@@ -248,34 +250,34 @@ require_once 'partials/headers.php';
             <!-- Status Filter Tabs (Responsive Horizontal Scroll) -->
             <div class="animate-slide-up" style="animation-delay: 0.3s;">
                 <div class="overflow-x-auto hide-scrollbar">
-                    <div class="flex space-x-3 pb-2 min-w-max">
-                        <a href="?status=all" 
-                            class="status-tab <?php echo $selectedStatus === 'all' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                    <div class="flex space-x-3 pb-2 min-w-max px-1">
+                        <a href="?status=all"
+                            class="status-tab <?php echo $selectedStatus === 'all' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
                             <i class="fas fa-list mr-2"></i>
                             All Orders
                         </a>
-                        <a href="?status=confirmed" 
-                            class="status-tab <?php echo $selectedStatus === 'confirmed' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                        <a href="?status=confirmed"
+                            class="status-tab <?php echo $selectedStatus === 'confirmed' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
                             <i class="fas fa-check-circle mr-2"></i>
                             Confirmed
                         </a>
-                        <a href="?status=processing" 
-                            class="status-tab <?php echo $selectedStatus === 'processing' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                        <a href="?status=processing"
+                            class="status-tab <?php echo $selectedStatus === 'processing' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
                             <i class="fas fa-clock mr-2"></i>
                             Processing
                         </a>
-                        <a href="?status=shipped" 
-                            class="status-tab <?php echo $selectedStatus === 'shipped' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                        <a href="?status=shipped"
+                            class="status-tab <?php echo $selectedStatus === 'shipped' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
                             <i class="fas fa-truck mr-2"></i>
                             Shipped
                         </a>
-                        <a href="?status=delivered" 
-                            class="status-tab <?php echo $selectedStatus === 'delivered' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                        <a href="?status=delivered"
+                            class="status-tab <?php echo $selectedStatus === 'delivered' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
                             <i class="fas fa-check-double mr-2"></i>
                             Delivered
                         </a>
-                        <a href="?status=cancelled" 
-                            class="status-tab <?php echo $selectedStatus === 'cancelled' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                        <a href="?status=cancelled"
+                            class="status-tab <?php echo $selectedStatus === 'cancelled' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
                             <i class="fas fa-times-circle mr-2"></i>
                             Cancelled
                         </a>
@@ -284,8 +286,8 @@ require_once 'partials/headers.php';
             </div>
 
             <!-- Results Info -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-slide-up" style="animation-delay: 0.4s;">
-                <div>
+            <div class="flex justify-between sm:align-start animate-slide-up" style="animation-delay: 0.4s;">
+                <div class="flex-1">
                     <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-1">
                         <?php echo $selectedStatus === 'all' ? 'All Orders' : ucfirst($selectedStatus) . ' Orders'; ?>
                     </h2>
@@ -297,11 +299,13 @@ require_once 'partials/headers.php';
                     </p>
                 </div>
 
-                <!-- Refresh Button -->
-                <button id="refresh-btn" class="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 transition-all duration-300 hover:scale-105">
-                    <i class="fas fa-sync-alt mr-2"></i>
-                    <span class="hidden sm:inline">Refresh</span>
-                </button>
+                <!-- Responsive Refresh Button -->
+                <div class="flex-shrink-0">
+                    <button id="refresh-btn" class="flex items-center justify-center px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 transition-all duration-300 hover:scale-105 min-w-[44px] sm:min-w-auto">
+                        <i class="fas fa-sync-alt text-sm leading-none"></i>
+                        <span class="hidden sm:inline text-sm font-medium ml-2">Refresh</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Orders List -->
@@ -351,7 +355,7 @@ require_once 'partials/headers.php';
                                         <?php endif; ?>
                                     </div>
                                     <div class="text-left sm:text-right">
-                                        <p class="text-xl md:text-2xl font-bold text-orange-500">₦<?php echo number_format($order['total_amount']); ?></p>
+                                        <p class="text-xl md:text-2xl font-bold text-orange-500"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($order['total_amount']); ?></p>
                                         <p class="text-gray-500 text-xs md:text-sm"><?php echo $order['items_count']; ?> item<?php echo $order['items_count'] > 1 ? 's' : ''; ?></p>
                                         <?php if ($order['payment_status'] === 'verified'): ?>
                                             <p class="text-green-600 text-xs mt-1">
@@ -383,33 +387,39 @@ require_once 'partials/headers.php';
                                 <div class="px-4 md:px-6 pb-4 md:pb-6 border-t border-gray-100">
                                     <div class="pt-4 space-y-4">
                                         <h4 class="font-semibold text-gray-900 mb-3 text-sm md:text-base">Order Items</h4>
-                                        
+
                                         <!-- Order Items Grid -->
                                         <div class="space-y-3">
                                             <?php foreach ($order['items'] as $item): ?>
                                                 <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl">
                                                     <?php if (!empty($item['image'])): ?>
-                                                        <img src="../assets/uploads/<?php echo $item['image']; ?>" 
-                                                             alt="<?php echo htmlspecialchars($item['name']); ?>"
-                                                             class="w-12 h-12 md:w-16 md:h-16 rounded-lg object-cover flex-shrink-0">
+                                                        <?php
+                                                        // Generate product image URL with fallback
+                                                        $productImage = !empty($item['image']) && $item['image'] !== DEFAULT_PRODUCT_IMAGE
+                                                            ? PRODUCT_IMAGE_URL . htmlspecialchars($item['image'])
+                                                            : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                                                        ?>
+                                                        <img src="<?php echo $productImage; ?>"
+                                                            alt="<?php echo htmlspecialchars($item['name']); ?>"
+                                                            class="w-12 h-12 md:w-16 md:h-16 rounded-lg object-cover flex-shrink-0">
                                                     <?php else: ?>
                                                         <div class="w-12 h-12 md:w-16 md:h-16 bg-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
                                                             <i class="fas fa-image text-gray-400"></i>
                                                         </div>
                                                     <?php endif; ?>
-                                                    
+
                                                     <div class="flex-1 min-w-0">
                                                         <p class="font-medium text-gray-900 text-sm md:text-base truncate">
                                                             <?php echo htmlspecialchars($item['name']); ?>
                                                         </p>
                                                         <p class="text-gray-500 text-xs md:text-sm">
-                                                            Qty: <?php echo $item['quantity']; ?> × ₦<?php echo number_format($item['price']); ?>
+                                                            Qty: <?php echo $item['quantity']; ?> × <?php echo CURRENCY_SYMBOL; ?><?php echo number_format($item['price']); ?>
                                                         </p>
                                                     </div>
-                                                    
+
                                                     <div class="text-right flex-shrink-0">
                                                         <span class="font-semibold text-orange-500 text-sm md:text-base">
-                                                            ₦<?php echo number_format($item['subtotal']); ?>
+                                                            <?php echo CURRENCY_SYMBOL; ?><?php echo number_format($item['subtotal']); ?>
                                                         </span>
                                                     </div>
                                                 </div>
@@ -420,56 +430,56 @@ require_once 'partials/headers.php';
                                         <div class="bg-gray-50 rounded-xl p-4 space-y-2">
                                             <div class="flex justify-between text-sm">
                                                 <span class="text-gray-600">Subtotal:</span>
-                                                <span class="text-gray-900">₦<?php echo number_format($order['subtotal']); ?></span>
+                                                <span class="text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($order['subtotal']); ?></span>
                                             </div>
                                             <div class="flex justify-between text-sm">
                                                 <span class="text-gray-600">Delivery Fee:</span>
-                                                <span class="text-gray-900">₦<?php echo number_format($order['delivery_fee']); ?></span>
+                                                <span class="text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($order['delivery_fee']); ?></span>
                                             </div>
                                             <div class="flex justify-between text-base font-semibold pt-2 border-t border-gray-200">
                                                 <span class="text-gray-900">Total:</span>
-                                                <span class="text-orange-500">₦<?php echo number_format($order['total_amount']); ?></span>
+                                                <span class="text-orange-500"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($order['total_amount']); ?></span>
                                             </div>
                                         </div>
 
                                         <!-- Action Buttons -->
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
                                             <?php if ($order['status'] === 'delivered'): ?>
-                                                <button onclick="reorderItems('<?php echo $order['order_number']; ?>')" 
-                                                        class="w-full bg-orange-500 text-white py-3 rounded-2xl font-semibold hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
+                                                <button onclick="reorderItems('<?php echo $order['order_number']; ?>')"
+                                                    class="w-full bg-orange-500 text-white py-3 rounded-2xl font-semibold hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
                                                     <i class="fas fa-redo mr-2"></i>
                                                     Reorder
                                                 </button>
-                                                <button onclick="rateOrder('<?php echo $order['order_number']; ?>')" 
-                                                        class="w-full bg-gray-100 text-gray-700 py-3 rounded-2xl font-semibold hover:bg-gray-200 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
+                                                <button onclick="rateOrder('<?php echo $order['order_number']; ?>')"
+                                                    class="w-full bg-gray-100 text-gray-700 py-3 rounded-2xl font-semibold hover:bg-gray-200 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
                                                     <i class="fas fa-star mr-2"></i>
                                                     Rate Order
                                                 </button>
                                             <?php elseif ($order['status'] === 'processing' || $order['status'] === 'confirmed'): ?>
-                                                <button onclick="trackOrder('<?php echo $order['order_number']; ?>')" 
-                                                        class="w-full bg-blue-500 text-white py-3 rounded-2xl font-semibold hover:bg-blue-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
+                                                <button onclick="trackOrder('<?php echo $order['order_number']; ?>')"
+                                                    class="w-full bg-blue-500 text-white py-3 rounded-2xl font-semibold hover:bg-blue-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
                                                     <i class="fas fa-truck mr-2"></i>
                                                     Track Order
                                                 </button>
-                                                <button onclick="contactSupport('<?php echo $order['order_number']; ?>')" 
-                                                        class="w-full bg-gray-100 text-gray-700 py-3 rounded-2xl font-semibold hover:bg-gray-200 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
+                                                <button onclick="contactSupport('<?php echo $order['order_number']; ?>')"
+                                                    class="w-full bg-gray-100 text-gray-700 py-3 rounded-2xl font-semibold hover:bg-gray-200 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
                                                     <i class="fas fa-headset mr-2"></i>
                                                     Contact Support
                                                 </button>
                                             <?php elseif ($order['status'] === 'pending_payment'): ?>
-                                                <button onclick="cancelOrder('<?php echo $order['order_number']; ?>')" 
-                                                        class="w-full bg-red-500 text-white py-3 rounded-2xl font-semibold hover:bg-red-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
+                                                <button onclick="cancelOrder('<?php echo $order['order_number']; ?>')"
+                                                    class="w-full bg-red-500 text-white py-3 rounded-2xl font-semibold hover:bg-red-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
                                                     <i class="fas fa-times mr-2"></i>
                                                     Cancel Order
                                                 </button>
-                                                <button onclick="retryPayment('<?php echo $order['order_number']; ?>')" 
-                                                        class="w-full bg-orange-500 text-white py-3 rounded-2xl font-semibold hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
+                                                <button onclick="retryPayment('<?php echo $order['order_number']; ?>')"
+                                                    class="w-full bg-orange-500 text-white py-3 rounded-2xl font-semibold hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
                                                     <i class="fas fa-credit-card mr-2"></i>
                                                     Complete Payment
                                                 </button>
                                             <?php else: ?>
-                                                <button onclick="reorderItems('<?php echo $order['order_number']; ?>')" 
-                                                        class="w-full bg-orange-500 text-white py-3 rounded-2xl font-semibold hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
+                                                <button onclick="reorderItems('<?php echo $order['order_number']; ?>')"
+                                                    class="w-full bg-orange-500 text-white py-3 rounded-2xl font-semibold hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base">
                                                     <i class="fas fa-redo mr-2"></i>
                                                     Reorder
                                                 </button>
@@ -542,7 +552,7 @@ require_once 'partials/headers.php';
                     const visibleCards = Array.from(orderCards).filter(card => card.style.display !== 'none').length;
                     const emptyState = document.getElementById('empty-state');
                     const ordersContainer = document.getElementById('orders-container');
-                    
+
                     if (visibleCards === 0 && searchTerm) {
                         // Create dynamic empty state for search
                         ordersContainer.innerHTML = `
@@ -581,23 +591,42 @@ require_once 'partials/headers.php';
             if (refreshBtn) {
                 refreshBtn.addEventListener('click', function() {
                     const icon = this.querySelector('i');
-                    icon.style.animation = 'spin 1s linear infinite';
+                    const text = this.querySelector('span');
 
-                    // Simulate refresh
+                    // Add refreshing state
+                    this.classList.add('refreshing');
+                    this.disabled = true;
+                    icon.classList.add('animate-spin');
+
+                    if (text) {
+                        text.textContent = 'Refreshing...';
+                    }
+
+                    // Simulate refresh with proper timing
                     setTimeout(() => {
-                        icon.style.animation = '';
-                        showToasted('Orders refreshed successfully!', 'success');
-                        
-                        // Add success feedback
-                        this.classList.add('bg-green-500', 'text-white');
-                        icon.classList.remove('fa-sync-alt');
+                        // Success state
+                        this.classList.remove('refreshing');
+                        this.classList.add('success');
+                        icon.classList.remove('fa-sync-alt', 'animate-spin');
                         icon.classList.add('fa-check');
 
+                        if (text) {
+                            text.textContent = 'Refreshed!';
+                        }
+
+                        showToasted('Orders refreshed successfully!', 'success');
+
+                        // Reset to normal state
                         setTimeout(() => {
-                            this.classList.remove('bg-green-500', 'text-white');
+                            this.classList.remove('success');
+                            this.disabled = false;
                             icon.classList.remove('fa-check');
                             icon.classList.add('fa-sync-alt');
-                        }, 1000);
+
+                            if (text) {
+                                text.textContent = 'Refresh';
+                            }
+                        }, 1500);
                     }, 2000);
                 });
             }
@@ -671,7 +700,7 @@ require_once 'partials/headers.php';
         window.reorderItems = async function(orderNumber) {
             try {
                 showToasted('Adding items to cart...', 'info');
-                
+
                 // Simulate API call to reorder
                 setTimeout(() => {
                     showToasted('Items added to cart successfully!', 'success');
@@ -691,7 +720,7 @@ require_once 'partials/headers.php';
             if (confirm('Are you sure you want to cancel this order?')) {
                 try {
                     showToasted('Cancelling order...', 'info');
-                    
+
                     // Simulate API call
                     setTimeout(() => {
                         showToasted('Order cancelled successfully', 'success');
@@ -719,111 +748,7 @@ require_once 'partials/headers.php';
                 window.location.href = `checkout.php?retry=${orderNumber}`;
             }, 1000);
         };
-
-        // CSS Animations
-        const style = document.createElement('style');
-        style.textContent = `
-            .hide-scrollbar {
-                -ms-overflow-style: none;
-                scrollbar-width: none;
-            }
-            .hide-scrollbar::-webkit-scrollbar {
-                display: none;
-            }
-            
-            .status-tab {
-                background: white;
-                color: #6b7280;
-                border: 1px solid #e5e7eb;
-            }
-            
-            .status-tab.active {
-                background: linear-gradient(135deg, #f97316, #ea580c);
-                color: white;
-                border: 1px solid #f97316;
-                box-shadow: 0 10px 25px rgba(249, 115, 22, 0.3);
-            }
-
-            .order-details {
-                max-height: 0;
-                overflow: hidden;
-                transition: max-height 0.3s ease-out;
-            }
-
-            .order-details.expanded {
-                max-height: 1000px;
-                transition: max-height 0.5s ease-in;
-            }
-            
-            .animate-float {
-                animation: float 6s ease-in-out infinite;
-            }
-            
-            @keyframes float {
-                0%, 100% { transform: translateY(0px); }
-                50% { transform: translateY(-20px); }
-            }
-            
-            .animate-scale-in {
-                animation: scaleIn 0.5s ease-out forwards;
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            
-            @keyframes scaleIn {
-                to {
-                    opacity: 1;
-                    transform: scale(1);
-                }
-            }
-            
-            .animate-slide-up {
-                animation: slideUp 0.6s ease-out forwards;
-            }
-            
-            @keyframes slideUp {
-                from {
-                    opacity: 0;
-                    transform: translateY(30px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-            
-            .animate-fade-in {
-                animation: fadeIn 0.4s ease-out;
-            }
-            
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-
-            @keyframes spin {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
-            }
-
-            .pull-indicator.visible {
-                background: #22c55e;
-            }
-
-            /* Responsive improvements */
-            @media (max-width: 640px) {
-                .order-card {
-                    margin: 0 -1rem;
-                    border-radius: 1.5rem;
-                }
-                
-                .container {
-                    padding-left: 1rem;
-                    padding-right: 1rem;
-                }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
 </body>
+
 </html>

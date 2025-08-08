@@ -1,10 +1,12 @@
 <?php
 require __DIR__ . '/initialize.php';
 require __DIR__ . '/util/utilities.php';
-require __DIR__ . '/partials/headers.php';
+require __DIR__ . '/../config/constants.php';
 
 $productStats = getProductStats($pdo);
 $products = getAllProducts($pdo);
+
+require __DIR__ . '/partials/headers.php';
 ?>
 
 <body class="bg-gray-50 font-sans">
@@ -121,7 +123,13 @@ $products = getAllProducts($pdo);
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace">
                                         <div class="flex items-center">
-                                            <img src="../assets/uploads/<?= htmlspecialchars($product['image']) ?>" alt="Product" class="w-12 h-12 rounded-lg object-cover mr-4">
+                                            <?php
+                                            // Generate product image URL with fallback
+                                            $productImage = !empty($product['image']) && $product['image'] !== DEFAULT_PRODUCT_IMAGE
+                                                ? PRODUCT_IMAGE_URL . htmlspecialchars($product['image'])
+                                                : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                                            ?>
+                                            <img onerror="this.src='<?= PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE ?>'" src="<?php echo $productImage; ?>" alt="Product" class="w-12 h-12 rounded-lg object-cover mr-4">
                                             <div>
                                                 <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($product['name']) ?></div>
                                                 <div class="text-sm text-gray-500"><?= htmlspecialchars($product['description']) ?></div>
@@ -133,7 +141,7 @@ $products = getAllProducts($pdo);
                                             <?= htmlspecialchars($product['category_name']) ?>
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₦<?= number_format($product['price'], 2) ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?= number_format($product['price'], 2) ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm <?= $product['in_stock'] < 10 ? 'text-red-600' : 'text-gray-900' ?>">
                                         <?= $product['in_stock'] ?>
                                     </td>
@@ -241,9 +249,9 @@ $products = getAllProducts($pdo);
                             </select>
                         </div>
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">Price (₦) *</label>
+                            <label class="block text-sm font-semibold text-gray-700">Price (<?php echo CURRENCY_SYMBOL; ?>) *</label>
                             <div class="relative z-10">
-                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₦</span>
+                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"><?php echo CURRENCY_SYMBOL; ?></span>
                                 <input type="number" name="price" step="0.01" min="0" required
                                     class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
                                     placeholder="0.00">
@@ -407,7 +415,7 @@ $products = getAllProducts($pdo);
             // Function to reset form
             function resetForm() {
                 addProductForm.reset();
-                imagePreview.src = "data:image/svg+xml,%3csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100' height='100' fill='%23f3f4f6'/%3e%3ctext x='50%25' y='50%25' font-size='14' text-anchor='middle' dy='.3em' fill='%236b7280'%3eNo Image%3c/text%3e%3c/svg%3e";
+                imagePreview.src = "<?php echo PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE; ?>";
             }
 
             // Close modal events
@@ -432,15 +440,20 @@ $products = getAllProducts($pdo);
             imageInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
-                    // Validate file size (10MB max)
-                    if (file.size > 10 * 1024 * 1024) {
-                        showToasted('File size too large. Maximum size is 10MB.', 'error');
+                    // Validate file size using PHP constant
+                    if (file.size > <?php echo MAX_PRODUCT_IMAGE_SIZE; ?>) {
+                        showToasted('File size too large. Maximum size is <?php echo number_format(MAX_PRODUCT_IMAGE_SIZE / (1024 * 1024), 0); ?>MB.', 'error');
                         this.value = '';
                         return;
                     }
 
                     // Validate file type
-                    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                    const allowedTypes = [
+                        '<?php echo ALLOWED_IMAGE_JPEG; ?>',
+                        '<?php echo ALLOWED_IMAGE_PNG; ?>',
+                        '<?php echo ALLOWED_IMAGE_GIF; ?>',
+                        '<?php echo ALLOWED_IMAGE_WEBP; ?>'
+                    ];
                     if (!allowedTypes.includes(file.type)) {
                         showToasted('Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'error');
                         this.value = '';

@@ -328,26 +328,96 @@ require __DIR__ . '/../components/header.php';
             form.addEventListener("submit", (e) => {
                 e.preventDefault(); // Prevent default form submission
 
-                const fullName = form.querySelector('input[type="text"]').value;
-                const email = form.querySelector('input[type="email"]').value;
-                const phone = form.querySelector('input[type="tel"]').value;
-                const password = form.querySelector('input[type="password"]').value;
-                const confirmPassword = form.querySelectorAll('input[type="password"]')[1].value;
-                const termsAccepted = form.querySelector('input[type="checkbox"]').checked;
+                // Get form elements using name attributes for reliability
+                const fullNameInput = form.querySelector('input[name="full_name"]') || form.querySelector('input[placeholder="Enter your full name"]');
+                const emailInput = form.querySelector('input[name="email"]') || form.querySelector('input[type="email"]');
+                const phoneInput = form.querySelector('input[name="phone"]') || form.querySelector('input[type="tel"]');
+                const passwordInput = form.querySelector('input[name="password"]') || form.querySelector('input[placeholder="Create a password"]');
+                const confirmPasswordInput = form.querySelector('input[name="confirm_password"]') || form.querySelector('input[placeholder="Confirm your password"]');
+                const termsCheckbox = form.querySelector('input[name="terms"]') || form.querySelector('input[type="checkbox"]');
 
-                const overlay = document.getElementById("overlay");
-                const overlayText = overlay.querySelector("div");
+                // Validate elements exist
+                if (!fullNameInput || !emailInput || !phoneInput || !passwordInput || !confirmPasswordInput || !termsCheckbox) {
+                    console.error('Form elements not found');
+                    showToasted('Form validation error. Please refresh the page.', 'error');
+                    return;
+                }
 
-                // Basic validation
-                if (!termsAccepted) {
-                    showToasted("You must accept the Terms of Service and Privacy Policy.", 'info', 3000);
+                // Get values
+                const fullName = fullNameInput.value.trim();
+                const email = emailInput.value.trim();
+                const phone = phoneInput.value.trim();
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+                const termsAccepted = termsCheckbox.checked;
+
+                // Validation
+                if (!fullName) {
+                    showToasted('Please enter your full name', 'error');
+                    fullNameInput.focus();
+                    return;
+                }
+
+                if (!email) {
+                    showToasted('Please enter your email address', 'error');
+                    emailInput.focus();
+                    return;
+                }
+
+                if (!phone) {
+                    showToasted('Please enter your phone number', 'error');
+                    phoneInput.focus();
+                    return;
+                }
+
+                if (!password) {
+                    showToasted('Please enter a password', 'error');
+                    passwordInputs[0].focus();
+                    return;
+                }
+
+                if (password.length < 8) {
+                    showToasted('Password must be at least 8 characters long', 'error');
+                    passwordInputs[0].focus();
+                    return;
+                }
+
+                if (!confirmPassword) {
+                    showToasted('Please confirm your password', 'error');
+                    passwordInputs[1].focus();
                     return;
                 }
 
                 if (password !== confirmPassword) {
-                    showToasted("Passwords do not match.", 'error');
+                    showToasted('Passwords do not match', 'error');
+                    passwordInputs[1].focus();
                     return;
                 }
+
+                if (!termsAccepted) {
+                    showToasted('You must accept the Terms of Service and Privacy Policy', 'info');
+                    termsCheckbox.focus();
+                    return;
+                }
+
+                // Email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    showToasted('Please enter a valid email address', 'error');
+                    emailInput.focus();
+                    return;
+                }
+
+                // Phone validation (basic)
+                const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+                if (!phoneRegex.test(phone)) {
+                    showToasted('Please enter a valid phone number', 'error');
+                    phoneInput.focus();
+                    return;
+                }
+
+                const overlay = document.getElementById("overlay");
+                const overlayText = overlay.querySelector("div");
 
                 // Progress messages array
                 const progressMessages = [
@@ -372,7 +442,7 @@ require __DIR__ . '/../components/header.php';
                             <div class="absolute inset-0 border-4 border-orange-200 rounded-full"></div>
                             <div class="absolute inset-0 border-4 border-transparent border-t-orange-500 rounded-full animate-spin"></div>
                         </div>
-                        <div class="text-white text-lg font-bold">Processing...</div>
+                        <div class="text-white text-lg font-bold">${progressMessages[currentMessageIndex]}</div>
                         <div class="text-white text-sm opacity-75 mt-2">Please wait, this may take a moment</div>
                     </div>
                 `;
@@ -387,7 +457,7 @@ require __DIR__ . '/../components/header.php';
                 // Start progress message interval
                 progressInterval = setInterval(() => {
                     updateProgressMessage();
-                }, 1500); // Change message every 1.5 seconds
+                }, 1500);
 
                 // AJAX request
                 fetch("api/api_register.php", {
@@ -402,24 +472,29 @@ require __DIR__ . '/../components/header.php';
                             password,
                         }),
                     })
-                    .then((response) => response.json())
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
                     .then((data) => {
                         // Clear the progress interval
                         clearInterval(progressInterval);
 
                         if (data.success) {
-                            // Show simple success message
+                            // Show success message
                             overlayText.innerHTML = `
-                        <div class="text-center">
-                            <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            </div>
-                            <div class="text-white text-lg font-bold mb-2">Registration Successful!</div>
-                            <div class="text-white text-sm opacity-75">Redirecting to login page...</div>
-                        </div>
-                    `;
+                                <div class="text-center">
+                                    <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="text-white text-lg font-bold mb-2">Registration Successful!</div>
+                                    <div class="text-white text-sm opacity-75">Redirecting to login page...</div>
+                                </div>
+                            `;
 
                             // Show toast message
                             showToasted("Registration successful!", 'success', 4000);
@@ -433,9 +508,9 @@ require __DIR__ . '/../components/header.php';
                             overlay.classList.add("hidden");
 
                             // Handle specific error scenarios
-                            if (data.message.includes('payment service')) {
+                            if (data.message && data.message.includes('payment service')) {
                                 showToasted("Payment service is temporarily unavailable. Please try again later.", 'error', 8000);
-                            } else if (data.message.includes('wallet')) {
+                            } else if (data.message && data.message.includes('wallet')) {
                                 showToasted("Failed to create payment wallet. Please try again.", 'error', 6000);
                             } else {
                                 showToasted(data.message || "Registration failed. Please try again.", 'error', 6000);
@@ -445,32 +520,77 @@ require __DIR__ . '/../components/header.php';
                     .catch((error) => {
                         // Clear the progress interval
                         clearInterval(progressInterval);
-
                         overlay.classList.add("hidden");
-                        showToasted("An unexpected error occurred during registration.", "error");
+
                         console.error("Registration Error:", error);
+                        showToasted("An unexpected error occurred during registration. Please try again.", "error");
                     });
             });
 
-            // Eye Toggle for Password Fields
-            const passwordInputs = form.querySelectorAll('input[type="password"]');
-            passwordInputs.forEach((input) => {
-                const eyeToggleBtn = input.nextElementSibling;
+            // Eye Toggle for Password Fields - Improved
+            const passwordToggles = document.querySelectorAll('button[type="button"]');
 
-                eyeToggleBtn.addEventListener("click", () => {
-                    const isPassword = input.type === "password";
-                    input.type = isPassword ? "text" : "password";
-                    eyeToggleBtn.innerHTML = isPassword ?
-                        `<svg xmlns="http://www.w3.org/2000/svg" class="lucide lucide-eye-off h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M17.94 17.94a10.94 10.94 0 0 1-5.94 1.94C5 19.88 2 12 2 12a21.05 21.05 0 0 1 4.29-6.29"/>
-                    <path d="M1 1l22 22"/>
-                </svg>` :
-                        `<svg xmlns="http://www.w3.org/2000/svg" class="lucide lucide-eye h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                </svg>`;
-                });
+            passwordToggles.forEach((toggle) => {
+                // Find the password input that this button controls
+                const passwordInput = toggle.parentElement.querySelector('input[type="password"]');
+
+                if (passwordInput) {
+                    toggle.addEventListener("click", (e) => {
+                        e.preventDefault();
+
+                        const isPassword = passwordInput.type === "password";
+                        passwordInput.type = isPassword ? "text" : "password";
+
+                        // Update icon
+                        const icon = toggle.querySelector('svg');
+                        if (icon) {
+                            icon.outerHTML = isPassword ?
+                                `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                            <path d="m15.5 4.5-15 15"></path>
+                            <path d="m21.5 16.5-8.5-8.5"></path>
+                            <path d="M9 15c.85.63 1.885 1 3 1s2.15-.37 3-1"></path>
+                            <path d="M2.5 8.5c1.56-1.61 3.65-2.5 6.5-2.5"></path>
+                            <path d="M16.5 6.5c2.69.75 4.5 2.5 4.5 4.5"></path>
+                        </svg>` :
+                                `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>`;
+                        }
+                    });
+                }
             });
+
+            // Real-time password validation
+            const passwordInput = form.querySelector('input[placeholder="Create a password"]');
+            const confirmPasswordInput = form.querySelector('input[placeholder="Confirm your password"]');
+
+            if (passwordInput && confirmPasswordInput) {
+                confirmPasswordInput.addEventListener('input', function() {
+                    const password = passwordInput.value;
+                    const confirmPassword = this.value;
+
+                    if (confirmPassword && password !== confirmPassword) {
+                        this.setCustomValidity('Passwords do not match');
+                        this.style.borderColor = '#ef4444';
+                    } else {
+                        this.setCustomValidity('');
+                        this.style.borderColor = '#d1d5db';
+                    }
+                });
+
+                passwordInput.addEventListener('input', function() {
+                    const password = this.value;
+
+                    if (password.length > 0 && password.length < 8) {
+                        this.setCustomValidity('Password must be at least 8 characters');
+                        this.style.borderColor = '#ef4444';
+                    } else {
+                        this.setCustomValidity('');
+                        this.style.borderColor = '#d1d5db';
+                    }
+                });
+            }
         });
     </script>
 </body>

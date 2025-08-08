@@ -1,13 +1,15 @@
 <?php
 require __DIR__ . '/initialize.php';
+require __DIR__ . '/../config/constants.php';
 require __DIR__ . '/util/utilities.php';
-require __DIR__ . '/partials/headers.php';
 
 $totalOrders = getTotalOrders($pdo);
 $totalRevenue = getTotalRevenue($pdo);
 $activeUsers = getActiveUsers($pdo);
 $totalProducts = getTotalProducts($pdo);
 $orders = getAllOrders($pdo);
+
+require __DIR__ . '/partials/headers.php';
 ?>
 
 <body class="bg-gray-50 font-sans">
@@ -120,7 +122,14 @@ $orders = getAllOrders($pdo);
                                             $user = getUserById($pdo, $order['user_id']);
                                             ?>
                                             <div class="flex items-center">
-                                                <img src="../assets/uploads/<?php echo $user['avatar']; ?>" alt="Customer" class="w-8 h-8 rounded-full mr-3">
+                                                <?php
+                                                // Generate user avatar URL with fallback
+                                                $userAvatarFile = !empty($user['avatar']) && $user['avatar'] !== DEFAULT_USER_AVATAR
+                                                    ? $user['avatar']
+                                                    : DEFAULT_USER_AVATAR;
+                                                $userAvatarUrl = USER_AVATAR_URL . htmlspecialchars($userAvatarFile);
+                                                ?>
+                                                <img src="<?php echo $userAvatarUrl; ?>" alt="Customer" class="w-8 h-8 rounded-full mr-3">
                                                 <div>
                                                     <div class="text-sm font-medium text-gray-900">
                                                         <?php echo $user ? htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) : 'Unknown'; ?>
@@ -139,7 +148,7 @@ $orders = getAllOrders($pdo);
                                             ?>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            ₦<?php echo number_format($order['total_amount'], 2); ?>
+                                            <?php echo CURRENCY_SYMBOL; ?><?php echo number_format($order['total_amount'], 2); ?>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <?php

@@ -3,9 +3,7 @@ header('Content-Type: application/json');
 
 require __DIR__ . '/../initialize.php';
 require __DIR__ . '/../util/utilities.php';
-
-error_reporting(E_ALL);
-ini_set('display_errors', 0);
+require __DIR__ . '/../../config/constants.php';
 
 function logError($message, $data = [])
 {
@@ -31,11 +29,12 @@ function sanitize($input)
     return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
 }
 
-try {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        jsonError('Invalid request method');
-    }
+// Validate request method
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    jsonError('Invalid request method');
+}
 
+try {
     $errors = [];
 
     // Required fields
@@ -71,20 +70,24 @@ try {
     }
 
     // Image validation if provided
-    $imageName = $existingProduct['image']; // default to existing image
     if (!empty($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
         $file = $_FILES['image'];
 
         if ($file['error'] !== UPLOAD_ERR_OK) {
             $errors[] = 'File upload error occurred';
-        } elseif ($file['size'] > 10 * 1024 * 1024) {
-            $errors[] = 'File size too large. Max: 10MB';
+        } elseif ($file['size'] > MAX_PRODUCT_IMAGE_SIZE) {
+            $errors[] = 'File size too large. Max: ' . number_format(MAX_PRODUCT_IMAGE_SIZE / (1024 * 1024), 0) . 'MB';
         } else {
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $mime = finfo_file($finfo, $file['tmp_name']);
             finfo_close($finfo);
 
-            $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $allowed = [
+                ALLOWED_IMAGE_JPEG,
+                ALLOWED_IMAGE_PNG,
+                ALLOWED_IMAGE_GIF,
+                ALLOWED_IMAGE_WEBP
+            ];
             if (!in_array($mime, $allowed)) {
                 $errors[] = 'Invalid file type. Only JPG, PNG, GIF, and WebP allowed';
             }
@@ -105,23 +108,30 @@ try {
     $is_active = isset($_POST['is_active']) ? 1 : 0;
     $is_featured = isset($_POST['is_featured']) ? 1 : 0;
 
+    // Default to existing image
+    $imageName = $existingProduct['image'];
+
     // Handle image upload
     if (!empty($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = __DIR__ . '/../../assets/uploads/';
+        $uploadDir = PRODUCT_IMAGE_DIR;
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
 
-        $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-        $imageName = uniqid('product_', true) . '.' . $ext;
+        $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+        $imageName = 'product_' . uniqid('', true) . '_' . time() . '.' . $ext;
         $uploadPath = $uploadDir . $imageName;
 
         if (!move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath)) {
             jsonError('Failed to upload new image', $_FILES);
         }
 
-        // Optionally delete old image here (if it's not a default image)
-        // unlink($uploadDir . $existingProduct['image']);
+        // Delete old image if it exists and is not a default image
+        if ($existingProduct['image'] && 
+            $existingProduct['image'] !== DEFAULT_PRODUCT_IMAGE && 
+            file_exists(PRODUCT_IMAGE_DIR . $existingProduct['image'])) {
+            unlink(PRODUCT_IMAGE_DIR . $existingProduct['image']);
+        }
     }
 
     // Update the product in DB
@@ -152,15 +162,18 @@ try {
     if ($success) {
         echo json_encode([
             'success' => true,
-            'message' => 'Product updated successfully'
+            'message' => 'Product updated successfully',
+            'product_id' => $id,
+            'image_url' => $imageName ? PRODUCT_IMAGE_URL . $imageName : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE
         ]);
     } else {
         jsonError('Failed to update product in database');
-        
     }
+
 } catch (Exception $e) {
-    jsonError('Unexpected error: ' . $e->getMessage(), [
-        'trace' => $e->getTraceAsString(),
+    jsonError('An unexpected error occurred: ' . $e->getMessage(), [
+        'exception' => $e->getTraceAsString(),
         'input' => $_POST
     ]);
 }
+?>

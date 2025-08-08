@@ -1,7 +1,7 @@
 <?php
 require_once 'util/util.php';
 require_once 'initialize.php';
-require_once 'partials/headers.php';
+require __DIR__ . '/../config/constants.php';
 
 // Get cart count for logged in users
 $cartCount = 0;
@@ -20,6 +20,7 @@ if (isset($_SESSION['user_id'])) {
 // Get all products for the dashboard
 $products = getAllProducts($pdo);
 $categories = getProductCategories($pdo);
+require_once 'partials/headers.php';
 ?>
 
 <body class="bg-gray font-dm pb-24 overflow-x-hidden">
@@ -90,15 +91,17 @@ $categories = getProductCategories($pdo);
             </div>
         </div>
 
-        <!-- Responsive Category Tabs (like notifications.php) -->
+        <!-- Responsive Category Tabs -->
         <div class="animate-slide-up" style="animation-delay: 0.2s;">
             <div class="overflow-x-auto hide-scrollbar">
-                <div class="flex space-x-3 pb-2 min-w-max">
-                    <button class="tab-button active px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-orange-500 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300" data-category="all">
+                <div class="flex space-x-3 pb-2 min-w-max px-1">
+                    <button class="tab-button active px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-orange-500 text-white transition-all duration-300" data-category="all">
+                        <i class="fas fa-th-large mr-2"></i>
                         All Products
                     </button>
                     <?php foreach ($categories as $category): ?>
-                        <button class="tab-button px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-white text-gray-600 shadow-md hover:shadow-lg hover:bg-gray-50 transform hover:scale-105 transition-all duration-300" data-category="<?php echo strtolower($category); ?>">
+                        <button class="tab-button px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap bg-white text-gray-600 transition-all duration-300" data-category="<?php echo strtolower($category); ?>">
+                            <i class="fas fa-box mr-2"></i>
                             <?php echo ucfirst($category); ?>
                         </button>
                     <?php endforeach; ?>
@@ -139,7 +142,13 @@ $categories = getProductCategories($pdo);
                             onclick="viewProduct(<?php echo $product['id']; ?>)"
                             style="animation-delay: <?php echo rand(1, 6) * 0.1; ?>s;">
                             <div class="relative">
-                                <img src="../assets/uploads/<?php echo $product['image']; ?>" alt="<?php echo $product['name']; ?>" class="w-full h-36 object-cover">
+                                <?php
+                                // Generate product image URL with fallback
+                                $productImage = !empty($product['image']) && $product['image'] !== DEFAULT_PRODUCT_IMAGE
+                                    ? PRODUCT_IMAGE_URL . htmlspecialchars($product['image'])
+                                    : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                                ?>
+                                <img src="<?php echo $productImage; ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-full h-36 object-cover">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                                 <button class="favorite-btn absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg flex items-center justify-center hover:bg-white hover:scale-110 transition-all duration-300" onclick="event.stopPropagation();">
                                     <i class="far fa-heart text-gray-600 text-sm"></i>
@@ -151,10 +160,10 @@ $categories = getProductCategories($pdo);
                                 </div>
                             </div>
                             <div class="p-4">
-                                <h4 class="font-bold text-dark text-sm mb-1 line-clamp-1"><?php echo $product['name']; ?></h4>
-                                <p class="text-gray-500 text-xs mb-3 line-clamp-2"><?php echo $product['description']; ?></p>
+                                <h4 class="font-bold text-dark text-sm mb-1 line-clamp-1"><?php echo htmlspecialchars($product['name']); ?></h4>
+                                <p class="text-gray-500 text-xs mb-3 line-clamp-2"><?php echo htmlspecialchars($product['description']); ?></p>
                                 <div class="flex items-center justify-between">
-                                    <span class="text-lg font-bold text-orange-500">₦<?php echo number_format($product['price']); ?></span>
+                                    <span class="text-lg font-bold text-orange-500"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($product['price']); ?></span>
                                     <!-- Updated Cart Icon Button -->
                                     <button onclick="handleAddToCart(<?php echo $product['id']; ?>); event.stopPropagation();" class="add-to-cart-btn bg-gray-900 text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-gray-800 transition-all duration-300 hover:scale-110 active:scale-95 shadow-md" data-product-id="<?php echo $product['id']; ?>">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -250,20 +259,22 @@ $categories = getProductCategories($pdo);
                 }
             };
 
-            // Enhanced tab functionality with smooth transitions
+            // Enhanced tab functionality with consistent styling
             tabButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const category = this.getAttribute('data-category');
 
                     // Remove active class from all buttons
                     tabButtons.forEach(btn => {
-                        btn.classList.remove('active', 'bg-orange-500', 'text-white');
+                        btn.classList.remove('active');
                         btn.classList.add('bg-white', 'text-gray-600');
+                        btn.classList.remove('bg-orange-500', 'text-white');
                     });
 
                     // Add active class to clicked button
-                    this.classList.add('active', 'bg-orange-500', 'text-white');
+                    this.classList.add('active');
                     this.classList.remove('bg-white', 'text-gray-600');
+                    this.classList.add('bg-orange-500', 'text-white');
 
                     // Smooth scroll active tab into view
                     this.scrollIntoView({
@@ -290,12 +301,6 @@ $categories = getProductCategories($pdo);
                             card.style.display = 'none';
                         }
                     });
-
-                    // Add bounce animation to button
-                    this.style.transform = 'scale(1.05)';
-                    setTimeout(() => {
-                        this.style.transform = 'scale(1)';
-                    }, 150);
                 });
             });
 
@@ -388,66 +393,6 @@ $categories = getProductCategories($pdo);
                 });
             }
         });
-
-        // CSS animations for enhanced interactions
-        const style = document.createElement('style');
-        style.textContent = `
-            .hide-scrollbar {
-                -ms-overflow-style: none;
-                scrollbar-width: none;
-            }
-            .hide-scrollbar::-webkit-scrollbar {
-                display: none;
-            }
-            
-            @keyframes heartbeat {
-                0%, 100% { transform: scale(1); }
-                25% { transform: scale(1.1); }
-                50% { transform: scale(1.2); }
-                75% { transform: scale(1.1); }
-            }
-            
-            .animate-bounce-gentle {
-                animation: bounce-gentle 0.6s ease-in-out;
-            }
-            
-            @keyframes bounce-gentle {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.1); }
-            }
-            
-            .product-card {
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            
-            .tab-button {
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            
-            .line-clamp-1 {
-                overflow: hidden;
-                display: -webkit-box;
-                -webkit-line-clamp: 1;
-                -webkit-box-orient: vertical;
-            }
-            
-            .line-clamp-2 {
-                overflow: hidden;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-            }
-            
-            .animate-fade-in {
-                animation: fadeIn 0.4s ease-out;
-            }
-            
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
 </body>
 

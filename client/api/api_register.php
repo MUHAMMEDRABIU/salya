@@ -2,28 +2,23 @@
 require __DIR__ . '/../../config/database.php';
 require __DIR__ . '/../../helpers/monnify.php';
 
-// Load environment variables if .env file exists
-if (file_exists(__DIR__ . '/../../.env')) {
-    $lines = file(__DIR__ . '/../../.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        if (strpos($line, '=') !== false && strpos($line, '#') !== 0) {
-            list($key, $value) = explode('=', $line, 2);
-            $_ENV[trim($key)] = trim($value, '"\'');
-        }
-    }
-}
-
 header('Content-Type: application/json');
 
 try {
     $data = json_decode(file_get_contents('php://input'), true);
+
+    // Check if JSON parsing was successful
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        echo json_encode(['success' => false, 'message' => 'Invalid JSON data provided.']);
+        exit();
+    }
 
     $fullName = $data['fullName'] ?? '';
     $email = $data['email'] ?? '';
     $phone = $data['phone'] ?? '';
     $password = $data['password'] ?? '';
 
-    // Validation
+    // Enhanced validation
     if (empty($fullName) || empty($email) || empty($phone) || empty($password)) {
         echo json_encode(['success' => false, 'message' => 'All fields are required.']);
         exit();
@@ -35,9 +30,21 @@ try {
         exit();
     }
 
-    // Validate password length
+    // Validate password strength
     if (strlen($password) < 6) {
         echo json_encode(['success' => false, 'message' => 'Password must be at least 6 characters long.']);
+        exit();
+    }
+
+    // Validate phone number format (basic validation)
+    if (!preg_match('/^[\+]?[0-9\-\(\)\s]{10,15}$/', $phone)) {
+        echo json_encode(['success' => false, 'message' => 'Please enter a valid phone number.']);
+        exit();
+    }
+
+    // Validate full name (at least 2 characters, letters and spaces only)
+    if (strlen(trim($fullName)) < 2 || !preg_match('/^[a-zA-Z\s]+$/', $fullName)) {
+        echo json_encode(['success' => false, 'message' => 'Please enter a valid full name (letters and spaces only).']);
         exit();
     }
 
@@ -45,7 +52,15 @@ try {
     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->execute([$email]);
     if ($stmt->fetch()) {
-        echo json_encode(['success' => false, 'message' => 'Email is already registered.']);
+        echo json_encode(['success' => false, 'message' => 'Email is already registered. Please use a different email or login to your existing account.']);
+        exit();
+    }
+
+    // Check if phone already exists
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE phone = ?");
+    $stmt->execute([$phone]);
+    if ($stmt->fetch()) {
+        echo json_encode(['success' => false, 'message' => 'Phone number is already registered. Please use a different phone number.']);
         exit();
     }
 
@@ -56,7 +71,7 @@ try {
         exit();
     }
 
-    // Split fullName into first_name and last_name
+    // Split fullName into first_name and last_name with improved logic
     $nameParts = preg_split('/\s+/', trim($fullName));
     if (count($nameParts) === 1) {
         $first_name = $nameParts[0];
@@ -69,6 +84,12 @@ try {
         $last_name = implode(' ', array_slice($nameParts, 1));
     }
 
+    // Validate name parts
+    if (strlen($first_name) < 1) {
+        echo json_encode(['success' => false, 'message' => 'First name is required.']);
+        exit();
+    }
+
     // Hash the password
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
@@ -78,27 +99,49 @@ try {
     try {
         // Insert user into the database
         $stmt = $pdo->prepare("INSERT INTO users (first_name, last_name, email, phone, password_hash, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
-        $stmt->execute([$first_name, $last_name, $email, $phone, $hashedPassword]);
-        $userId = $pdo->lastInsertId();
+        $result = $stmt->execute([$first_name, $last_name, $email, $phone, $hashedPassword]);
 
-        error_log("Registration: User $userId created successfully");
-
-        // Create user wallet - REQUIRED FOR REGISTRATION SUCCESS
-        $walletCreated = createUserWallet($userId, $email, $phone, $pdo);
-
-        if (!$walletCreated) {
-            error_log("Registration Failed: Wallet creation failed for user $userId");
-            throw new Exception('Failed to create user wallet. Registration cannot proceed.');
+        if (!$result) {
+            throw new Exception('Failed to create user account. Please try again.');
         }
 
-        error_log("Registration: Wallet created successfully for user $userId");
+        $userId = $pdo->lastInsertId();
 
-        // Create virtual account - REQUIRED FOR REGISTRATION SUCCESS
+        if (!$userId) {
+            throw new Exception('Failed to retrieve user ID after account creation.');
+        }
+
+        // Create user wallet - REQUIRED FOR REGISTRATION SUCCESS
+        $walletResult = createUserWallet($userId, $email, $phone, $pdo);
+
+        if (!$walletResult['success']) {
+            $errorMessage = $walletResult['message'];
+            $errorType = $walletResult['error_type'] ?? 'UNKNOWN';
+            
+            error_log("Registration Failed: Wallet creation failed for user $userId. Type: $errorType, Details: $errorMessage");
+            
+            // Handle different error types differently
+            switch ($errorType) {
+                case 'WALLET_EXISTS':
+                    // If wallet exists, we can continue with registration
+                    error_log("Registration Continuing: Using existing wallet for user $userId");
+                    break;
+                    
+                case 'MISSING_PARAMETERS':
+                    throw new Exception('Invalid user data provided for wallet creation. Please check your information and try again.');
+                    
+                case 'DATABASE_ERROR':
+                    throw new Exception('Database error occurred while creating your wallet. Please try again later.');
+                    
+                default:
+                    throw new Exception('Failed to create user wallet. Registration cannot proceed. Please try again later.');
+            }
+        }
+
+        // Get Monnify credentials
         $apiKey = $_ENV['MONNIFY_API_KEY'];
         $secretKey = $_ENV['MONNIFY_SECRET_KEY'];
         $contractCode = $_ENV['MONNIFY_CONTRACT_CODE'];
-
-        error_log("Registration: Attempting to create virtual account for user $userId");
 
         // Get Monnify token
         $token = getMonnifyToken($apiKey, $secretKey);
@@ -108,9 +151,7 @@ try {
             throw new Exception('Failed to authenticate with payment service. Please try again later.');
         }
 
-        error_log("Registration: Got Monnify token for user $userId");
-
-        // Create permanent virtual account
+        // Create permanent virtual account - REQUIRED FOR REGISTRATION SUCCESS
         $virtualAccountData = createPermanentVirtualAccount(
             $token,
             $contractCode,
@@ -125,16 +166,23 @@ try {
             throw new Exception('Failed to create payment account. Please try again later.');
         }
 
-        error_log("Registration Success: Virtual account created for user $userId - Account: " . $virtualAccountData['account_number']);
-
         // If we reach here, everything was successful
         $pdo->commit();
+
+        // Log successful registration
+        error_log("Registration Success: User $userId registered successfully with email $email");
 
         // Success response
         $response = [
             'success' => true,
             'message' => 'Registration successful! Your account and payment wallet have been created.',
             'user_id' => $userId,
+            'user_details' => [
+                'first_name' => $first_name,
+                'last_name' => $last_name,
+                'email' => $email,
+                'phone' => $phone
+            ],
             'wallet_created' => true,
             'virtual_account_created' => true,
             'virtual_account' => [
@@ -144,29 +192,41 @@ try {
             ]
         ];
 
-        error_log("Registration Complete: User $userId registered successfully with wallet and virtual account");
-
         echo json_encode($response);
     } catch (Exception $e) {
         // Rollback transaction on any error
         $pdo->rollBack();
 
-        // Log the specific error
-        error_log("Registration Transaction Failed for user email $email: " . $e->getMessage());
+        // Log the specific error with more context
+        error_log("Registration Transaction Failed for user email $email (Phone: $phone): " . $e->getMessage());
 
         // Return user-friendly error message
         echo json_encode([
             'success' => false,
-            'message' => $e->getMessage()
+            'message' => $e->getMessage(),
+            'error_code' => 'REGISTRATION_FAILED'
         ]);
         exit();
     }
 } catch (PDOException $e) {
-    error_log('Registration Database Error: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Database error occurred. Please try again later.']);
+    // Rollback transaction if it was started
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    
+    error_log('Registration Database Error: ' . $e->getMessage() . ' | Code: ' . $e->getCode());
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Database error occurred. Please try again later.',
+        'error_code' => 'DATABASE_ERROR'
+    ]);
 } catch (Exception $e) {
     error_log('Registration General Error: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'An unexpected error occurred during registration. Please try again.']);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'An unexpected error occurred during registration. Please try again.',
+        'error_code' => 'GENERAL_ERROR'
+    ]);
 }
 
 /**
@@ -176,37 +236,125 @@ try {
  * @param string $email User email
  * @param string $phone User phone number
  * @param PDO $pdo Database connection
- * @return bool True if wallet created successfully, false otherwise
+ * @return array Result array with success status, message, and data
  */
 function createUserWallet($userId, $email, $phone, $pdo)
 {
     try {
         // Check if user already has a wallet
-        $stmt = $pdo->prepare("SELECT id FROM wallets WHERE user_id = ? LIMIT 1");
+        $stmt = $pdo->prepare("SELECT id, balance, created_at FROM wallets WHERE user_id = ? LIMIT 1");
         $stmt->execute([$userId]);
         $existingWallet = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($existingWallet) {
-            error_log("Wallet: User $userId already has a wallet with ID " . $existingWallet['id']);
-            return false; // Wallet already exists, consider it failed
+            $walletCreatedDate = date('M j, Y g:i A', strtotime($existingWallet['created_at']));
+            $message = "Wallet already exists for this user. " .
+                      "Wallet ID: {$existingWallet['id']}, " .
+                      "Current Balance: ₦" . number_format($existingWallet['balance'], 2) . ", " .
+                      "Created: {$walletCreatedDate}";
+            
+            error_log("Wallet Creation Skipped: $message (User ID: $userId)");
+            
+            return [
+                'success' => false,
+                'message' => $message,
+                'error_type' => 'WALLET_EXISTS',
+                'existing_wallet' => [
+                    'id' => $existingWallet['id'],
+                    'balance' => $existingWallet['balance'],
+                    'created_at' => $existingWallet['created_at']
+                ]
+            ];
+        }
+
+        // Validate required parameters
+        if (empty($userId) || empty($email) || empty($phone)) {
+            $message = "Missing required parameters for wallet creation. " .
+                      "User ID: " . ($userId ?: 'missing') . ", " .
+                      "Email: " . ($email ?: 'missing') . ", " .
+                      "Phone: " . ($phone ?: 'missing');
+            
+            error_log("Wallet Creation Failed: $message");
+            
+            return [
+                'success' => false,
+                'message' => $message,
+                'error_type' => 'MISSING_PARAMETERS'
+            ];
         }
 
         // Create new wallet with initial balance of 0
         $stmt = $pdo->prepare("
-            INSERT INTO wallets (user_id, balance, email, phone, created_at, updated_at) 
-            VALUES (?, 0.00, ?, ?, NOW(), NOW())
+            INSERT INTO wallets (user_id, balance, currency, is_active, created_at, updated_at) 
+            VALUES (?, 0.00, 'NGN', 1, NOW(), NOW())
         ");
 
-        $result = $stmt->execute([$userId, $email, $phone]);
+        $result = $stmt->execute([$userId]);
 
         if ($result) {
-            return true;
+            $walletId = $pdo->lastInsertId();
+            $message = "Wallet created successfully";
+            
+            return [
+                'success' => true,
+                'message' => $message,
+                'wallet_data' => [
+                    'id' => $walletId,
+                    'user_id' => $userId,
+                    'balance' => 0.00,
+                    'currency' => 'NGN'
+                ]
+            ];
         } else {
-            error_log("Wallet Creation Failed: Unable to create wallet for user $userId");
-            return false;
+            $errorInfo = $stmt->errorInfo();
+            $message = "Failed to execute wallet creation query for user $userId. " .
+                      "SQL Error: " . ($errorInfo[2] ?? 'Unknown error') . " " .
+                      "(SQLSTATE: " . ($errorInfo[0] ?? 'Unknown') . ")";
+            
+            error_log("Wallet Creation Failed: $message");
+            
+            return [
+                'success' => false,
+                'message' => $message,
+                'error_type' => 'QUERY_EXECUTION_FAILED',
+                'sql_error' => $errorInfo
+            ];
         }
     } catch (PDOException $e) {
-        error_log("Wallet Creation Error: " . $e->getMessage() . " for user $userId");
-        return false;
+        $message = "Database error during wallet creation for user $userId. " .
+                  "Error: {$e->getMessage()}, " .
+                  "Error Code: {$e->getCode()}, " .
+                  "File: {$e->getFile()}:{$e->getLine()}";
+        
+        error_log("Wallet Creation Database Error: $message");
+        
+        return [
+            'success' => false,
+            'message' => $message,
+            'error_type' => 'DATABASE_ERROR',
+            'exception' => [
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]
+        ];
+    } catch (Exception $e) {
+        $message = "Unexpected error during wallet creation for user $userId. " .
+                  "Error: {$e->getMessage()}, " .
+                  "File: {$e->getFile()}:{$e->getLine()}";
+        
+        error_log("Wallet Creation Unexpected Error: $message");
+        
+        return [
+            'success' => false,
+            'message' => $message,
+            'error_type' => 'UNEXPECTED_ERROR',
+            'exception' => [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]
+        ];
     }
 }

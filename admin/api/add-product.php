@@ -1,12 +1,9 @@
 <?php
 header('Content-Type: application/json');
 
-require __DIR__ . '/initialize.php';
+require __DIR__ . '/../initialize.php';
 require __DIR__ . '/../util/utilities.php';
-
-// Enable error reporting internally
-error_reporting(E_ALL);
-ini_set('display_errors', 0); // Keep display off for production
+require __DIR__ . '/../../config/constants.php';
 
 function logError($message, $data = [])
 {
@@ -60,14 +57,19 @@ try {
 
         if ($file['error'] !== UPLOAD_ERR_OK) {
             $errors[] = 'File upload error occurred';
-        } elseif ($file['size'] > 10 * 1024 * 1024) {
-            $errors[] = 'File size too large. Max: 10MB';
+        } elseif ($file['size'] > MAX_PRODUCT_IMAGE_SIZE) {
+            $errors[] = 'File size too large. Max: ' . number_format(MAX_PRODUCT_IMAGE_SIZE / (1024 * 1024), 0) . 'MB';
         } else {
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $mime = finfo_file($finfo, $file['tmp_name']);
             finfo_close($finfo);
 
-            $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $allowed = [
+                ALLOWED_IMAGE_JPEG,
+                ALLOWED_IMAGE_PNG,
+                ALLOWED_IMAGE_GIF,
+                ALLOWED_IMAGE_WEBP
+            ];
             if (!in_array($mime, $allowed)) {
                 $errors[] = 'Invalid file type. Only JPG, PNG, GIF, and WebP allowed';
             }
@@ -99,21 +101,21 @@ try {
     // Handle image
     $imageName = null;
     if (!empty($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = __DIR__ . '/../../assets/uploads/';
+        $uploadDir = PRODUCT_IMAGE_DIR;
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
 
-        $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-        $imageName = uniqid('product_', true) . '.' . $ext;
+        $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+        $imageName = 'product_' . uniqid('', true) . '_' . time() . '.' . $ext;
         $uploadPath = $uploadDir . $imageName;
 
         if (!move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath)) {
             jsonError('Failed to upload image', $_FILES);
         }
     } else {
-        // If no image provided, send AJAX response
-        if ($_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+        // If no image provided, check if it's an actual error
+        if (!empty($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
             jsonError('Image upload error', $_FILES);
         }
     }
@@ -145,7 +147,8 @@ try {
         echo json_encode([
             'success' => true,
             'message' => 'Product added successfully',
-            'product_id' => $pdo->lastInsertId()
+            'product_id' => $pdo->lastInsertId(),
+            'image_url' => $imageName ? PRODUCT_IMAGE_URL . $imageName : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE
         ]);
     } else {
         jsonError('Failed to insert product into database');

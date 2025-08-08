@@ -1,3 +1,14 @@
+<?php
+require_once __DIR__ . '/../../config/constants.php';
+
+// Generate admin avatar URL using constants
+$adminAvatarFile = $admin['avatar'] ?? DEFAULT_ADMIN_AVATAR;
+$adminAvatarUrl = ADMIN_AVATAR_URL . htmlspecialchars($adminAvatarFile);
+
+// Full admin name
+$adminFullName = htmlspecialchars(($admin['first_name'] ?? '') . ' ' . ($admin['last_name'] ?? ''));
+$adminEmail = htmlspecialchars($admin['email'] ?? '');
+?>
 <header class="bg-white shadow-sm border-b border-gray-200">
     <div class="flex items-center justify-between h-16 px-6">
         <div class="flex items-center">
@@ -21,9 +32,9 @@
             <!-- User Dropdown -->
             <div class="relative">
                 <button id="userDropdown" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                    <img id="navbarAvatar" src="../assets/uploads/<?php echo htmlspecialchars($admin['avatar'] ?? 'avatar.jpg'); ?>" alt="User" class="w-8 h-8 rounded-full">
+                    <img id="navbarAvatar" src="<?php echo $adminAvatarUrl; ?>" alt="User" class="w-8 h-8 rounded-full">
                     <span id="navbarName" class="hidden md:block text-sm font-medium text-gray-700">
-                        <?php echo htmlspecialchars(($admin['first_name'] ?? '') . ' ' . ($admin['last_name'] ?? '')); ?>
+                        <?php echo $adminFullName; ?>
                     </span>
                     <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 transition-transform duration-200" id="dropdownIcon"></i>
                 </button>
@@ -33,13 +44,13 @@
                     <!-- User Info -->
                     <div class="px-4 py-3 border-b border-gray-100">
                         <div class="flex items-center space-x-3">
-                            <img id="navbarDropdownAvatar" src="../assets/uploads/<?php echo htmlspecialchars($admin['avatar'] ?? 'avatar.jpg'); ?>" alt="User" class="w-10 h-10 rounded-full">
+                            <img id="navbarDropdownAvatar" src="<?php echo $adminAvatarUrl; ?>" alt="User" class="w-10 h-10 rounded-full">
                             <div>
                                 <p id="navbarDropdownName" class="text-sm font-medium text-gray-900">
-                                    <?php echo htmlspecialchars(($admin['first_name'] ?? '') . ' ' . ($admin['last_name'] ?? '')); ?>
+                                    <?php echo $adminFullName; ?>
                                 </p>
                                 <p id="navbarDropdownEmail" class="text-xs text-gray-400">
-                                    <?php echo htmlspecialchars($admin['email'] ?? ''); ?>
+                                    <?php echo $adminEmail; ?>
                                 </p>
                             </div>
                         </div>

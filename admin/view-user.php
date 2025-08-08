@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/../config/database.php';
 require __DIR__ . '/util/utilities.php';
-require __DIR__ . '/partials/headers.php';
+require __DIR__ . '/../config/constants.php';
 
 // Get user ID from URL
 $user_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -24,6 +24,8 @@ $userOrders = getUserOrders($pdo, $user_id, 5);
 $userWallet = getUserWallet($pdo, $user_id);
 
 $orders = $userOrders['orders'];
+
+require __DIR__ . '/partials/headers.php';
 ?>
 
 <body class="bg-gray-50 font-sans">
@@ -79,7 +81,14 @@ $orders = $userOrders['orders'];
                         <div class="flex flex-col sm:flex-row sm:items-end sm:space-x-6">
                             <!-- Avatar -->
                             <div class="relative -mt-16 mb-4 sm:mb-0">
-                                <img src="../assets/uploads/<?= htmlspecialchars($user['avatar']) ?>"
+                                <?php
+                                // Generate user avatar URL with fallback
+                                $userAvatarFile = !empty($user['avatar']) && $user['avatar'] !== DEFAULT_USER_AVATAR
+                                    ? $user['avatar']
+                                    : DEFAULT_USER_AVATAR;
+                                $userAvatarUrl = USER_AVATAR_URL . htmlspecialchars($userAvatarFile);
+                                ?>
+                                <img src="<?php echo $userAvatarUrl; ?>"
                                     alt="<?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?>"
                                     class="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover">
                             </div>
@@ -125,7 +134,7 @@ $orders = $userOrders['orders'];
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-sm font-medium text-gray-600">Wallet Balance</p>
-                                    <p class="text-2xl font-bold text-orange-600">₦<?= number_format((float)$userWallet['balance'], 2) ?></p>
+                                    <p class="text-2xl font-bold text-orange-600"><?php echo CURRENCY_SYMBOL; ?><?= number_format((float)$userWallet['balance'], 2) ?></p>
                                 </div>
                                 <div class="bg-orange-50 p-3 rounded-lg">
                                     <i data-lucide="wallet" class="w-6 h-6 text-orange-600"></i>
@@ -138,7 +147,7 @@ $orders = $userOrders['orders'];
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-sm font-medium text-gray-600">Total Spent</p>
-                                    <p class="text-2xl font-bold text-gray-500">₦<?= number_format((float)$userOrders['total_spent'], 2) ?></p>
+                                    <p class="text-2xl font-bold text-gray-500"><?php echo CURRENCY_SYMBOL; ?><?= number_format((float)$userOrders['total_spent'], 2) ?></p>
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <i data-lucide="dollar-sign" class="w-6 h-6 text-gray-600"></i>
@@ -194,7 +203,7 @@ $orders = $userOrders['orders'];
                                                     <?= date('M d, Y', strtotime($order['created_at'])) ?>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    ₦<?= number_format((float)$order['total_amount'], 2) ?>
+                                                    <?php echo CURRENCY_SYMBOL; ?><?= number_format((float)$order['total_amount'], 2) ?>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
@@ -326,14 +335,21 @@ $orders = $userOrders['orders'];
                     <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Profile Picture</h3>
                     <div class="flex items-center space-x-6">
                         <div class="flex-shrink-0">
-                            <img id="avatarPreview" src="../assets/uploads/<?= htmlspecialchars($user['avatar']) ?>"
+                            <?php
+                            // Generate avatar preview URL with fallback for modal
+                            $avatarPreviewFile = !empty($user['avatar']) && $user['avatar'] !== DEFAULT_USER_AVATAR
+                                ? $user['avatar']
+                                : DEFAULT_USER_AVATAR;
+                            $avatarPreviewUrl = USER_AVATAR_URL . htmlspecialchars($avatarPreviewFile);
+                            ?>
+                            <img id="avatarPreview" src="<?php echo $avatarPreviewUrl; ?>"
                                 alt="User avatar" class="w-20 h-20 rounded-full object-cover border border-gray-300">
                         </div>
                         <div class="flex-1">
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Upload New Avatar</label>
                             <input type="file" name="avatar" accept="image/*" id="avatarInput"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100">
-                            <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>
+                            <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to <?php echo number_format(MAX_AVATAR_SIZE / (1024 * 1024), 0); ?>MB</p>
                         </div>
                     </div>
                 </div>
@@ -623,15 +639,20 @@ $orders = $userOrders['orders'];
             avatarInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
-                    // Validate file size (5MB max)
-                    if (file.size > 5 * 1024 * 1024) {
-                        showToasted('File size too large. Maximum size is 5MB.', 'error');
+                    // Validate file size using PHP constant
+                    if (file.size > <?php echo MAX_AVATAR_SIZE; ?>) {
+                        showToasted('File size too large. Maximum size is <?php echo number_format(MAX_AVATAR_SIZE / (1024 * 1024), 0); ?>MB.', 'error');
                         this.value = '';
                         return;
                     }
 
                     // Validate file type
-                    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                    const allowedTypes = [
+                        '<?php echo ALLOWED_IMAGE_JPEG; ?>',
+                        '<?php echo ALLOWED_IMAGE_PNG; ?>',
+                        '<?php echo ALLOWED_IMAGE_GIF; ?>',
+                        '<?php echo ALLOWED_IMAGE_WEBP; ?>'
+                    ];
                     if (!allowedTypes.includes(file.type)) {
                         showToasted('Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'error');
                         this.value = '';

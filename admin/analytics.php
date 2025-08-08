@@ -1,9 +1,11 @@
 <?php
 require __DIR__ . '/initialize.php';
 require __DIR__ . '/util/utilities.php';
-require __DIR__ . '/partials/headers.php';
+require __DIR__ . '/../config/constants.php';
 
 $analytics = getAnalyticsData($pdo);
+
+require __DIR__ . '/partials/headers.php';
 ?>
 
 <body class="bg-gray-50 font-sans">
@@ -52,7 +54,7 @@ $analytics = getAnalyticsData($pdo);
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-600">Total Revenue</p>
-                            <p id="revenueCounter" class="text-2xl font-bold text-gray-900" data-target="<?= $analytics['total_revenue'] ?>">₦0.00</p>
+                            <p id="revenueCounter" class="text-2xl font-bold text-gray-900" data-target="<?= $analytics['total_revenue'] ?>"><?php echo CURRENCY_SYMBOL; ?>0.00</p>
                         </div>
                         <div class="bg-green-50 p-3 rounded-lg">
                             <i data-lucide="dollar-sign" class="w-6 h-6 text-green-600"></i>
@@ -88,7 +90,7 @@ $analytics = getAnalyticsData($pdo);
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-600">Avg Order Value</p>
-                            <p class="text-2xl font-bold text-gray-900">₦<?= number_format($analytics['avg_order_value'] ?? 0, 2) ?></p>
+                            <p class="text-2xl font-bold text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?= number_format($analytics['avg_order_value'] ?? 0, 2) ?></p>
                         </div>
                         <div class="bg-orange-50 p-3 rounded-lg">
                             <i data-lucide="credit-card" class="w-6 h-6 text-orange-600"></i>
@@ -161,14 +163,20 @@ $analytics = getAnalyticsData($pdo);
                             <?php foreach ($analytics['top_products'] as $product): ?>
                                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                     <div class="flex items-center space-x-3">
-                                        <img src="/assets/uploads/<?= $product['image'] ?>" alt="Product" class="w-10 h-10 rounded-lg object-cover">
+                                        <?php
+                                        // Generate product image URL with fallback
+                                        $productImage = !empty($product['image']) && $product['image'] !== DEFAULT_PRODUCT_IMAGE
+                                            ? PRODUCT_IMAGE_URL . htmlspecialchars($product['image'])
+                                            : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                                        ?>
+                                        <img src="<?php echo $productImage; ?>" alt="Product" class="w-10 h-10 rounded-lg object-cover">
                                         <div>
                                             <p class="font-medium text-gray-900"><?= htmlspecialchars($product['name']) ?></p>
                                             <p class="text-sm text-gray-500"><?= $product['total_sold'] ?> sold</p>
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <p class="font-semibold text-gray-900">₦<?= number_format($product['total_amount'] ?? 0, 2) ?></p>
+                                        <p class="font-semibold text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?= number_format($product['total_amount'] ?? 0, 2) ?></p>
                                         <p class="text-sm text-green-600">+<?= rand(1, 25) ?>%</p>
                                     </div>
                                 </div>
@@ -216,7 +224,7 @@ $analytics = getAnalyticsData($pdo);
     <script src="js/script.js"></script>
     <script src="js/analytics.js"></script>
     <script>
-        function animateCounter(id, targetValue, prefix = "₦", duration = 2000) {
+        function animateCounter(id, targetValue, prefix = "<?php echo CURRENCY_SYMBOL; ?>", duration = 2000) {
             const el = document.getElementById(id);
             const start = 0;
             const startTime = performance.now();
@@ -241,7 +249,10 @@ $analytics = getAnalyticsData($pdo);
         window.addEventListener('DOMContentLoaded', () => {
             const el = document.getElementById('revenueCounter');
             const target = parseFloat(el.getAttribute('data-target')) || 0;
-            animateCounter('revenueCounter', target);
+            animateCounter('revenueCounter', target, '<?php echo CURRENCY_SYMBOL; ?>');
+
+            // Set global currency symbol for charts
+            window.CURRENCY_SYMBOL = '<?php echo CURRENCY_SYMBOL; ?>';
         });
     </script>
 

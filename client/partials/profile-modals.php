@@ -9,14 +9,14 @@
                 </button>
             </div>
         </div>
-        
+
         <form id="editProfileForm" class="p-6 space-y-6">
             <div class="text-center">
                 <div class="relative inline-block">
                     <?php if (!empty($user['avatar']) && file_exists("../assets/img/" . $user['avatar'])): ?>
-                        <img src="../assets/img/<?php echo htmlspecialchars($user['avatar']); ?>" 
-                             alt="Profile" 
-                             class="w-20 h-20 rounded-full object-cover border-4 border-orange-200">
+                        <img src="../assets/img/<?php echo htmlspecialchars($user['avatar']); ?>"
+                            alt="Profile"
+                            class="w-20 h-20 rounded-full object-cover border-4 border-orange-200">
                     <?php else: ?>
                         <div class="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center border-4 border-orange-200">
                             <i class="fas fa-user text-orange-500 text-2xl"></i>
@@ -31,40 +31,40 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">First Name</label>
-                    <input type="text" id="editFirstName" name="first_name" 
-                           value="<?php echo htmlspecialchars($user['first_name']); ?>"
-                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all">
+                    <input type="text" id="editFirstName" name="first_name"
+                        value="<?php echo htmlspecialchars($user['first_name']); ?>"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name</label>
-                    <input type="text" id="editLastName" name="last_name" 
-                           value="<?php echo htmlspecialchars($user['last_name']); ?>"
-                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all">
+                    <input type="text" id="editLastName" name="last_name"
+                        value="<?php echo htmlspecialchars($user['last_name']); ?>"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all">
                 </div>
             </div>
 
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                <input type="email" id="editEmail" name="email" 
-                       value="<?php echo htmlspecialchars($user['email']); ?>"
-                       class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all">
+                <input type="email" id="editEmail" name="email"
+                    value="<?php echo htmlspecialchars($user['email']); ?>"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all">
             </div>
 
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
-                <input type="tel" id="editPhone" name="phone" 
-                       value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>"
-                       placeholder="+234 8XX XXX XXXX"
-                       class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all">
+                <input type="tel" id="editPhone" name="phone"
+                    value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>"
+                    placeholder="+234 8XX XXX XXXX"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all">
             </div>
 
             <div class="flex flex-col sm:flex-row gap-3 pt-4">
-                <button type="button" onclick="closeModal('editProfileModal')" 
-                        class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                <button type="button" onclick="closeModal('editProfileModal')"
+                    class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
                     Cancel
                 </button>
-                <button type="submit" 
-                        class="w-full px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
+                <button type="submit"
+                    class="w-full px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
                     Save Changes
                 </button>
             </div>
@@ -83,14 +83,14 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="p-6 space-y-6">
             <div class="text-center">
                 <div class="w-32 h-32 mx-auto mb-4 relative">
                     <div id="avatarPreview" class="w-full h-full rounded-full bg-gray-100 flex items-center justify-center border-4 border-gray-200 overflow-hidden">
                         <?php if (!empty($user['avatar']) && file_exists("../assets/img/" . $user['avatar'])): ?>
-                            <img src="../assets/img/<?php echo htmlspecialchars($user['avatar']); ?>" 
-                                 alt="Profile" class="w-full h-full object-cover">
+                            <img src="../assets/img/<?php echo htmlspecialchars($user['avatar']); ?>"
+                                alt="Profile" class="w-full h-full object-cover">
                         <?php else: ?>
                             <i class="fas fa-user text-gray-400 text-4xl"></i>
                         <?php endif; ?>
@@ -100,27 +100,27 @@
 
             <div class="space-y-4">
                 <input type="file" id="avatarInput" accept="image/*" class="hidden" onchange="previewAvatar(this)">
-                
-                <button type="button" onclick="document.getElementById('avatarInput').click()" 
-                        class="w-full px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors flex items-center justify-center">
+
+                <button type="button" onclick="document.getElementById('avatarInput').click()"
+                    class="w-full px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors flex items-center justify-center">
                     <i class="fas fa-upload mr-2"></i>
                     Choose New Photo
                 </button>
-                
-                <button type="button" onclick="removeAvatar()" 
-                        class="w-full px-6 py-3 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 transition-colors">
+
+                <button type="button" onclick="removeAvatar()"
+                    class="w-full px-6 py-3 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 transition-colors">
                     <i class="fas fa-trash mr-2"></i>
                     Remove Photo
                 </button>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-3 pt-4">
-                <button type="button" onclick="closeModal('avatarUploadModal')" 
-                        class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                <button type="button" onclick="closeModal('avatarUploadModal')"
+                    class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
                     Cancel
                 </button>
-                <button type="button" onclick="uploadAvatar()" 
-                        class="w-full px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
+                <button type="button" onclick="uploadAvatar()"
+                    class="w-full px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
                     Save Photo
                 </button>
             </div>
@@ -139,7 +139,7 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="p-6">
             <div class="flex justify-between items-center mb-6">
                 <p class="text-gray-600">Manage your saved delivery addresses</p>
@@ -202,19 +202,19 @@
                 <form class="space-y-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Address Name</label>
-                        <input type="text" id="newAddressName" placeholder="e.g., Home, Office" 
-                               class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                        <input type="text" id="newAddressName" placeholder="e.g., Home, Office"
+                            class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Full Address</label>
-                        <textarea id="newFullAddress" rows="3" placeholder="Street address, landmarks, etc." 
-                                  class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none"></textarea>
+                        <textarea id="newFullAddress" rows="3" placeholder="Street address, landmarks, etc."
+                            class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none"></textarea>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">City</label>
-                            <input type="text" id="newCity" 
-                                   class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                            <input type="text" id="newCity"
+                                class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">State</label>
@@ -258,7 +258,7 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="p-6 space-y-6">
             <div class="text-center">
                 <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -272,8 +272,8 @@
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
                     <div class="relative">
-                        <input type="password" id="currentPassword" 
-                               class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent pr-12">
+                        <input type="password" id="currentPassword"
+                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent pr-12">
                         <button type="button" onclick="togglePassword('currentPassword')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -283,8 +283,8 @@
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
                     <div class="relative">
-                        <input type="password" id="newPassword" 
-                               class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent pr-12">
+                        <input type="password" id="newPassword"
+                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent pr-12">
                         <button type="button" onclick="togglePassword('newPassword')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -294,8 +294,8 @@
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
                     <div class="relative">
-                        <input type="password" id="confirmPassword" 
-                               class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent pr-12">
+                        <input type="password" id="confirmPassword"
+                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent pr-12">
                         <button type="button" onclick="togglePassword('confirmPassword')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -303,12 +303,12 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-3 pt-4">
-                    <button type="button" onclick="closeModal('securityModal')" 
-                            class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                    <button type="button" onclick="closeModal('securityModal')"
+                        class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
                         Cancel
                     </button>
-                    <button type="submit" 
-                            class="w-full px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
+                    <button type="submit"
+                        class="w-full px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
                         Update Password
                     </button>
                 </div>
@@ -328,7 +328,7 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="p-6">
             <div class="space-y-3">
                 <div class="language-option p-4 border border-gray-200 rounded-xl hover:border-orange-300 transition-colors cursor-pointer" data-lang="en">
@@ -393,12 +393,12 @@
             </div>
 
             <div class="flex gap-3 pt-6">
-                <button type="button" onclick="closeModal('languageModal')" 
-                        class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                <button type="button" onclick="closeModal('languageModal')"
+                    class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
                     Cancel
                 </button>
-                <button type="button" onclick="saveLanguagePreference()" 
-                        class="flex-1 px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
+                <button type="button" onclick="saveLanguagePreference()"
+                    class="flex-1 px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
                     Save
                 </button>
             </div>
@@ -417,7 +417,7 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="p-6">
             <div class="text-center py-8">
                 <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -425,7 +425,7 @@
                 </div>
                 <h4 class="font-semibold text-gray-900 mb-2">No Payment Methods</h4>
                 <p class="text-gray-500 text-sm mb-6">You can add payment methods during checkout for faster payments in the future.</p>
-                
+
                 <div class="space-y-3">
                     <div class="flex items-center justify-between p-3 border border-gray-200 rounded-xl">
                         <div class="flex items-center">
@@ -473,7 +473,7 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="p-6">
             <div class="space-y-4">
                 <div class="help-item p-4 border border-gray-200 rounded-xl hover:border-orange-300 transition-colors cursor-pointer" onclick="toggleHelpItem(this)">
@@ -567,7 +567,7 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="p-6 space-y-6">
             <div class="text-center">
                 <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -627,7 +627,7 @@
                 </button>
             </div>
         </div>
-        
+
         <form id="feedbackForm" class="p-6 space-y-6">
             <div class="text-center">
                 <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -651,17 +651,17 @@
 
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Your Message</label>
-                <textarea id="feedbackMessage" rows="4" placeholder="Tell us what you think..." 
-                          class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none"></textarea>
+                <textarea id="feedbackMessage" rows="4" placeholder="Tell us what you think..."
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none"></textarea>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-3">
-                <button type="button" onclick="closeModal('feedbackModal')" 
-                        class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                <button type="button" onclick="closeModal('feedbackModal')"
+                    class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
                     Cancel
                 </button>
-                <button type="submit" 
-                        class="w-full px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
+                <button type="submit"
+                    class="w-full px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
                     Send Feedback
                 </button>
             </div>
@@ -680,7 +680,7 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="p-6 space-y-6">
             <div class="text-center">
                 <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -693,7 +693,7 @@
 
             <div class="space-y-4 text-center">
                 <p class="text-gray-600 text-sm">
-                    Salya is your trusted partner for premium frozen foods delivery across Nigeria. 
+                    Salya is your trusted partner for premium frozen foods delivery across Nigeria.
                     We bring you the freshest frozen seafood, meat, and specialty items right to your doorstep.
                 </p>
 
@@ -711,7 +711,7 @@
                 <div class="border-t border-gray-200 pt-4">
                     <h5 class="font-semibold text-gray-900 mb-3">Our Mission</h5>
                     <p class="text-gray-600 text-sm">
-                        To make premium frozen foods accessible to everyone across Nigeria, 
+                        To make premium frozen foods accessible to everyone across Nigeria,
                         ensuring quality, freshness, and convenience in every delivery.
                     </p>
                 </div>
@@ -737,14 +737,14 @@
             </div>
             <h3 class="text-xl font-bold text-gray-900 mb-2">Sign Out</h3>
             <p class="text-gray-500 text-sm mb-6">Are you sure you want to sign out of your account?</p>
-            
+
             <div class="flex flex-col sm:flex-row gap-3">
-                <button type="button" onclick="closeModal('signOutModal')" 
-                        class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                <button type="button" onclick="closeModal('signOutModal')"
+                    class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
                     Cancel
                 </button>
-                <button type="button" onclick="signOut()" 
-                        class="w-full px-6 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors">
+                <button type="button" onclick="signOut()"
+                    class="w-full px-6 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors">
                     <i class="fas fa-sign-out-alt mr-2"></i>
                     Sign Out
                 </button>
@@ -754,324 +754,573 @@
 </div>
 
 <script>
-// Modal-specific JavaScript functions
+    // Modal-specific JavaScript functions
 
-// Edit Profile Form Handler
-document.getElementById('editProfileForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = {
-        first_name: document.getElementById('editFirstName').value.trim(),
-        last_name: document.getElementById('editLastName').value.trim(),
-        email: document.getElementById('editEmail').value.trim(),
-        phone: document.getElementById('editPhone').value.trim()
-    };
-    
-    // Validation
-    if (!formData.first_name || !formData.last_name || !formData.email) {
-        showToasted('Please fill in all required fields', 'error');
-        return;
-    }
-    
-    if (!isValidEmail(formData.email)) {
-        showToasted('Please enter a valid email address', 'error');
-        return;
-    }
-    
-    updateProfile(formData);
-});
+    // Edit Profile Form Handler
+    document.getElementById('editProfileForm').addEventListener('submit', function(e) {
+        e.preventDefault();
 
-// Password Change Form Handler
-document.getElementById('passwordChangeForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const currentPassword = document.getElementById('currentPassword').value;
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    
-    // Validation
-    if (!currentPassword || !newPassword || !confirmPassword) {
-        showToasted('Please fill in all password fields', 'error');
-        return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-        showToasted('New passwords do not match', 'error');
-        return;
-    }
-    
-    if (newPassword.length < 8) {
-        showToasted('New password must be at least 8 characters long', 'error');
-        return;
-    }
-    
-    changePassword(currentPassword, newPassword);
-});
-
-// Feedback Form Handler
-document.getElementById('feedbackForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const feedbackType = document.getElementById('feedbackType').value;
-    const message = document.getElementById('feedbackMessage').value.trim();
-    
-    if (!feedbackType || !message) {
-        showToasted('Please fill in all fields', 'error');
-        return;
-    }
-    
-    submitFeedback(feedbackType, message);
-});
-
-// Avatar functions
-function previewAvatar(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('avatarPreview').innerHTML = 
-                `<img src="${e.target.result}" alt="Preview" class="w-full h-full object-cover rounded-full">`;
+        const formData = {
+            first_name: document.getElementById('editFirstName').value.trim(),
+            last_name: document.getElementById('editLastName').value.trim(),
+            email: document.getElementById('editEmail').value.trim(),
+            phone: document.getElementById('editPhone').value.trim()
         };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
 
-async function uploadAvatar() {
-    const fileInput = document.getElementById('avatarInput');
-    const file = fileInput.files[0];
-    
-    if (!file) {
-        showToasted('Please select an image first', 'error');
-        return;
-    }
-    
-    const formData = new FormData();
-    formData.append('avatar', file);
-    
-    try {
-        showToasted('Uploading avatar...', 'info');
-        
-        const response = await fetch('api/upload-avatar.php', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToasted('Avatar updated successfully!', 'success');
-            closeModal('avatarUploadModal');
-            // Update avatar in UI
-            location.reload();
-        } else {
-            throw new Error(result.message || 'Failed to upload avatar');
+        // Validation
+        if (!formData.first_name || !formData.last_name || !formData.email) {
+            showToasted('Please fill in all required fields', 'error');
+            return;
         }
-    } catch (error) {
-        console.error('Avatar upload error:', error);
-        showToasted('Failed to upload avatar', 'error');
-    }
-}
 
-async function removeAvatar() {
-    if (!confirm('Are you sure you want to remove your profile picture?')) {
-        return;
-    }
-    
-    try {
-        showToasted('Removing avatar...', 'info');
-        
-        const response = await fetch('api/remove-avatar.php', {
-            method: 'POST'
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToasted('Avatar removed successfully!', 'success');
-            closeModal('avatarUploadModal');
-            location.reload();
-        } else {
-            throw new Error(result.message || 'Failed to remove avatar');
+        if (!isValidEmail(formData.email)) {
+            showToasted('Please enter a valid email address', 'error');
+            return;
         }
-    } catch (error) {
-        console.error('Remove avatar error:', error);
-        showToasted('Failed to remove avatar', 'error');
-    }
-}
 
-// Address functions
-function openAddAddressForm() {
-    document.getElementById('addAddressForm').classList.remove('hidden');
-}
-
-function cancelAddAddress() {
-    document.getElementById('addAddressForm').classList.add('hidden');
-    // Clear form
-    document.getElementById('addAddressForm').querySelectorAll('input, textarea, select').forEach(el => el.value = '');
-}
-
-async function saveNewAddress() {
-    const addressData = {
-        address_name: document.getElementById('newAddressName').value.trim(),
-        full_address: document.getElementById('newFullAddress').value.trim(),
-        city: document.getElementById('newCity').value.trim(),
-        state: document.getElementById('newState').value,
-        is_default: document.getElementById('setAsDefault').checked
-    };
-    
-    // Validation
-    if (!addressData.address_name || !addressData.full_address || !addressData.city || !addressData.state) {
-        showToasted('Please fill in all required fields', 'error');
-        return;
-    }
-    
-    try {
-        showToasted('Saving address...', 'info');
-        
-        const response = await fetch('api/save-address.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(addressData)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToasted('Address saved successfully!', 'success');
-            cancelAddAddress();
-            // Refresh addresses list
-            location.reload();
-        } else {
-            throw new Error(result.message || 'Failed to save address');
-        }
-    } catch (error) {
-        console.error('Save address error:', error);
-        showToasted('Failed to save address', 'error');
-    }
-}
-
-// Language functions
-let selectedLanguage = userPreferences.language || 'en';
-
-document.querySelectorAll('.language-option').forEach(option => {
-    option.addEventListener('click', function() {
-        // Remove active class from all options
-        document.querySelectorAll('.radio-check').forEach(check => check.classList.remove('active'));
-        
-        // Add active class to selected option
-        this.querySelector('.radio-check').classList.add('active');
-        
-        // Update selected language
-        selectedLanguage = this.dataset.lang;
+        updateProfile(formData);
     });
-});
 
-async function saveLanguagePreference() {
-    try {
-        await updatePreference('language', selectedLanguage);
-        closeModal('languageModal');
-        // Update UI language text if needed
-        location.reload();
-    } catch (error) {
-        console.error('Language update error:', error);
-    }
-}
+    // Password Change Form Handler
+    document.getElementById('passwordChangeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
 
-// Help functions
-function toggleHelpItem(element) {
-    const content = element.querySelector('.help-content');
-    const icon = element.querySelector('i');
-    
-    if (content.classList.contains('hidden')) {
-        content.classList.remove('hidden');
-        icon.style.transform = 'rotate(180deg)';
-    } else {
-        content.classList.add('hidden');
-        icon.style.transform = 'rotate(0deg)';
-    }
-}
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
 
-// Password visibility toggle
-function togglePassword(fieldId) {
-    const field = document.getElementById(fieldId);
-    const icon = field.nextElementSibling.querySelector('i');
-    
-    if (field.type === 'password') {
-        field.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-    } else {
-        field.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-    }
-}
-
-// Utility functions
-function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
-
-async function changePassword(currentPassword, newPassword) {
-    try {
-        showToasted('Updating password...', 'info');
-        
-        const response = await fetch('api/change-password.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                current_password: currentPassword,
-                new_password: newPassword
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToasted('Password updated successfully!', 'success');
-            closeModal('securityModal');
-            // Clear form
-            document.getElementById('passwordChangeForm').reset();
-        } else {
-            throw new Error(result.message || 'Failed to update password');
+        // Validation
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            showToasted('Please fill in all password fields', 'error');
+            return;
         }
-    } catch (error) {
-        console.error('Password change error:', error);
-        showToasted('Failed to update password', 'error');
-    }
-}
 
-async function submitFeedback(type, message) {
-    try {
-        showToasted('Sending feedback...', 'info');
-        
-        const response = await fetch('api/submit-feedback.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                type: type,
-                message: message
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToasted('Thank you for your feedback!', 'success');
-            closeModal('feedbackModal');
-            document.getElementById('feedbackForm').reset();
-        } else {
-            throw new Error(result.message || 'Failed to submit feedback');
+        if (newPassword !== confirmPassword) {
+            showToasted('New passwords do not match', 'error');
+            return;
         }
-    } catch (error) {
-        console.error('Feedback submission error:', error);
-        showToasted('Failed to submit feedback', 'error');
-    }
-}
 
-// Add modal-specific styles
-const modalStyles = document.createElement('style');
-modalStyles.textContent = `
+        if (newPassword.length < 8) {
+            showToasted('New password must be at least 8 characters long', 'error');
+            return;
+        }
+
+        changePassword(currentPassword, newPassword);
+    });
+
+    // Feedback Form Handler
+    document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const feedbackType = document.getElementById('feedbackType').value;
+        const message = document.getElementById('feedbackMessage').value.trim();
+
+        if (!feedbackType || !message) {
+            showToasted('Please fill in all fields', 'error');
+            return;
+        }
+
+        submitFeedback(feedbackType, message);
+    });
+
+    // Add this to your profile-modals.php script section
+
+    // Preview image when file is selected
+    function previewAvatar(input) {
+        const preview = document.getElementById('avatarPreview');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Upload avatar
+    async function uploadAvatar() {
+        const fileInput = document.getElementById('avatarFile');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            alert('Please select a file first');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        try {
+            const response = await fetch('api/upload-avatar.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Update avatar in page
+                const avatarImg = document.querySelector('.profile-avatar img');
+                if (avatarImg) {
+                    avatarImg.src = result.avatar_url + '?t=' + Date.now();
+                }
+
+                // Close modal
+                closeModal('avatarUploadModal');
+
+                // Reset form
+                fileInput.value = '';
+                document.getElementById('avatarPreview').style.display = 'none';
+
+                alert('Avatar updated successfully!');
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            alert('Upload failed. Please try again.');
+        }
+    }
+
+    // Remove avatar
+    async function removeAvatar() {
+        if (!confirm('Remove your avatar?')) return;
+
+        try {
+            const response = await fetch('api/remove-avatar.php', {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Reset to default avatar
+                const avatarContainer = document.querySelector('.profile-avatar');
+                avatarContainer.innerHTML = `
+                <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/20 flex items-center justify-center border-4 border-white/20">
+                    <i class="fas fa-user text-white text-2xl md:text-3xl"></i>
+                </div>
+                <button onclick="openAvatarUpload()" class="absolute bottom-0 right-0 w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-camera text-gray-600 text-xs md:text-sm"></i>
+                </button>
+            `;
+
+                closeModal('avatarUploadModal');
+                alert('Avatar removed!');
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            alert('Failed to remove avatar');
+        }
+    }
+
+    // Update avatar display throughout the page
+    function updateAvatarDisplay(avatarUrl) {
+        const avatarElements = document.querySelectorAll('.profile-avatar img, .user-avatar');
+        const avatarContainers = document.querySelectorAll('.profile-avatar');
+
+        if (avatarUrl) {
+            // Update existing image elements
+            avatarElements.forEach(img => {
+                img.src = avatarUrl + '?t=' + Date.now(); // Add timestamp to prevent caching
+                img.style.display = 'block';
+            });
+
+            // Update containers with new avatar
+            avatarContainers.forEach(container => {
+                container.innerHTML = `
+                <img src="${avatarUrl}?t=${Date.now()}" 
+                     alt="Profile" 
+                     class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-white/20">
+                <button onclick="openAvatarUpload()" class="absolute bottom-0 right-0 w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-camera text-gray-600 text-xs md:text-sm"></i>
+                </button>
+            `;
+            });
+        } else {
+            // Revert to default avatar
+            avatarContainers.forEach(container => {
+                container.innerHTML = `
+                <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/20 flex items-center justify-center border-4 border-white/20">
+                    <i class="fas fa-user text-white text-2xl md:text-3xl"></i>
+                </div>
+                <button onclick="openAvatarUpload()" class="absolute bottom-0 right-0 w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-camera text-gray-600 text-xs md:text-sm"></i>
+                </button>
+            `;
+            });
+        }
+    }
+
+    // Reset avatar upload form
+    function resetAvatarForm() {
+        const fileInput = document.getElementById('avatarFile');
+        const preview = document.getElementById('avatarPreview');
+        const uploadBtn = document.querySelector('#avatarUploadModal button[onclick="uploadAvatar()"]');
+
+        if (fileInput) {
+            fileInput.value = '';
+        }
+
+        if (preview) {
+            preview.style.display = 'none';
+            preview.src = '';
+        }
+
+        if (uploadBtn) {
+            uploadBtn.disabled = true;
+            uploadBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
+    // File drag and drop functionality
+    function setupAvatarDragDrop() {
+        const dropZone = document.getElementById('avatarDropZone');
+        const fileInput = document.getElementById('avatarFile');
+
+        if (!dropZone || !fileInput) return;
+
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropZone.classList.add('border-orange-500', 'bg-orange-50');
+        });
+
+        dropZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('border-orange-500', 'bg-orange-50');
+        });
+
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('border-orange-500', 'bg-orange-50');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                previewAvatar(fileInput);
+            }
+        });
+    }
+
+    // Initialize avatar functionality when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        setupAvatarDragDrop();
+    });
+
+
+    // Address functions
+    function openAddAddressForm() {
+        document.getElementById('addAddressForm').classList.remove('hidden');
+    }
+
+    function cancelAddAddress() {
+        document.getElementById('addAddressForm').classList.add('hidden');
+        // Clear form
+        document.getElementById('addAddressForm').querySelectorAll('input, textarea, select').forEach(el => el.value = '');
+    }
+
+    async function saveNewAddress() {
+        const addressData = {
+            address_name: document.getElementById('newAddressName').value.trim(),
+            full_address: document.getElementById('newFullAddress').value.trim(),
+            city: document.getElementById('newCity').value.trim(),
+            state: document.getElementById('newState').value,
+            is_default: document.getElementById('setAsDefault').checked
+        };
+
+        // Validation
+        if (!addressData.address_name || !addressData.full_address || !addressData.city || !addressData.state) {
+            showToasted('Please fill in all required fields', 'error');
+            return;
+        }
+
+        try {
+            showToasted('Saving address...', 'info');
+
+            const response = await fetch('api/save-address.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(addressData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToasted('Address saved successfully!', 'success');
+                cancelAddAddress();
+                // Refresh addresses list
+                location.reload();
+            } else {
+                throw new Error(result.message || 'Failed to save address');
+            }
+        } catch (error) {
+            console.error('Save address error:', error);
+            showToasted('Failed to save address', 'error');
+        }
+    }
+
+    // Address management functions
+    async function editAddress(addressId) {
+        try {
+            const response = await fetch(`api/get-address.php?address_id=${addressId}`);
+            const result = await response.json();
+
+            if (result.success) {
+                const address = result.address;
+
+                // Populate edit form (you can create a separate edit modal or modify the add form)
+                document.getElementById('newAddressName').value = address.address_name;
+                document.getElementById('newFullAddress').value = address.full_address;
+                document.getElementById('newCity').value = address.city;
+                document.getElementById('newState').value = address.state;
+                document.getElementById('setAsDefault').checked = address.is_default == 1;
+
+                // Show form and update button text
+                openAddAddressForm();
+                const saveBtn = document.querySelector('#addAddressForm button[onclick="saveNewAddress()"]');
+                saveBtn.textContent = 'Update Address';
+                saveBtn.setAttribute('onclick', `updateAddress(${addressId})`);
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Edit address error:', error);
+            showToasted('Failed to load address for editing', 'error');
+        }
+    }
+
+    async function updateAddress(addressId) {
+        const addressData = {
+            address_id: addressId,
+            address_name: document.getElementById('newAddressName').value.trim(),
+            full_address: document.getElementById('newFullAddress').value.trim(),
+            city: document.getElementById('newCity').value.trim(),
+            state: document.getElementById('newState').value,
+            is_default: document.getElementById('setAsDefault').checked
+        };
+
+        if (!addressData.address_name || !addressData.full_address || !addressData.city || !addressData.state) {
+            showToasted('Please fill in all required fields', 'error');
+            return;
+        }
+
+        try {
+            showToasted('Updating address...', 'info');
+
+            const response = await fetch('api/edit-address.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(addressData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToasted('Address updated successfully!', 'success');
+                cancelAddAddress();
+                location.reload();
+            } else {
+                throw new Error(result.message || 'Failed to update address');
+            }
+        } catch (error) {
+            console.error('Update address error:', error);
+            showToasted('Failed to update address', 'error');
+        }
+    }
+
+    async function deleteAddress(addressId) {
+        if (!confirm('Are you sure you want to delete this address?')) {
+            return;
+        }
+
+        try {
+            showToasted('Deleting address...', 'info');
+
+            const response = await fetch('api/delete-address.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    address_id: addressId
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToasted('Address deleted successfully!', 'success');
+                location.reload();
+            } else {
+                throw new Error(result.message || 'Failed to delete address');
+            }
+        } catch (error) {
+            console.error('Delete address error:', error);
+            showToasted('Failed to delete address', 'error');
+        }
+    }
+
+    async function setDefaultAddress(addressId) {
+        try {
+            showToasted('Setting default address...', 'info');
+
+            const response = await fetch('api/set-default-address.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    address_id: addressId
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToasted('Default address updated!', 'success');
+                location.reload();
+            } else {
+                throw new Error(result.message || 'Failed to set default address');
+            }
+        } catch (error) {
+            console.error('Set default address error:', error);
+            showToasted('Failed to set default address', 'error');
+        }
+    }
+
+    // Language functions
+    let selectedLanguage = userPreferences.language || 'en';
+
+    document.querySelectorAll('.language-option').forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove active class from all options
+            document.querySelectorAll('.radio-check').forEach(check => check.classList.remove('active'));
+
+            // Add active class to selected option
+            this.querySelector('.radio-check').classList.add('active');
+
+            // Update selected language
+            selectedLanguage = this.dataset.lang;
+        });
+    });
+
+    async function saveLanguagePreference() {
+        try {
+            await updatePreference('language', selectedLanguage);
+            closeModal('languageModal');
+            // Update UI language text if needed
+            location.reload();
+        } catch (error) {
+            console.error('Language update error:', error);
+        }
+    }
+
+    // Help functions
+    function toggleHelpItem(element) {
+        const content = element.querySelector('.help-content');
+        const icon = element.querySelector('i');
+
+        if (content.classList.contains('hidden')) {
+            content.classList.remove('hidden');
+            icon.style.transform = 'rotate(180deg)';
+        } else {
+            content.classList.add('hidden');
+            icon.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    // Password visibility toggle
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = field.nextElementSibling.querySelector('i');
+
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            field.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    // Utility functions
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    async function changePassword(currentPassword, newPassword) {
+        try {
+            showToasted('Updating password...', 'info');
+
+            const response = await fetch('api/change-password.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToasted('Password updated successfully!', 'success');
+                closeModal('securityModal');
+                // Clear form
+                document.getElementById('passwordChangeForm').reset();
+            } else {
+                throw new Error(result.message || 'Failed to update password');
+            }
+        } catch (error) {
+            console.error('Password change error:', error);
+            showToasted('Failed to update password', 'error');
+        }
+    }
+
+    async function submitFeedback(type, message) {
+        try {
+            showToasted('Sending feedback...', 'info');
+
+            const response = await fetch('api/submit-feedback.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    type: type,
+                    message: message
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToasted('Thank you for your feedback!', 'success');
+                closeModal('feedbackModal');
+                document.getElementById('feedbackForm').reset();
+            } else {
+                throw new Error(result.message || 'Failed to submit feedback');
+            }
+        } catch (error) {
+            console.error('Feedback submission error:', error);
+            showToasted('Failed to submit feedback', 'error');
+        }
+    }
+
+    // Add modal-specific styles
+    const modalStyles = document.createElement('style');
+    modalStyles.textContent = `
     .radio-check {
         width: 20px;
         height: 20px;
@@ -1113,5 +1362,5 @@ modalStyles.textContent = `
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
 `;
-document.head.appendChild(modalStyles);
+    document.head.appendChild(modalStyles);
 </script>
