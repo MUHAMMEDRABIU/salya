@@ -10,11 +10,8 @@ if (!$order) {
     exit;
 }
 
-// Get related data with proper error handling
+// Get customer data
 $customer = getUserById($pdo, $order['user_id']);
-$product = getProductById($pdo, productId: $order['product_id']);
-
-// Handle cases where product or customer might not exist
 if (!$customer) {
     $customer = [
         'id' => $order['user_id'],
@@ -26,15 +23,9 @@ if (!$customer) {
     ];
 }
 
-if (!$product) {
-    $product = [
-        'id' => $order['product_id'],
-        'name' => 'Product No Longer Available',
-        'description' => 'This product has been removed or is no longer available',
-        'price' => $order['total_amount'] ?? 0,
-        'image' => null
-    ];
-}
+// Get order items (multiple products per order)
+$orderItems = getOrderItems($pdo, $order['id']);
+
 require __DIR__ . '/partials/headers.php';
 ?>
 
@@ -47,33 +38,7 @@ require __DIR__ . '/partials/headers.php';
 
         <!-- Order Details Content -->
         <main class="p-6">
-            <!-- Breadcrumb -->
-            <div class="mb-6">
-                <nav class="flex" aria-label="Breadcrumb">
-                    <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                        <li class="inline-flex items-center">
-                            <a href="dashboard.php" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-orange-600">
-                                <i data-lucide="home" class="w-4 h-4 mr-2"></i>
-                                Dashboard
-                            </a>
-                        </li>
-                        <li>
-                            <div class="flex items-center">
-                                <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400"></i>
-                                <a href="orders.php" class="ml-1 text-sm font-medium text-gray-700 hover:text-orange-600 md:ml-2">Orders</a>
-                            </div>
-                        </li>
-                        <li aria-current="page">
-                            <div class="flex items-center">
-                                <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400"></i>
-                                <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">#<?= htmlspecialchars($order['order_number']) ?></span>
-                            </div>
-                        </li>
-                    </ol>
-                </nav>
-            </div>
-
-            <!-- Header Section -->
+            <!-- Header Section (keep existing) -->
             <div class="mb-8">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center space-x-4">
@@ -81,7 +46,7 @@ require __DIR__ . '/partials/headers.php';
                             <i data-lucide="arrow-left" class="w-5 h-5"></i>
                         </a>
                         <div>
-                            <h1 class="text-2xl font-bold text-gray-900">Order #<?php echo htmlspecialchars($order['order_number'] ?? $order['id']); ?></h1>
+                            <h1 class="text-2xl font-bold text-gray-900">Order #<?php echo htmlspecialchars($order['order_number']); ?></h1>
                             <p class="text-gray-600">
                                 <i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>
                                 Placed on <?php echo date('F d, Y \a\t g:i A', strtotime($order['created_at'])); ?>
@@ -94,7 +59,8 @@ require __DIR__ . '/partials/headers.php';
                         $statusConfig = [
                             'delivered' => ['bg-green-100 text-green-800 border-green-200', 'package-check'],
                             'processing' => ['bg-yellow-100 text-yellow-800 border-yellow-200', 'clock'],
-                            'pending' => ['bg-orange-100 text-orange-800 border-orange-200', 'clock'],
+                            'pending_payment' => ['bg-orange-100 text-orange-800 border-orange-200', 'clock'],
+                            'confirmed' => ['bg-blue-100 text-blue-800 border-blue-200', 'check-circle'],
                             'shipped' => ['bg-blue-100 text-blue-800 border-blue-200', 'truck'],
                             'cancelled' => ['bg-red-100 text-red-800 border-red-200', 'x-circle'],
                         ];
@@ -102,7 +68,7 @@ require __DIR__ . '/partials/headers.php';
                         ?>
                         <span class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold border <?php echo $config[0]; ?>">
                             <i data-lucide="<?php echo $config[1]; ?>" class="w-4 h-4 mr-2"></i>
-                            <?php echo ucfirst($order['status']); ?>
+                            <?php echo ucfirst(str_replace('_', ' ', $order['status'])); ?>
                         </span>
                     </div>
                 </div>
@@ -116,46 +82,54 @@ require __DIR__ . '/partials/headers.php';
                         <div class="p-6 border-b border-gray-200">
                             <h3 class="text-lg font-semibold text-gray-800 flex items-center">
                                 <i data-lucide="package" class="w-5 h-5 mr-2 text-gray-600"></i>
-                                Order Items
+                                Order Items (<?php echo count($orderItems); ?> items)
                             </h3>
                         </div>
                         <div class="p-6">
                             <div class="space-y-4">
-                                <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                                    <?php if ($product['image']): ?>
-                                        <?php
-                                        // Generate product image URL with fallback
-                                        $productImage = !empty($product['image']) && $product['image'] !== DEFAULT_PRODUCT_IMAGE
-                                            ? PRODUCT_IMAGE_URL . htmlspecialchars($product['image'])
-                                            : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
-                                        ?>
-                                        <img src="<?php echo $productImage; ?>" alt="Product" class="w-16 h-16 rounded-lg object-cover">
-                                    <?php else: ?>
-                                        <div class="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center">
-                                            <i data-lucide="image" class="w-8 h-8 text-gray-400"></i>
+                                <?php if (empty($orderItems)): ?>
+                                    <div class="text-center py-8">
+                                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <i data-lucide="package" class="w-8 h-8 text-gray-400"></i>
                                         </div>
-                                    <?php endif; ?>
-                                    <div class="flex-1">
-                                        <h4 class="font-semibold text-gray-900"><?php echo htmlspecialchars($product['name'] ?? 'Unknown Product'); ?></h4>
-                                        <p class="text-gray-600 text-sm"><?php echo htmlspecialchars($product['description'] ?? 'No description available'); ?></p>
-                                        <div class="flex items-center space-x-4 mt-2">
-                                            <span class="text-sm text-gray-500 flex items-center">
-                                                <i data-lucide="hash" class="w-3 h-3 mr-1"></i>
-                                                Quantity: <?php echo intval($order['quantity'] ?? 1); ?>
-                                            </span>
-                                            <span class="text-sm text-gray-500 flex items-center">
-                                                <i data-lucide="tag" class="w-3 h-3 mr-1"></i>
-                                                Unit Price: <?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($product['price'] ?? 0), 2); ?>
-                                            </span>
+                                        <p class="text-gray-500">No items found for this order</p>
+                                    </div>
+                                <?php else: ?>
+                                    <?php foreach ($orderItems as $item): ?>
+                                        <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                                            <?php
+                                            // Generate product image URL with fallback
+                                            $productImage = !empty($item['product_image']) && $item['product_image'] !== DEFAULT_PRODUCT_IMAGE
+                                                ? PRODUCT_IMAGE_URL . htmlspecialchars($item['product_image'])
+                                                : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                                            ?>
+                                            <img src="<?php echo $productImage; ?>" 
+                                                 alt="<?php echo htmlspecialchars($item['product_name']); ?>" 
+                                                 class="w-16 h-16 rounded-lg object-cover"
+                                                 onerror="this.src='<?php echo PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE; ?>';">
+                                            
+                                            <div class="flex-1">
+                                                <h4 class="font-semibold text-gray-900"><?php echo htmlspecialchars($item['product_name']); ?></h4>
+                                                <div class="flex items-center space-x-4 mt-2">
+                                                    <span class="text-sm text-gray-500 flex items-center">
+                                                        <i data-lucide="hash" class="w-3 h-3 mr-1"></i>
+                                                        Qty: <?php echo intval($item['quantity']); ?>
+                                                    </span>
+                                                    <span class="text-sm text-gray-500 flex items-center">
+                                                        <i data-lucide="tag" class="w-3 h-3 mr-1"></i>
+                                                        Unit: <?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($item['price']), 2); ?>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="font-semibold text-gray-900 flex items-center justify-end">
+                                                    <i data-lucide="dollar-sign" class="w-4 h-4 mr-1 text-green-600"></i>
+                                                    <?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($item['subtotal']), 2); ?>
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="font-semibold text-gray-900 flex items-center justify-end">
-                                            <i data-lucide="dollar-sign" class="w-4 h-4 mr-1 text-green-600"></i>
-                                            <?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['total_amount'] ?? 0), 2); ?>
-                                        </p>
-                                    </div>
-                                </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </div>
 
                             <!-- Order Summary -->
@@ -166,28 +140,21 @@ require __DIR__ . '/partials/headers.php';
                                             <i data-lucide="calculator" class="w-4 h-4 mr-2"></i>
                                             Subtotal
                                         </span>
-                                        <span class="text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['total_amount'] ?? 0) - floatval($order['shipping_fee'] ?? 0), 2); ?></span>
+                                        <span class="text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['subtotal']), 2); ?></span>
                                     </div>
                                     <div class="flex justify-between text-sm">
                                         <span class="text-gray-600 flex items-center">
                                             <i data-lucide="truck" class="w-4 h-4 mr-2"></i>
-                                            Shipping
+                                            Delivery Fee
                                         </span>
-                                        <span class="text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['shipping_fee'] ?? 0), 2); ?></span>
-                                    </div>
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-gray-600 flex items-center">
-                                            <i data-lucide="percent" class="w-4 h-4 mr-2"></i>
-                                            Tax
-                                        </span>
-                                        <span class="text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['tax_amount'] ?? 0), 2); ?></span>
+                                        <span class="text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['delivery_fee']), 2); ?></span>
                                     </div>
                                     <div class="flex justify-between text-lg font-semibold pt-3 border-t border-gray-200">
                                         <span class="text-gray-900 flex items-center">
                                             <i data-lucide="dollar-sign" class="w-5 h-5 mr-2 text-green-600"></i>
                                             Total
                                         </span>
-                                        <span class="text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['total_amount'] ?? 0), 2); ?></span>
+                                        <span class="text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['total_amount']), 2); ?></span>
                                     </div>
                                 </div>
                             </div>
@@ -311,7 +278,7 @@ require __DIR__ . '/partials/headers.php';
                     </div>
                 </div>
 
-                <!-- Right Column -->
+                <!-- Right Column (keep existing customer info, shipping, etc.) -->
                 <div class="space-y-6">
                     <!-- Customer Information -->
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200">

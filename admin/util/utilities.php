@@ -283,6 +283,33 @@ function getOrderStatusCount($pdo, $status) {
     }
 }
 
+/**
+ * Get order statistics
+ * @param PDO $pdo
+ * @param int $order_id
+ * @return array
+ */
+function getOrderStatistics($pdo, $order_id)
+{
+    try {
+        $stmt = $pdo->prepare("
+            SELECT 
+                COUNT(*) as total_items,
+                SUM(quantity) as total_quantity,
+                COUNT(DISTINCT product_id) as unique_products,
+                GROUP_CONCAT(DISTINCT p.category) as categories
+            FROM order_items oi
+            LEFT JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = ?
+        ");
+        $stmt->execute([$order_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+    } catch (PDOException $e) {
+        error_log("Error fetching order statistics: " . $e->getMessage());
+        return [];
+    }
+}
+
 // function for getting user by id
 function getUserById($pdo, $userId) {
     try {
@@ -793,30 +820,6 @@ function getProductCountByStatus($pdo, $status = 'active') {
     } catch (PDOException $e) {
         error_log("Error getting product count by status: " . $e->getMessage());
         return 0;
-    }
-}
-
-/**
- * Duplicate product
- */
-function duplicateProduct($pdo, $productId) {
-    try {
-        // Get original product
-        $original = getProductById($pdo, $productId);
-        if (!$original) {
-            return false;
-        }
-        
-        // Create new product data
-        $newData = $original;
-        unset($newData['id'], $newData['created_at'], $newData['updated_at'], $newData['category_name']);
-        $newData['name'] = $original['name'] . ' (Copy)';
-        $newData['sku'] = $original['sku'] ? $original['sku'] . '_copy' : null;
-        
-        return createProduct($pdo, $newData);
-    } catch (PDOException $e) {
-        error_log("Error duplicating product: " . $e->getMessage());
-        return false;
     }
 }
 
