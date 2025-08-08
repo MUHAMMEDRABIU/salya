@@ -211,7 +211,7 @@ require_once 'partials/headers.php';
 
             <!-- Search and Filter Section -->
             <div class="bg-white rounded-2xl p-4 md:p-6 shadow-lg animate-slide-up" style="animation-delay: 0.2s;">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-6">
                     <!-- Search Bar -->
                     <div class="flex-1 lg:max-w-md">
                         <div class="relative">
@@ -230,15 +230,15 @@ require_once 'partials/headers.php';
                     </div>
 
                     <!-- Date Filter -->
-                    <div class="flex items-center space-x-4">
-                        <select id="date-filter" class="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                    <div class="relative">
+                        <select id="date-filter" class="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-12 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent min-w-[140px] cursor-pointer">
                             <option value="all">All Time</option>
                             <option value="today">Today</option>
                             <option value="week">This Week</option>
                             <option value="month">This Month</option>
                             <option value="year">This Year</option>
                         </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
@@ -284,9 +284,10 @@ require_once 'partials/headers.php';
                     </div>
                 </div>
             </div>
+            
             <!-- Results Info -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-slide-up" style="animation-delay: 0.4s;">
-                <div>
+                <div class="flex-1">
                     <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-1">
                         <?php echo $selectedStatus === 'all' ? 'All Orders' : ucfirst($selectedStatus) . ' Orders'; ?>
                     </h2>
@@ -298,11 +299,13 @@ require_once 'partials/headers.php';
                     </p>
                 </div>
 
-                <!-- Refresh Button -->
-                <button id="refresh-btn" class="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 transition-all duration-300 hover:scale-105">
-                    <i class="fas fa-sync-alt mr-2"></i>
-                    <span class="hidden sm:inline">Refresh</span>
-                </button>
+                <!-- Responsive Refresh Button -->
+                <div class="flex-shrink-0">
+                    <button id="refresh-btn" class="flex items-center justify-center px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 transition-all duration-300 hover:scale-105 min-w-[44px] sm:min-w-auto">
+                        <i class="fas fa-sync-alt text-sm sm:mr-2"></i>
+                        <span class="hidden sm:inline text-sm font-medium">Refresh</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Orders List -->

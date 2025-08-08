@@ -1013,6 +1013,120 @@ input:checked + .slider:before {
   }
 }
 
+/* Add these styles to the existing file: */
+
+/* ============================
+   DROPDOWN AND SELECT FIXES
+   ============================ */
+
+/* Custom select styling */
+select {
+    background-image: none !important;
+}
+
+.select-wrapper {
+    position: relative;
+}
+
+.select-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #9ca3af;
+    pointer-events: none;
+}
+
+/* Date filter specific styling */
+#date-filter {
+    background-position: right 12px center !important;
+    background-repeat: no-repeat !important;
+    background-size: 16px !important;
+    padding-right: 40px !important;
+}
+
+/* Ensure dropdown arrow is visible and positioned correctly */
+.relative select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+/* ============================
+   RESPONSIVE BUTTON FIXES
+   ============================ */
+
+/* Refresh button responsive improvements */
+#refresh-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+#refresh-btn:hover {
+    background-color: #f3f4f6;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#refresh-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure proper touch targets on mobile */
+@media (max-width: 640px) {
+    #refresh-btn {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0.75rem;
+    }
+    
+    #date-filter {
+        min-height: 44px;
+        font-size: 14px;
+    }
+}
+
+/* Search and filter container improvements */
+.search-filter-container {
+    gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+    .search-filter-container {
+        gap: 1.5rem;
+    }
+}
+
+/* ============================
+   ANIMATION IMPROVEMENTS
+   ============================ */
+
+/* Smooth refresh button animation */
+#refresh-btn.refreshing {
+    pointer-events: none;
+}
+
+#refresh-btn.refreshing i {
+    animation: spin 1s linear infinite;
+}
+
+#refresh-btn.success {
+    background-color: #10b981 !important;
+    color: white !important;
+}
+
+/* Search input focus improvements */
+#search-input:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
 /* Improved spacing for bottom navigation overlap */
 @media (max-width: 1024px) {
   .container {
