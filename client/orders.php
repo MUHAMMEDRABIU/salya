@@ -252,32 +252,32 @@ require_once 'partials/headers.php';
                 <div class="overflow-x-auto hide-scrollbar">
                     <div class="flex space-x-3 pb-2 min-w-max px-1">
                         <a href="?status=all"
-                            class="status-tab <?php echo $selectedStatus === 'all' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
+                            class="status-tab <?php echo $selectedStatus === 'all' ? 'active bg-orange-500 text-white' : 'bg-white text-gray-600'; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
                             <i class="fas fa-list mr-2"></i>
                             All Orders
                         </a>
                         <a href="?status=confirmed"
-                            class="status-tab <?php echo $selectedStatus === 'confirmed' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
+                            class="status-tab <?php echo $selectedStatus === 'confirmed' ? 'active bg-orange-500 text-white' : 'bg-white text-gray-600'; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
                             <i class="fas fa-check-circle mr-2"></i>
                             Confirmed
                         </a>
                         <a href="?status=processing"
-                            class="status-tab <?php echo $selectedStatus === 'processing' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
+                            class="status-tab <?php echo $selectedStatus === 'processing' ? 'active bg-orange-500 text-white' : 'bg-white text-gray-600'; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
                             <i class="fas fa-clock mr-2"></i>
                             Processing
                         </a>
                         <a href="?status=shipped"
-                            class="status-tab <?php echo $selectedStatus === 'shipped' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
+                            class="status-tab <?php echo $selectedStatus === 'shipped' ? 'active bg-orange-500 text-white' : 'bg-white text-gray-600'; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
                             <i class="fas fa-truck mr-2"></i>
                             Shipped
                         </a>
                         <a href="?status=delivered"
-                            class="status-tab <?php echo $selectedStatus === 'delivered' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
+                            class="status-tab <?php echo $selectedStatus === 'delivered' ? 'active bg-orange-500 text-white' : 'bg-white text-gray-600'; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
                             <i class="fas fa-check-double mr-2"></i>
                             Delivered
                         </a>
                         <a href="?status=cancelled"
-                            class="status-tab <?php echo $selectedStatus === 'cancelled' ? 'active' : ''; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300">
+                            class="status-tab <?php echo $selectedStatus === 'cancelled' ? 'active bg-orange-500 text-white' : 'bg-white text-gray-600'; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
                             <i class="fas fa-times-circle mr-2"></i>
                             Cancelled
                         </a>

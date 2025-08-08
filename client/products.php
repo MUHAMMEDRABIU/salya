@@ -154,14 +154,16 @@ require_once 'partials/headers.php';
             <!-- Category Tabs -->
             <div class="mb-8 animate-slide-up" style="animation-delay: 0.2s;">
                 <div class="overflow-x-auto hide-scrollbar">
-                    <div class="flex space-x-3 pb-2 min-w-max">
+                    <div class="flex space-x-3 pb-2 min-w-max px-1">
                         <a href="?category=all&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?>"
-                            class="category-tab <?php echo $selectedCategory === 'all' ? 'active' : ''; ?> px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                            class="category-tab <?php echo $selectedCategory === 'all' ? 'active bg-orange-500 text-white' : 'bg-white text-gray-600'; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                            <i class="fas fa-th-large mr-2"></i>
                             All Products
                         </a>
                         <?php foreach ($categories as $category): ?>
                             <a href="?category=<?php echo strtolower($category); ?>&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?>"
-                                class="category-tab <?php echo $selectedCategory === strtolower($category) ? 'active' : ''; ?> px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                                class="category-tab <?php echo $selectedCategory === strtolower($category) ? 'active bg-orange-500 text-white' : 'bg-white text-gray-600'; ?> px-4 md:px-6 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 hover:scale-105 shadow-md">
+                                <i class="fas fa-box mr-2"></i>
                                 <?php echo ucfirst($category); ?>
                             </a>
                         <?php endforeach; ?>

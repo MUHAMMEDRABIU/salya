@@ -260,6 +260,9 @@ require_once 'partials/headers.php';
             };
 
             // Enhanced tab functionality with consistent styling
+            // Replace the tab functionality in the script section:
+
+            // Enhanced tab functionality with consistent styling
             tabButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const category = this.getAttribute('data-category');
