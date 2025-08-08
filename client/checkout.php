@@ -314,116 +314,144 @@ require_once 'partials/headers.php';
 
     <!-- Delivery Form Modal -->
     <div id="deliveryFormModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold text-custom-dark">Delivery Information</h2>
-                <button onclick="closeDeliveryForm()" class="text-gray-500 hover:text-gray-700">
+        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 class="text-xl md:text-2xl font-bold text-custom-dark">Delivery Information</h2>
+                <button onclick="closeDeliveryForm()" class="text-gray-400 hover:text-gray-600 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
 
-            <form id="deliveryForm" class="space-y-6 mb-8">
-                <!-- Personal Information -->
-                <div class="bg-gray-50 rounded-xl p-4">
-                    <h3 class="text-lg font-semibold text-custom-dark mb-4">Personal Information</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-                            <input type="text" id="fullName" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" placeholder="e.g John Doe" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
-                            <input type="tel" id="phoneNumber" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" placeholder="08012345678" required>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Delivery Address -->
-                <div class="bg-gray-50 rounded-xl p-4">
-                    <h3 class="text-lg font-semibold text-custom-dark mb-4">Delivery Address</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">State *</label>
-                            <select id="deliveryState" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-custom-accent" required onchange="updateCities()">
-                                <option value="">Select State</option>
-                                <option value="fct">Federal Capital Territory (Abuja)</option>
-                                <option value="lagos">Lagos</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">City *</label>
-                            <select id="deliveryCity" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-custom-accent" required onchange="updateAreas()">
-                                <option value="">Select City</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Area/District *</label>
-                            <select id="deliveryArea" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-custom-accent" required>
-                                <option value="">Select Area</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Street Address *</label>
-                            <textarea id="streetAddress" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-custom-accent" placeholder="e.g., 123 Main Street, Victoria Island" required></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Postal Code (Optional)</label>
-                            <input type="text" id="postalCode" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-custom-accent" placeholder="e.g., 100001">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Landmark (Optional)</label>
-                            <input type="text" id="landmark" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-custom-accent" placeholder="e.g., Near First Bank">
+            <!-- Scrollable Form Content -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <form id="deliveryForm" class="space-y-6">
+                    <!-- Personal Information -->
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <h3 class="text-lg font-semibold text-custom-dark mb-4">Personal Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                                <input type="text" id="fullName" 
+                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 focus:outline-none transition-all duration-200" 
+                                       placeholder="e.g John Doe" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+                                <input type="tel" id="phoneNumber" 
+                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 focus:outline-none transition-all duration-200" 
+                                       placeholder="08012345678" required>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Delivery Options -->
-                <div class="bg-gray-50 rounded-xl p-4">
-                    <h3 class="text-lg font-semibold text-custom-dark mb-4">Delivery Options</h3>
-                    <div class="space-y-3">
-                        <div>
-                            <input type="radio" id="standard" name="delivery_option" value="standard" class="hidden" checked>
-                            <label for="standard" class="delivery-option-label flex items-center p-3 border-2 border-custom-accent bg-blue-50 rounded-xl cursor-pointer transition-all">
-                                <div class="flex-1">
-                                    <h4 class="font-semibold text-custom-dark">Standard Delivery</h4>
-                                    <p class="text-sm text-gray-600">3-5 business days • Free for orders above <?php echo CURRENCY_SYMBOL; ?>10,000</p>
+                    <!-- Delivery Address -->
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <h3 class="text-lg font-semibold text-custom-dark mb-4">Delivery Address</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">State *</label>
+                                <select id="deliveryState" 
+                                        class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200" 
+                                        required onchange="updateCities()">
+                                    <option value="">Select State</option>
+                                    <option value="fct">Federal Capital Territory (Abuja)</option>
+                                    <option value="lagos">Lagos</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                                <select id="deliveryCity" 
+                                        class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200" 
+                                        required onchange="updateAreas()">
+                                    <option value="">Select City</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Area/District *</label>
+                                <select id="deliveryArea" 
+                                        class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200" 
+                                        required>
+                                    <option value="">Select Area</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Street Address *</label>
+                                <textarea id="streetAddress" rows="3" 
+                                          class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200 resize-none" 
+                                          placeholder="e.g., 123 Main Street, Victoria Island" required></textarea>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Postal Code (Optional)</label>
+                                    <input type="text" id="postalCode" 
+                                           class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200" 
+                                           placeholder="e.g., 100001">
                                 </div>
-                                <div class="text-custom-accent font-semibold"><?php echo CURRENCY_SYMBOL; ?><?= number_format($delivery_fee) ?></div>
-                            </label>
-                        </div>
-                        <div>
-                            <input type="radio" id="express" name="delivery_option" value="express" class="hidden">
-                            <label for="express" class="delivery-option-label flex items-center p-3 border-2 border-gray-50 rounded-xl cursor-pointer hover:border-custom-accent transition-all">
-                                <div class="flex-1">
-                                    <h4 class="font-semibold text-custom-dark">Express Delivery</h4>
-                                    <p class="text-sm text-gray-600">1-2 business days • Fast delivery</p>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Landmark (Optional)</label>
+                                    <input type="text" id="landmark" 
+                                           class="w-full px-4 py-3 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 transition-all duration-200" 
+                                           placeholder="e.g., Near First Bank">
                                 </div>
-                                <div class="text-custom-accent font-semibold"><?php echo CURRENCY_SYMBOL; ?>4,500</div>
-                            </label>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Special Instructions -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Special Delivery Instructions (Optional)</label>
-                    <textarea id="specialInstructions" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-custom-accent focus:outline-none" placeholder="Any special instructions for delivery..."></textarea>
-                </div>
+                    <!-- Delivery Options -->
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <h3 class="text-lg font-semibold text-custom-dark mb-4">Delivery Options</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <input type="radio" id="standard" name="delivery_option" value="standard" class="hidden" checked>
+                                <label for="standard" class="delivery-option-label flex items-center justify-between p-4 border-2 border-custom-accent bg-blue-50 rounded-xl cursor-pointer transition-all hover:shadow-md">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-custom-dark">Standard Delivery</h4>
+                                        <p class="text-sm text-gray-600 mt-1">3-5 business days • Free for orders above <?php echo CURRENCY_SYMBOL; ?>10,000</p>
+                                    </div>
+                                    <div class="text-custom-accent font-bold text-lg ml-4"><?php echo CURRENCY_SYMBOL; ?><?= number_format($delivery_fee) ?></div>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="radio" id="express" name="delivery_option" value="express" class="hidden">
+                                <label for="express" class="delivery-option-label flex items-center justify-between p-4 border-2 border-gray-200 bg-white rounded-xl cursor-pointer hover:border-custom-accent transition-all hover:shadow-md">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-custom-dark">Express Delivery</h4>
+                                        <p class="text-sm text-gray-600 mt-1">1-2 business days • Fast delivery</p>
+                                    </div>
+                                    <div class="text-custom-accent font-bold text-lg ml-4"><?php echo CURRENCY_SYMBOL; ?>4,500</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="flex space-x-4 pt-4 mb-6">
-                    <button type="button" onclick="closeDeliveryForm()" class="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors">
+                    <!-- Special Instructions -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Special Delivery Instructions (Optional)</label>
+                        <textarea id="specialInstructions" rows="3" 
+                                  class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:border-custom-accent focus:ring-2 focus:ring-custom-accent focus:ring-opacity-20 focus:outline-none transition-all duration-200 resize-none" 
+                                  placeholder="Any special instructions for delivery..."></textarea>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Fixed Action Buttons -->
+            <div class="border-t border-gray-100 p-6 bg-white">
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                    <button type="button" onclick="closeDeliveryForm()" 
+                            class="flex-1 px-6 py-4 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium text-center">
                         Cancel
                     </button>
-                    <button type="submit" class="flex-1 px-6 py-3 bg-custom-accent text-white rounded-xl hover:opacity-90 transition-opacity">
+                    <button type="submit" form="deliveryForm"
+                            class="flex-1 px-6 py-4 bg-custom-accent text-white rounded-xl hover:opacity-90 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-center">
                         Complete Order
                     </button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
-
     <!-- Bottom navigation include -->
     <?php include 'partials/bottom-nav.php'; ?>
 

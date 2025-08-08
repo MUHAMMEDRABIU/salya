@@ -9,11 +9,13 @@
   --dark: #201f20;
   --secondary-color: #111827;
   --font-family: "DM Sans", sans-serif;
+  --border-color: #e5e7eb;
 }
 
 /* ============================
    BASE STYLES
    ============================ */
+
 html {
   scroll-behavior: smooth;
 }
@@ -1021,40 +1023,40 @@ input:checked + .slider:before {
 
 /* Custom select styling */
 select {
-    background-image: none !important;
+  background-image: none !important;
 }
 
 .select-wrapper {
-    position: relative;
+  position: relative;
 }
 
 .select-wrapper::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: 12px;
-    transform: translateY(-50%);
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 5px solid #9ca3af;
-    pointer-events: none;
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #9ca3af;
+  pointer-events: none;
 }
 
 /* Date filter specific styling */
 #date-filter {
-    background-position: right 12px center !important;
-    background-repeat: no-repeat !important;
-    background-size: 16px !important;
-    padding-right: 40px !important;
+  background-position: right 12px center !important;
+  background-repeat: no-repeat !important;
+  background-size: 16px !important;
+  padding-right: 40px !important;
 }
 
 /* Ensure dropdown arrow is visible and positioned correctly */
 .relative select {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 /* ============================
@@ -1063,44 +1065,44 @@ select {
 
 /* Refresh button responsive improvements */
 #refresh-btn {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    white-space: nowrap;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
 }
 
 #refresh-btn:hover {
-    background-color: #f3f4f6;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: #f3f4f6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 #refresh-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Ensure proper touch targets on mobile */
 @media (max-width: 640px) {
-    #refresh-btn {
-        min-width: 44px;
-        min-height: 44px;
-        padding: 0.75rem;
-    }
-    
-    #date-filter {
-        min-height: 44px;
-        font-size: 14px;
-    }
+  #refresh-btn {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0.75rem;
+  }
+
+  #date-filter {
+    min-height: 44px;
+    font-size: 14px;
+  }
 }
 
 /* Search and filter container improvements */
 .search-filter-container {
-    gap: 1rem;
+  gap: 1rem;
 }
 
 @media (min-width: 1024px) {
-    .search-filter-container {
-        gap: 1.5rem;
-    }
+  .search-filter-container {
+    gap: 1.5rem;
+  }
 }
 
 /* ============================
@@ -1110,22 +1112,22 @@ select {
 /* Smooth refresh button animation */
 
 #refresh-btn.refreshing {
-    pointer-events: none;
+  pointer-events: none;
 }
 
 #refresh-btn.refreshing i {
-    animation: spin 1s linear infinite;
+  animation: spin 1s linear infinite;
 }
 
 #refresh-btn.success {
-    background-color: #10b981 !important;
-    color: white !important;
+  background-color: #10b981 !important;
+  color: white !important;
 }
 
 /* Search input focus improvements */
 #search-input:focus {
-    transform: translateY(-1px);
-    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 /* Improved spacing for bottom navigation overlap */
@@ -1133,6 +1135,87 @@ select {
   .container {
     padding-bottom: 6rem !important;
   }
+}
+
+/* Delivery form modal enhancements */
+#deliveryForm input,
+#deliveryForm select,
+#deliveryForm textarea {
+  border-color: #e5e7eb !important;
+}
+
+#deliveryFormModal .bg-white {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Form input focus states */
+#deliveryForm input:focus,
+#deliveryForm select:focus,
+#deliveryForm textarea:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+}
+
+/* Delivery option labels */
+.delivery-option-label {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.delivery-option-label:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Form section styling */
+#deliveryForm .bg-gray-50 {
+  border: 1px solid #f1f5f9;
+  transition: border-color 0.2s ease;
+}
+
+#deliveryForm .bg-gray-50:hover {
+  border-color: #e2e8f0;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  #deliveryFormModal .max-w-2xl {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+
+  #deliveryFormModal .p-6 {
+    padding: 1rem;
+  }
+
+  #deliveryForm .grid-cols-1.md\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Ensure buttons are properly sized on mobile */
+  #deliveryFormModal button {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  /* Add extra spacing from bottom nav */
+  #deliveryFormModal .border-t.border-gray-100 {
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Tablet responsiveness */
+@media (max-width: 768px) {
+  #deliveryFormModal .max-w-2xl {
+    margin: 0.75rem;
+  }
+}
+
+/* Focus ring for better accessibility */
+#deliveryForm input:focus-visible,
+#deliveryForm select:focus-visible,
+#deliveryForm textarea:focus-visible {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
 }
 
 /* Extra small screen utilities */
