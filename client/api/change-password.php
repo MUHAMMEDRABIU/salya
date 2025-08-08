@@ -21,8 +21,8 @@ try {
         throw new Exception('Current password and new password are required');
     }
 
-    if (strlen($newPassword) < 8) {
-        throw new Exception('New password must be at least 8 characters long');
+    if (strlen($newPassword) < 6) {
+        throw new Exception('New password must be at least 6 characters long');
     }
 
     // Verify current password

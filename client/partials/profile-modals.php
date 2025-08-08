@@ -11,8 +11,7 @@
         </div>
 
         <form id="editProfileForm" class="p-6 space-y-6">
-
-            <!-- Edit Profile Modal - Avatar Section -->
+            <!-- Avatar Section -->
             <div class="text-center">
                 <div class="relative inline-block">
                     <?php if (!empty($user['avatar']) && $user['avatar'] !== DEFAULT_USER_AVATAR): ?>
@@ -33,41 +32,43 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">First Name</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">First Name *</label>
                     <input type="text" id="editFirstName" name="first_name"
                         value="<?php echo htmlspecialchars($user['first_name']); ?>"
-                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all">
+                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                        required>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name *</label>
                     <input type="text" id="editLastName" name="last_name"
                         value="<?php echo htmlspecialchars($user['last_name']); ?>"
-                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all">
+                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                        required>
                 </div>
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
                 <input type="email" id="editEmail" name="email"
                     value="<?php echo htmlspecialchars($user['email']); ?>"
-                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all">
+                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                    required>
             </div>
 
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
                 <input type="tel" id="editPhone" name="phone"
-                    value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>"
-                    placeholder="+234 8XX XXX XXXX"
-                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all">
+                    value="<?php echo htmlspecialchars($user['phone']); ?>"
+                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
             </div>
 
             <div class="flex flex-col sm:flex-row gap-3 pt-4">
                 <button type="button" onclick="closeModal('editProfileModal')"
-                    class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                    class="w-full px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors">
                     Cancel
                 </button>
                 <button type="submit"
-                    class="w-full px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
+                    class="w-full px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors font-semibold">
                     Save Changes
                 </button>
             </div>
@@ -147,11 +148,11 @@
         </div>
 
         <div class="p-6">
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex justify-between items-center mb-6" id="addressHeader">
                 <p class="text-gray-600">Manage your saved delivery addresses</p>
-                <button onclick="openAddAddressForm()" class="px-4 py-2 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
-                    <i class="fas fa-plus mr-2"></i>
-                    Add New
+                <button onclick="openAddAddressForm()" id="addAddressBtn"
+                    class="px-4 py-2 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Add New
                 </button>
             </div>
 
@@ -163,40 +164,44 @@
                         </div>
                         <h4 class="font-semibold text-gray-900 mb-2">No Addresses Added</h4>
                         <p class="text-gray-500 text-sm mb-4">Add your first delivery address to get started</p>
-                        <button onclick="openAddAddressForm()" class="px-6 py-2 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
+                        <button onclick="openAddAddressForm()"
+                            class="px-6 py-2 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
                             Add Address
                         </button>
                     </div>
                 <?php else: ?>
                     <?php foreach ($addresses as $address): ?>
-                        <div class="address-item p-4 border border-gray-200 rounded-xl hover:border-orange-300 transition-colors">
-                            <div class="flex items-start justify-between">
+                        <div class="p-4 border border-gray-200 rounded-xl hover:border-orange-300 transition-colors">
+                            <div class="flex justify-between items-start">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2 mb-2">
-                                        <h4 class="font-semibold text-gray-900"><?php echo htmlspecialchars($address['address_name']); ?></h4>
+                                        <h5 class="font-semibold text-gray-900"><?php echo htmlspecialchars($address['address_name']); ?></h5>
                                         <?php if ($address['is_default']): ?>
-                                            <span class="px-2 py-1 bg-orange-100 text-orange-600 text-xs rounded-full font-semibold">Default</span>
+                                            <span class="px-2 py-1 bg-orange-100 text-orange-600 text-xs rounded-full">Default</span>
                                         <?php endif; ?>
                                     </div>
-                                    <p class="text-gray-600 text-sm mb-1"><?php echo htmlspecialchars($address['full_address']); ?></p>
-                                    <p class="text-gray-500 text-xs"><?php echo htmlspecialchars($address['city'] . ', ' . $address['state']); ?></p>
+                                    <p class="text-gray-600 text-sm"><?php echo htmlspecialchars($address['full_address']); ?></p>
+                                    <p class="text-gray-500 text-xs mt-1"><?php echo htmlspecialchars($address['city'] . ', ' . $address['state']); ?></p>
                                 </div>
-                                <div class="flex items-center gap-2 ml-4">
-                                    <button onclick="editAddress(<?php echo $address['id']; ?>)" class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center hover:bg-blue-200 transition-colors">
-                                        <i class="fas fa-edit text-blue-600 text-xs"></i>
+                                <div class="flex gap-2 ml-4">
+                                    <button onclick="editAddress(<?php echo $address['id']; ?>)"
+                                        class="p-2 text-gray-500 hover:text-orange-500 transition-colors">
+                                        <i class="fas fa-edit"></i>
                                     </button>
                                     <?php if (!$address['is_default']): ?>
-                                        <button onclick="deleteAddress(<?php echo $address['id']; ?>)" class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors">
-                                            <i class="fas fa-trash text-red-600 text-xs"></i>
+                                        <button onclick="deleteAddress(<?php echo $address['id']; ?>)"
+                                            class="p-2 text-gray-500 hover:text-red-500 transition-colors">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    <?php endif; ?>
+                                    <?php if (!$address['is_default']): ?>
+                                        <button onclick="setDefaultAddress(<?php echo $address['id']; ?>)"
+                                            class="px-3 py-1 text-xs border border-orange-300 text-orange-600 rounded-lg hover:bg-orange-50 transition-colors">
+                                            Set Default
                                         </button>
                                     <?php endif; ?>
                                 </div>
                             </div>
-                            <?php if (!$address['is_default']): ?>
-                                <button onclick="setDefaultAddress(<?php echo $address['id']; ?>)" class="mt-3 text-orange-500 text-sm font-semibold hover:text-orange-600 transition-colors">
-                                    Set as Default
-                                </button>
-                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -206,44 +211,42 @@
             <div id="addAddressForm" class="hidden mt-6 p-4 bg-gray-50 rounded-xl">
                 <h4 class="font-semibold text-gray-900 mb-4">Add New Address</h4>
                 <form class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Address Name</label>
-                        <input type="text" id="newAddressName" placeholder="e.g., Home, Office"
-                            class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Full Address</label>
-                        <textarea id="newFullAddress" rows="3" placeholder="Street address, landmarks, etc."
-                            class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none"></textarea>
-                    </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">City</label>
-                            <input type="text" id="newCity"
-                                class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Address Name *</label>
+                            <input type="text" id="newAddressName" placeholder="e.g., Home, Office"
+                                class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-400" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">State</label>
-                            <select id="newState" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">State *</label>
+                            <select id="newState" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-400" required>
                                 <option value="">Select State</option>
+                                <option value="Federal Capital Territory">Federal Capital Territory</option>
                                 <option value="Lagos">Lagos</option>
-                                <option value="Abuja">Abuja</option>
-                                <option value="Kano">Kano</option>
-                                <option value="Rivers">Rivers</option>
-                                <option value="Oyo">Oyo</option>
-                                <!-- Add more states as needed -->
                             </select>
                         </div>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                        <input type="text" id="newCity" placeholder="e.g., Abuja, Lagos"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-400" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Address *</label>
+                        <textarea id="newFullAddress" rows="3" placeholder="House number, street, area, landmark..."
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-400 resize-none" required></textarea>
+                    </div>
                     <div class="flex items-center">
-                        <input type="checkbox" id="setAsDefault" class="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-400">
-                        <label for="setAsDefault" class="ml-2 text-sm text-gray-700">Set as default address</label>
+                        <input type="checkbox" id="setAsDefault" class="mr-2">
+                        <label for="setAsDefault" class="text-sm text-gray-700">Set as default address</label>
                     </div>
                     <div class="flex gap-3 pt-2">
-                        <button type="button" onclick="cancelAddAddress()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-colors">
+                        <button type="button" onclick="cancelAddAddress()"
+                            class="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                             Cancel
                         </button>
-                        <button type="button" onclick="saveNewAddress()" class="flex-1 px-4 py-2 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
+                        <button type="button" onclick="saveNewAddress()"
+                            class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">
                             Save Address
                         </button>
                     </div>
@@ -276,45 +279,33 @@
 
             <form id="passwordChangeForm" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
-                    <div class="relative">
-                        <input type="password" id="currentPassword"
-                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent pr-12">
-                        <button type="button" onclick="togglePassword('currentPassword')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Current Password *</label>
+                    <input type="password" id="currentPassword"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                        required>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
-                    <div class="relative">
-                        <input type="password" id="newPassword"
-                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent pr-12">
-                        <button type="button" onclick="togglePassword('newPassword')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">New Password *</label>
+                    <input type="password" id="newPassword"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                        required minlength="6">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
-                    <div class="relative">
-                        <input type="password" id="confirmPassword"
-                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent pr-12">
-                        <button type="button" onclick="togglePassword('confirmPassword')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password *</label>
+                    <input type="password" id="confirmPassword"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                        required minlength="6">
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-3 pt-4">
                     <button type="button" onclick="closeModal('securityModal')"
-                        class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                        class="w-full px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors">
                         Cancel
                     </button>
                     <button type="submit"
-                        class="w-full px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors">
+                        class="w-full px-6 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors font-semibold">
                         Update Password
                     </button>
                 </div>
@@ -804,8 +795,8 @@
             return;
         }
 
-        if (newPassword.length < 8) {
-            showToasted('New password must be at least 8 characters long', 'error');
+        if (newPassword.length < 6) {
+            showToasted('New password must be at least 6 characters long', 'error');
             return;
         }
 
@@ -845,7 +836,6 @@
         }
     }
 
-    // Upload avatar
     // Upload avatar
     async function uploadAvatar() {
         const fileInput = document.getElementById('avatarInput');
@@ -986,7 +976,7 @@
         if (preview) {
             // Reset to current user avatar or default
             const currentAvatar = '<?php echo !empty($user["avatar"]) && $user["avatar"] !== DEFAULT_USER_AVATAR ? USER_AVATAR_URL . htmlspecialchars($user["avatar"]) : ""; ?>';
-            
+
             if (currentAvatar) {
                 preview.innerHTML = `<img src="${currentAvatar}" alt="Profile" class="w-full h-full object-cover">`;
             } else {
@@ -1027,7 +1017,7 @@
     // Initialize avatar functionality when DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
         setupAvatarDragDrop();
-        
+
         // Set up proper error handling for existing avatar images
         const avatarImages = document.querySelectorAll('img[src*="avatar"], img[src*="profile"]');
         avatarImages.forEach(img => {
@@ -1041,12 +1031,26 @@
     // Address functions
     function openAddAddressForm() {
         document.getElementById('addAddressForm').classList.remove('hidden');
+        document.getElementById('addAddressBtn').style.display = 'none';
+
+        // Reset form
+        document.getElementById('addAddressForm').querySelectorAll('input, textarea, select').forEach(el => {
+            if (el.type === 'checkbox') {
+                el.checked = false;
+            } else {
+                el.value = '';
+            }
+        });
+
+        // Update button for adding mode
+        const saveBtn = document.querySelector('#addAddressForm button[onclick*="save"]');
+        saveBtn.textContent = 'Save Address';
+        saveBtn.setAttribute('onclick', 'saveNewAddress()');
     }
 
     function cancelAddAddress() {
         document.getElementById('addAddressForm').classList.add('hidden');
-        // Clear form
-        document.getElementById('addAddressForm').querySelectorAll('input, textarea, select').forEach(el => el.value = '');
+        document.getElementById('addAddressBtn').style.display = 'inline-flex';
     }
 
     async function saveNewAddress() {

@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/initialize.php';
 require_once __DIR__ . '/util/util.php';
-require __DIR__ . '/../config/constants.php';
+require_once __DIR__ . '/../config/constants.php';
 
 
 // Check if user is logged in
@@ -26,70 +26,6 @@ try {
 } catch (Exception $e) {
     error_log("Error getting cart count in profile: " . $e->getMessage());
     $cartCount = 0;
-}
-
-// Get user preferences
-function getUserPreferences($pdo, $user_id)
-{
-    try {
-        $stmt = $pdo->prepare("
-            SELECT 
-                push_notifications,
-                email_updates,
-                language,
-                theme
-            FROM user_preferences 
-            WHERE user_id = ?
-        ");
-        $stmt->execute([$user_id]);
-        $preferences = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // Set defaults if no preferences found
-        if (!$preferences) {
-            return [
-                'push_notifications' => 1,
-                'email_updates' => 0,
-                'language' => 'en',
-                'theme' => 'light'
-            ];
-        }
-
-        return $preferences;
-    } catch (Exception $e) {
-        error_log("Error getting user preferences: " . $e->getMessage());
-        return [
-            'push_notifications' => 1,
-            'email_updates' => 0,
-            'language' => 'en',
-            'theme' => 'light'
-        ];
-    }
-}
-
-// Get user addresses
-function getUserAddresses($pdo, $user_id)
-{
-    try {
-        $stmt = $pdo->prepare("
-            SELECT 
-                id,
-                address_name,
-                full_address,
-                city,
-                state,
-                postal_code,
-                is_default,
-                created_at
-            FROM user_addresses 
-            WHERE user_id = ? 
-            ORDER BY is_default DESC, created_at DESC
-        ");
-        $stmt->execute([$user_id]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-        error_log("Error getting user addresses: " . $e->getMessage());
-        return [];
-    }
 }
 
 $preferences = getUserPreferences($pdo, $user_id);
@@ -579,7 +515,19 @@ require_once 'partials/headers.php';
 
         // Specific modal functions
         function openEditProfileModal() {
+            // Populate form fields with current user data
+            updateEditModalValues();
+
+            // Open the modal
             openModal('editProfileModal');
+
+            // Focus on first name field
+            setTimeout(() => {
+                const firstNameField = document.getElementById('firstName');
+                if (firstNameField) {
+                    firstNameField.focus();
+                }
+            }, 300);
         }
 
         function openAddressModal() {
@@ -623,6 +571,8 @@ require_once 'partials/headers.php';
         }
 
         // Update preferences
+        // Replace the updatePreference function (around line 570):
+
         async function updatePreference(key, value) {
             try {
                 showToasted('Updating preference...', 'info');
@@ -633,7 +583,7 @@ require_once 'partials/headers.php';
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        preference: key,
+                        key: key,
                         value: value
                     })
                 });
@@ -670,7 +620,16 @@ require_once 'partials/headers.php';
 
         // Profile update
         async function updateProfile(formData) {
+            const submitButton = document.querySelector('#editProfileForm button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+
             try {
+                // Show loading state
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating...';
+                submitButton.disabled = true;
+
+                showToasted('Updating profile...', 'info');
+
                 const response = await fetch('api/update-profile.php', {
                     method: 'POST',
                     headers: {
@@ -685,34 +644,112 @@ require_once 'partials/headers.php';
                     // Update local user data
                     Object.assign(currentUser, formData);
 
-                    // Update UI
+                    // Update UI immediately
                     updateProfileUI();
+
+                    // Update session data in localStorage for persistence
+                    localStorage.setItem('user_profile', JSON.stringify(currentUser));
 
                     showToasted('Profile updated successfully!', 'success');
                     closeModal('editProfileModal');
+
+                    // Optional: Refresh user data from server to ensure sync
+                    setTimeout(() => {
+                        refreshUserData();
+                    }, 1000);
+
                 } else {
                     throw new Error(result.message || 'Failed to update profile');
                 }
             } catch (error) {
                 console.error('Error updating profile:', error);
-                showToasted('Failed to update profile', 'error');
+                showToasted('Failed to update profile: ' + error.message, 'error');
+            } finally {
+                // Restore button state
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            }
+        }
+
+        async function refreshUserData() {
+            try {
+                const response = await fetch('api/get-user-profile.php');
+                const result = await response.json();
+
+                if (result.success) {
+                    // Update currentUser with fresh data from server
+                    currentUser = result.user;
+
+                    // Update UI with fresh data
+                    updateProfileUI();
+
+                    console.log('User data refreshed successfully');
+                }
+            } catch (error) {
+                console.error('Error refreshing user data:', error);
             }
         }
 
         function updateProfileUI() {
             // Update profile name in header
-            const nameElement = document.querySelector('h2');
+            const nameElement = document.querySelector('.profile-avatar + div h2');
             if (nameElement) {
                 nameElement.textContent = `${currentUser.first_name} ${currentUser.last_name}`;
             }
 
-            // Update email
-            const emailElements = document.querySelectorAll('.text-orange-100');
-            emailElements.forEach(el => {
-                if (el.textContent.includes('@')) {
-                    el.textContent = currentUser.email;
+            // Update email in profile header
+            const emailElement = document.querySelector('.profile-avatar + div p.text-orange-100');
+            if (emailElement && emailElement.textContent.includes('@')) {
+                emailElement.textContent = currentUser.email;
+            }
+
+            // Update phone number in profile header
+            const phoneElement = document.querySelector('.profile-avatar + div p.text-orange-100:has(i.fa-phone)');
+            if (phoneElement && currentUser.phone) {
+                phoneElement.innerHTML = `<i class="fas fa-phone mr-2"></i>${currentUser.phone}`;
+            } else if (phoneElement && !currentUser.phone) {
+                phoneElement.style.display = 'none';
+            } else if (!phoneElement && currentUser.phone) {
+                // Create phone element if it doesn't exist
+                const emailElement = document.querySelector('.profile-avatar + div p.text-orange-100');
+                if (emailElement) {
+                    const phoneHTML = `<p class="text-orange-100 text-sm mb-3">
+                <i class="fas fa-phone mr-2"></i>
+                ${currentUser.phone}
+            </p>`;
+                    emailElement.insertAdjacentHTML('afterend', phoneHTML);
                 }
-            });
+            }
+
+            // Update form values in edit modal
+            updateEditModalValues();
+
+            // Show success animation
+            showProfileUpdateAnimation();
+        }
+
+        // Update the edit modal form fields with current user data
+        function updateEditModalValues() {
+            const firstNameField = document.getElementById('firstName');
+            const lastNameField = document.getElementById('lastName');
+            const emailField = document.getElementById('email');
+            const phoneField = document.getElementById('phone');
+
+            if (firstNameField) firstNameField.value = currentUser.first_name || '';
+            if (lastNameField) lastNameField.value = currentUser.last_name || '';
+            if (emailField) emailField.value = currentUser.email || '';
+            if (phoneField) phoneField.value = currentUser.phone || '';
+        }
+
+        // Show a subtle animation when profile is updated
+        function showProfileUpdateAnimation() {
+            const profileHeader = document.querySelector('.bg-gradient-to-br');
+            if (profileHeader) {
+                profileHeader.classList.add('animate-pulse-once');
+                setTimeout(() => {
+                    profileHeader.classList.remove('animate-pulse-once');
+                }, 1000);
+            }
         }
 
         // Real-time updates

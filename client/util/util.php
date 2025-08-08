@@ -1,4 +1,3 @@
-<!-- USERS UTIL FUNCTIONS -->
 <?php
 /**
  * Get user profile by ID
@@ -322,27 +321,6 @@ function removeFromFavorites($pdo, $user_id, $product_id)
     }
 }
 
-/**
- * Check if product is in user favorites
- * @param PDO $pdo
- * @param int $user_id
- * @param int $product_id
- * @return bool
- */
-function isProductFavorite($pdo, $user_id, $product_id)
-{
-    try {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM user_favorites WHERE user_id = :user_id AND product_id = :product_id");
-        $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
-        $stmt->bindParam(':product_id', $product_id, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchColumn() > 0;
-    } catch (PDOException $e) {
-        error_log($e->getMessage());
-        return false;
-    }
-}
-
 
 function getStatusInfo($status)
 {
@@ -358,348 +336,6 @@ function getStatusInfo($status)
         default:
             return ['color' => 'text-gray-600', 'bg' => 'bg-gray-100', 'icon' => 'fas fa-question-circle'];
     }
-}
-
-function getUserActivityLog($user_id)
-{
-    // In real app, fetch from database
-    return [
-        [
-            'action' => 'Profile Updated',
-            'timestamp' => '2025-01-01 14:30:00',
-            'details' => 'Updated delivery address'
-        ],
-        [
-            'action' => 'Order Placed',
-            'timestamp' => '2025-01-01 12:15:00',
-            'details' => 'Order #FF20250101001'
-        ],
-        [
-            'action' => 'Password Changed',
-            'timestamp' => '2024-12-28 09:45:00',
-            'details' => 'Password updated successfully'
-        ]
-    ];
-}
-
-/**
- * Cart utility functions for Frozen Foods
- */
-
-/**
- * Add item to cart session
- * @param int $product_id
- * @param int $quantity
- * @return bool
- */
-
-/**
- * Remove item from cart
- * @param int $product_id
- * @return bool
- */
-
-function removeFromCart($product_id)
-{
-    if (isset($_SESSION['cart'][$product_id])) {
-        unset($_SESSION['cart'][$product_id]);
-        return true;
-    }
-
-    return false;
-}
-
-/**
- * Update cart item quantity
- * @param int $product_id
- * @param int $quantity
- * @return bool
- */
-function updateCartQuantity($product_id, $quantity)
-{
-    if (isset($_SESSION['cart'][$product_id])) {
-        if ($quantity <= 0) {
-            return removeFromCart($product_id);
-        }
-
-        $_SESSION['cart'][$product_id]['quantity'] = $quantity;
-        return true;
-    }
-
-    return false;
-}
-
-/**
- * Get cart contents
- * @return array
- */
-function getCart()
-{
-    return isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
-}
-
-/**
- * Get cart total
- * @return float
- */
-function getCartTotal()
-{
-    $cart = getCart();
-    $total = 0;
-
-    foreach ($cart as $item) {
-        $total += $item['product']['price'] * $item['quantity'];
-    }
-
-    return $total;
-}
-
-/**
- * Get cart item count
- * @return int
- */
-function getCartItemCount()
-{
-    $cart = getCart();
-    $count = 0;
-
-    foreach ($cart as $item) {
-        $count += $item['quantity'];
-    }
-
-    return $count;
-}
-
-/**
- * Clear cart
- * @return bool
- */
-function clearCart()
-{
-    unset($_SESSION['cart']);
-    return true;
-}
-
-
-
-/**
- * Calculate cart subtotal
- * @return float
- */
-function getCartSubtotal()
-{
-    return getCartTotal();
-}
-
-/**
- * Calculate delivery fee
- * @param float $subtotal
- * @return float
- */
-function calculateDeliveryFee($subtotal)
-{
-    // Free delivery for orders above ₦10,000
-    if ($subtotal >= 10000) {
-        return 0;
-    }
-
-    // Standard delivery fee
-    return 500;
-}
-
-/**
- * Calculate total with delivery
- * @return array
- */
-function getCartTotals()
-{
-    $subtotal = getCartSubtotal();
-    $delivery = calculateDeliveryFee($subtotal);
-    $total = $subtotal + $delivery;
-
-    return [
-        'subtotal' => $subtotal,
-        'delivery' => $delivery,
-        'total' => $total
-    ];
-}
-
-/**
- * Create a new order
- * @param array $order_data
- * @return array|false
- */
-function createOrder($order_data)
-{
-    // Validate required fields
-    $required_fields = ['customer_name', 'customer_phone', 'delivery_address', 'items'];
-
-    foreach ($required_fields as $field) {
-        if (!isset($order_data[$field]) || empty($order_data[$field])) {
-            return false;
-        }
-    }
-
-    // Generate order ID
-    $order_id = generateOrderId();
-
-    // Calculate totals
-    $totals = calculateOrderTotals($order_data['items']);
-
-    // Create order array
-    $order = [
-        'id' => $order_id,
-        'customer_name' => sanitizeInput($order_data['customer_name']),
-        'customer_phone' => sanitizeInput($order_data['customer_phone']),
-        'customer_email' => isset($order_data['customer_email']) ? sanitizeInput($order_data['customer_email']) : '',
-        'delivery_address' => sanitizeInput($order_data['delivery_address']),
-        'items' => $order_data['items'],
-        'subtotal' => $totals['subtotal'],
-        'delivery_fee' => $totals['delivery_fee'],
-        'total' => $totals['total'],
-        'status' => 'pending',
-        'created_at' => date('Y-m-d H:i:s'),
-        'updated_at' => date('Y-m-d H:i:s')
-    ];
-
-    // In a real application, save to database
-    // For now, we'll save to a JSON file or session
-    saveOrder($order);
-
-    return $order;
-}
-
-/**
- * Generate unique order ID
- * @return string
- */
-function generateOrderId()
-{
-    return 'FF' . date('Ymd') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
-}
-
-/**
- * Calculate order totals
- * @param array $items
- * @return array
- */
-function calculateOrderTotals($items)
-{
-    $subtotal = 0;
-
-    foreach ($items as $item) {
-        $subtotal += $item['price'] * $item['quantity'];
-    }
-
-    $delivery_fee = calculateDeliveryFee($subtotal);
-    $total = $subtotal + $delivery_fee;
-
-    return [
-        'subtotal' => $subtotal,
-        'delivery_fee' => $delivery_fee,
-        'total' => $total
-    ];
-}
-
-/**
- * Save order (in real app, this would save to database)
- * @param array $order
- * @return bool
- */
-function saveOrder($order)
-{
-    // For demonstration, we'll save to session
-    if (!isset($_SESSION['orders'])) {
-        $_SESSION['orders'] = [];
-    }
-
-    $_SESSION['orders'][$order['id']] = $order;
-
-    return true;
-}
-
-/**
- * Get order by ID
- * @param string $order_id
- * @return array|null
- */
-function getOrderById($order_id)
-{
-    if (isset($_SESSION['orders'][$order_id])) {
-        return $_SESSION['orders'][$order_id];
-    }
-
-    return null;
-}
-
-/**
- * Get all orders for current session
- * @return array
- */
-function getAllOrders()
-{
-    return isset($_SESSION['orders']) ? $_SESSION['orders'] : [];
-}
-
-/**
- * Update order status
- * @param string $order_id
- * @param string $status
- * @return bool
- */
-function updateOrderStatus($order_id, $status)
-{
-    $valid_statuses = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
-
-    if (!in_array($status, $valid_statuses)) {
-        return false;
-    }
-
-    if (isset($_SESSION['orders'][$order_id])) {
-        $_SESSION['orders'][$order_id]['status'] = $status;
-        $_SESSION['orders'][$order_id]['updated_at'] = date('Y-m-d H:i:s');
-        return true;
-    }
-
-    return false;
-}
-
-/**
- * Get order status display text
- * @param string $status
- * @return string
- */
-function getOrderStatusText($status)
-{
-    $status_texts = [
-        'pending' => 'Order Pending',
-        'confirmed' => 'Order Confirmed',
-        'preparing' => 'Preparing Order',
-        'out_for_delivery' => 'Out for Delivery',
-        'delivered' => 'Delivered',
-        'cancelled' => 'Cancelled'
-    ];
-
-    return isset($status_texts[$status]) ? $status_texts[$status] : 'Unknown Status';
-}
-
-/**
- * Get order status color class
- * @param string $status
- * @return string
- */
-function getOrderStatusColor($status)
-{
-    $status_colors = [
-        'pending' => 'text-yellow-600 bg-yellow-100',
-        'confirmed' => 'text-blue-600 bg-blue-100',
-        'preparing' => 'text-orange-600 bg-orange-100',
-        'out_for_delivery' => 'text-purple-600 bg-purple-100',
-        'delivered' => 'text-green-600 bg-green-100',
-        'cancelled' => 'text-red-600 bg-red-100'
-    ];
-
-    return isset($status_colors[$status]) ? $status_colors[$status] : 'text-gray-600 bg-gray-100';
 }
 
 /**
@@ -749,7 +385,6 @@ function formatPhoneNumber($phone)
 
     return $phone;
 }
-
 
 function getAllProducts($pdo)
 {
@@ -830,5 +465,377 @@ function getProductById($pdo, $id)
     } catch (PDOException $e) {
         error_log("Error fetching product by ID: " . $e->getMessage());
         return null;
+    }
+}
+
+/**
+ * Get user addresses
+ * @param PDO $pdo
+ * @param int $user_id
+ * @return array
+ */
+function getUserAddresses($pdo, $user_id)
+{
+    try {
+        $stmt = $pdo->prepare("
+            SELECT id, address_name, full_address, type, street_address, 
+                   city, state, postal_code, landmark, is_default, 
+                   created_at, updated_at
+            FROM user_addresses 
+            WHERE user_id = ? 
+            ORDER BY is_default DESC, created_at DESC   
+        ");
+        $stmt->execute([$user_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error fetching user addresses: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Add new user address
+ * @param PDO $pdo
+ * @param int $user_id
+ * @param array $address_data
+ * @return bool
+ */
+function addUserAddress($pdo, $user_id, $address_data)
+{
+    try {
+        // If this is set as default, unset other defaults first
+        if (isset($address_data['is_default']) && $address_data['is_default']) {
+            $stmt = $pdo->prepare("UPDATE user_addresses SET is_default = 0 WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+        }
+
+        $stmt = $pdo->prepare("
+            INSERT INTO user_addresses 
+            (user_id, address_name, full_address, type, street_address, city, state, postal_code, landmark, is_default) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        
+        return $stmt->execute([
+            $user_id,
+            $address_data['address_name'] ?? 'Home',
+            $address_data['full_address'],
+            $address_data['type'] ?? 'home',
+            $address_data['street_address'],
+            $address_data['city'],
+            $address_data['state'],
+            $address_data['postal_code'] ?? null,
+            $address_data['landmark'] ?? null,
+            $address_data['is_default'] ?? 0
+        ]);
+    } catch (PDOException $e) {
+        error_log("Error adding user address: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Update user address
+ * @param PDO $pdo
+ * @param int $user_id
+ * @param int $address_id
+ * @param array $address_data
+ * @return bool
+ */
+function updateUserAddress($pdo, $user_id, $address_id, $address_data)
+{
+    try {
+        // If this is set as default, unset other defaults first
+        if (isset($address_data['is_default']) && $address_data['is_default']) {
+            $stmt = $pdo->prepare("UPDATE user_addresses SET is_default = 0 WHERE user_id = ? AND id != ?");
+            $stmt->execute([$user_id, $address_id]);
+        }
+
+        $stmt = $pdo->prepare("
+            UPDATE user_addresses SET 
+                address_name = ?, full_address = ?, type = ?, street_address = ?, 
+                city = ?, state = ?, postal_code = ?, landmark = ?, is_default = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ? AND user_id = ?
+        ");
+        
+        return $stmt->execute([
+            $address_data['address_name'] ?? 'Home',
+            $address_data['full_address'],
+            $address_data['type'] ?? 'home',
+            $address_data['street_address'],
+            $address_data['city'],
+            $address_data['state'],
+            $address_data['postal_code'] ?? null,
+            $address_data['landmark'] ?? null,
+            $address_data['is_default'] ?? 0,
+            $address_id,
+            $user_id
+        ]);
+    } catch (PDOException $e) {
+        error_log("Error updating user address: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Delete user address
+ * @param PDO $pdo
+ * @param int $user_id
+ * @param int $address_id
+ * @return bool
+ */
+function deleteUserAddress($pdo, $user_id, $address_id)
+{
+    try {
+        $stmt = $pdo->prepare("DELETE FROM user_addresses WHERE id = ? AND user_id = ?");
+        return $stmt->execute([$address_id, $user_id]);
+    } catch (PDOException $e) {
+        error_log("Error deleting user address: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Set default address
+ * @param PDO $pdo
+ * @param int $user_id
+ * @param int $address_id
+ * @return bool
+ */
+function setDefaultAddress($pdo, $user_id, $address_id)
+{
+    try {
+        // First, unset all defaults for this user
+        $stmt1 = $pdo->prepare("UPDATE user_addresses SET is_default = 0 WHERE user_id = ?");
+        $stmt1->execute([$user_id]);
+
+        // Then set the new default
+        $stmt2 = $pdo->prepare("UPDATE user_addresses SET is_default = 1 WHERE id = ? AND user_id = ?");
+        return $stmt2->execute([$address_id, $user_id]);
+    } catch (PDOException $e) {
+        error_log("Error setting default address: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Get user preferences
+ * @param PDO $pdo
+ * @param int $user_id
+ * @return array
+ */
+function getUserPreferences($pdo, $user_id)
+{
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM user_preferences WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        $prefs = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Return defaults if no preferences found
+        return $prefs ?: [
+            'push_notifications' => 1,
+            'email_updates' => 0,
+            'language' => 'en',
+            'theme' => 'light'
+        ];
+    } catch (PDOException $e) {
+        error_log("Error fetching user preferences: " . $e->getMessage());
+        return [
+            'push_notifications' => 1,
+            'email_updates' => 0,
+            'language' => 'en',
+            'theme' => 'light'
+        ];
+    }
+}
+
+/**
+ * Update user preferences
+ * @param PDO $pdo
+ * @param int $user_id
+ * @param array $preferences
+ * @return bool
+ */
+function updateUserPreferences($pdo, $user_id, $preferences)
+{
+    try {
+        // Check if preferences exist
+        $stmt = $pdo->prepare("SELECT id FROM user_preferences WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        $exists = $stmt->fetch();
+
+        if ($exists) {
+            // Update existing preferences
+            $stmt = $pdo->prepare("
+                UPDATE user_preferences SET 
+                    push_notifications = ?, email_updates = ?, language = ?, theme = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = ?
+            ");
+            return $stmt->execute([
+                $preferences['push_notifications'] ?? 1,
+                $preferences['email_updates'] ?? 0,
+                $preferences['language'] ?? 'en',
+                $preferences['theme'] ?? 'light',
+                $user_id
+            ]);
+        } else {
+            // Insert new preferences
+            $stmt = $pdo->prepare("
+                INSERT INTO user_preferences 
+                (user_id, push_notifications, email_updates, language, theme) 
+                VALUES (?, ?, ?, ?, ?)
+            ");
+            return $stmt->execute([
+                $user_id,
+                $preferences['push_notifications'] ?? 1,
+                $preferences['email_updates'] ?? 0,
+                $preferences['language'] ?? 'en',
+                $preferences['theme'] ?? 'light'
+            ]);
+        }
+    } catch (PDOException $e) {
+        error_log("Error updating user preferences: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Get Nigerian states
+ * @param PDO $pdo
+ * @return array
+ */
+function getNigerianStates($pdo)
+{
+    try {
+        $stmt = $pdo->prepare("SELECT id, state_name, state_code FROM nigerian_states ORDER BY state_name");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error fetching states: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Get cities by state
+ * @param PDO $pdo
+ * @param int $state_id
+ * @return array
+ */
+function getCitiesByState($pdo, $state_id)
+{
+    try {
+        $stmt = $pdo->prepare("SELECT id, city_name FROM nigerian_cities WHERE state_id = ? ORDER BY city_name");
+        $stmt->execute([$state_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error fetching cities: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Get areas by city
+ * @param PDO $pdo
+ * @param int $city_id
+ * @return array
+ */
+function getAreasByCity($pdo, $city_id)
+{
+    try {
+        $stmt = $pdo->prepare("SELECT id, area_name FROM nigerian_areas WHERE city_id = ? ORDER BY area_name");
+        $stmt->execute([$city_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error fetching areas: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Upload user avatar
+ * @param int $user_id
+ * @param array $file
+ * @return array
+ */
+function uploadUserAvatar($pdo, $user_id, $file)
+{
+    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    $max_size = 5 * 1024 * 1024; // 5MB
+    
+    // Validate file
+    if (!in_array($file['type'], $allowed_types)) {
+        return ['success' => false, 'message' => 'Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'];
+    }
+    
+    if ($file['size'] > $max_size) {
+        return ['success' => false, 'message' => 'File size too large. Maximum 5MB allowed.'];
+    }
+    
+    // Create upload directory if it doesn't exist
+    $upload_dir = USER_AVATAR_DIR;
+    if (!is_dir($upload_dir)) {
+        mkdir($upload_dir, 0755, true);
+    }
+    
+    // Generate unique filename
+    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $filename = 'user_' . $user_id . '_' . time() . '.' . $extension;
+    $filepath = $upload_dir . $filename;
+    
+    // Upload file
+    if (move_uploaded_file($file['tmp_name'], $filepath)) {
+        try {
+            // Update user avatar in database
+            $stmt = $pdo->prepare("UPDATE users SET avatar = ? WHERE id = ?");
+            $stmt->execute([$filename, $user_id]);
+            
+            return [
+                'success' => true, 
+                'message' => 'Avatar uploaded successfully',
+                'avatar_filename' => $filename
+            ];
+        } catch (PDOException $e) {
+            // Delete uploaded file if database update fails
+            unlink($filepath);
+            error_log("Error updating user avatar: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to update avatar in database'];
+        }
+    }
+    
+    return ['success' => false, 'message' => 'Failed to upload file'];
+}
+
+/**
+ * Remove user avatar
+ * @param PDO $pdo
+ * @param int $user_id
+ * @return array
+ */
+function removeUserAvatar($pdo, $user_id)
+{
+    try {
+        // Get current avatar
+        $stmt = $pdo->prepare("SELECT avatar FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($user && $user['avatar'] && $user['avatar'] !== DEFAULT_USER_AVATAR) {
+            // Delete file if it exists
+            $filepath = USER_AVATAR_DIR . $user['avatar'];
+            if (file_exists($filepath)) {
+                unlink($filepath);
+            }
+        }
+        
+        // Reset avatar to default in database
+        $stmt = $pdo->prepare("UPDATE users SET avatar = ? WHERE id = ?");
+        $stmt->execute([DEFAULT_USER_AVATAR, $user_id]);
+        
+        return ['success' => true, 'message' => 'Avatar removed successfully'];
+    } catch (PDOException $e) {
+        error_log("Error removing user avatar: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Failed to remove avatar'];
     }
 }
