@@ -1,6 +1,7 @@
 <?php
 require_once 'util/util.php';
 require_once 'initialize.php';
+require_once '../config/constants.php';
 
 // Get product ID from URL
 $product_id = isset($_GET['id']) ? (int)$_GET['id'] : 1;
@@ -47,7 +48,7 @@ require_once 'partials/headers.php';
 
             <div class="mb-6">
               <p class="text-gray-300 text-sm">Price</p>
-              <p class="text-lg text-accent font-bold text-custom-dark">₦<?php echo number_format($product['price'], 2); ?></p>
+              <p class="text-lg text-accent font-bold text-custom-dark"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($product['price'], 2); ?></p>
             </div>
 
             <div>
@@ -68,8 +69,14 @@ require_once 'partials/headers.php';
         <!-- Product Image -->
         <div class="flex-1 relative">
           <div class="absolute right-0 top-1/2 -translate-y-1/2 z-20">
+            <?php
+            // Generate product image URL with fallback
+            $productImage = !empty($product['image']) && $product['image'] !== DEFAULT_PRODUCT_IMAGE
+              ? PRODUCT_IMAGE_URL . htmlspecialchars($product['image'])
+              : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+            ?>
             <img
-              src="../assets/uploads/<?php echo htmlspecialchars($product['image']); ?>"
+              src="<?php echo $productImage; ?>"
               alt="<?php echo htmlspecialchars($product['name']); ?>"
               class="w-40 h-40 sm:w-56 sm:h-56 md:w-64 md:h-64 object-cover rounded-2xl product-image"
               style="max-width: none;">

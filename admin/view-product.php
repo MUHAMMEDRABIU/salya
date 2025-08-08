@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/initialize.php';
 require __DIR__ . '/util/utilities.php';
-require __DIR__ . '/partials/headers.php';
+require __DIR__ . '/../config/constants.php';
 
 // Get product ID from URL parameter
 $productId = isset($_GET['product_id']) ? (int)$_GET['product_id'] : 0;
@@ -22,6 +22,7 @@ if (!$product) {
 $categories = getAllCategories($pdo);
 $productImages = getProductImages($pdo, $productId);
 $recentOrders = getRecentOrdersForProduct($pdo, $productId, 5);
+require __DIR__ . '/partials/headers.php';
 ?>
 
 <body class="bg-gray-50 font-sans">
@@ -104,19 +105,37 @@ $recentOrders = getRecentOrdersForProduct($pdo, $productId, 5);
                     <!-- Product Images -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <div class="aspect-w-16 aspect-h-10 bg-gray-100">
+                            <?php
+                            // Generate main product image URL with fallback
+                            $mainProductImage = !empty($product['image']) && $product['image'] !== DEFAULT_PRODUCT_IMAGE
+                                ? PRODUCT_IMAGE_URL . htmlspecialchars($product['image'])
+                                : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                            ?>
                             <img id="mainProductImage"
-                                src="../assets/uploads/<?php echo htmlspecialchars($product['image']); ?>"
+                                src="<?php echo $mainProductImage; ?>"
                                 alt="<?php echo htmlspecialchars($product['name']); ?>"
                                 class="w-full h-96 object-cover transition-all duration-300 hover:scale-105">
                         </div>
                         <?php if (!empty($productImages)): ?>
                             <div class="p-4 border-t border-gray-200">
                                 <div class="flex space-x-3 overflow-x-auto">
-                                    <img src="../assets/uploads/<?php echo htmlspecialchars($product['image']); ?>"
+                                    <?php
+                                    // Generate main thumbnail image URL with fallback
+                                    $mainThumbnailImage = !empty($product['image']) && $product['image'] !== DEFAULT_PRODUCT_IMAGE
+                                        ? PRODUCT_IMAGE_URL . htmlspecialchars($product['image'])
+                                        : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                                    ?>
+                                    <img src="<?php echo $mainThumbnailImage; ?>"
                                         alt="Main"
                                         class="w-16 h-16 rounded-lg object-cover cursor-pointer border-2 border-orange-500 opacity-100 hover:opacity-80 transition-opacity thumbnail-image">
                                     <?php foreach ($productImages as $image): ?>
-                                        <img src="../assets/uploads/<?php echo htmlspecialchars($image['image_path']); ?>"
+                                        <?php
+                                        // Generate additional product image URL with fallback
+                                        $additionalImage = !empty($image['image_path']) && $image['image_path'] !== DEFAULT_PRODUCT_IMAGE
+                                            ? PRODUCT_IMAGE_URL . htmlspecialchars($image['image_path'])
+                                            : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                                        ?>
+                                        <img src="<?php echo $additionalImage; ?>"
                                             alt="Product view"
                                             class="w-16 h-16 rounded-lg object-cover cursor-pointer border-2 border-transparent hover:border-orange-300 opacity-70 hover:opacity-100 transition-all thumbnail-image">
                                     <?php endforeach; ?>
@@ -146,7 +165,7 @@ $recentOrders = getRecentOrdersForProduct($pdo, $productId, 5);
                                     </div>
                                     <div class="flex items-center justify-between py-3 border-b border-gray-100">
                                         <span class="text-sm font-medium text-gray-600">Price</span>
-                                        <span class="text-lg font-bold text-gray-900">₦<?php echo number_format($product['price'], 2); ?></span>
+                                        <span class="text-lg font-bold text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($product['price'], 2); ?></span>
                                     </div>
                                     <div class="flex items-center justify-between py-3 border-b border-gray-100">
                                         <span class="text-sm font-medium text-gray-600">Stock Quantity</span>
@@ -193,7 +212,7 @@ $recentOrders = getRecentOrdersForProduct($pdo, $productId, 5);
                                                 </div>
                                             </div>
                                             <div class="text-right">
-                                                <p class="font-semibold text-gray-900">₦<?php echo number_format($order['total_amount'], 2); ?></p>
+                                                <p class="font-semibold text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($order['total_amount'], 2); ?></p>
                                                 <p class="text-sm text-gray-600"><?php echo date('M d, Y', strtotime($order['created_at'])); ?></p>
                                             </div>
                                         </div>
@@ -214,7 +233,7 @@ $recentOrders = getRecentOrdersForProduct($pdo, $productId, 5);
                         <div class="p-6 space-y-4">
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-gray-600">Total Sales</span>
-                                <span class="text-lg font-bold text-green-600">₦<?php echo number_format($product['total_sales'] ?? 0, 2); ?></span>
+                                <span class="text-lg font-bold text-green-600"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($product['total_sales'] ?? 0, 2); ?></span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-gray-600">Units Sold</span>
@@ -343,9 +362,9 @@ $recentOrders = getRecentOrdersForProduct($pdo, $productId, 5);
                             </select>
                         </div>
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">Price (₦) *</label>
+                            <label class="block text-sm font-semibold text-gray-700">Price (<?php echo CURRENCY_SYMBOL; ?>) *</label>
                             <div class="relative z-10">
-                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₦</span>
+                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"><?php echo CURRENCY_SYMBOL; ?></span>
                                 <input type="number" name="price" value="<?php echo $product['price']; ?>" step="0.01" min="0" required
                                     class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
                             </div>
@@ -380,14 +399,20 @@ $recentOrders = getRecentOrdersForProduct($pdo, $productId, 5);
                     <div class="space-y-4">
                         <div class="flex items-center space-x-6">
                             <div class="flex-shrink-0">
-                                <img name="image" id="currentImage" src="../assets/uploads/<?php echo htmlspecialchars($product['image']); ?>"
+                                <?php
+                                // Generate current image URL for modal with fallback
+                                $currentModalImage = !empty($product['image']) && $product['image'] !== DEFAULT_PRODUCT_IMAGE
+                                    ? PRODUCT_IMAGE_URL . htmlspecialchars($product['image'])
+                                    : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                                ?>
+                                <img name="image" id="currentImage" src="<?php echo $currentModalImage; ?>"
                                     alt="Current product image" class="w-24 h-24 rounded-lg object-cover border border-gray-300">
                             </div>
                             <div class="flex-1">
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Upload New Image</label>
                                 <input type="file" name="image" accept="image/*"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100">
-                                <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</p>
+                                <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to <?php echo number_format(MAX_PRODUCT_IMAGE_SIZE / (1024 * 1024), 0); ?>MB</p>
                             </div>
                         </div>
                     </div>

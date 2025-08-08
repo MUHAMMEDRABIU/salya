@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/initialize.php';
 require __DIR__ . '/util/utilities.php';
-require __DIR__ . '/partials/headers.php';
+require __DIR__ . '/../config/constants.php';
 
 $orderNumber = $_GET['order_number'] ?? '';
 $order = getOrderByNumber($pdo, $orderNumber);
@@ -35,6 +35,7 @@ if (!$product) {
         'image' => null
     ];
 }
+require __DIR__ . '/partials/headers.php';
 ?>
 
 <body class="bg-gray-50 font-sans">
@@ -122,8 +123,13 @@ if (!$product) {
                             <div class="space-y-4">
                                 <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                                     <?php if ($product['image']): ?>
-                                        <img src="../assets/uploads/<?php echo htmlspecialchars($product['image']); ?>"
-                                            alt="Product" class="w-16 h-16 rounded-lg object-cover">
+                                        <?php
+                                        // Generate product image URL with fallback
+                                        $productImage = !empty($product['image']) && $product['image'] !== DEFAULT_PRODUCT_IMAGE
+                                            ? PRODUCT_IMAGE_URL . htmlspecialchars($product['image'])
+                                            : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                                        ?>
+                                        <img src="<?php echo $productImage; ?>" alt="Product" class="w-16 h-16 rounded-lg object-cover">
                                     <?php else: ?>
                                         <div class="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center">
                                             <i data-lucide="image" class="w-8 h-8 text-gray-400"></i>
@@ -139,14 +145,14 @@ if (!$product) {
                                             </span>
                                             <span class="text-sm text-gray-500 flex items-center">
                                                 <i data-lucide="tag" class="w-3 h-3 mr-1"></i>
-                                                Unit Price: ₦<?php echo number_format(floatval($product['price'] ?? 0), 2); ?>
+                                                Unit Price: <?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($product['price'] ?? 0), 2); ?>
                                             </span>
                                         </div>
                                     </div>
                                     <div class="text-right">
                                         <p class="font-semibold text-gray-900 flex items-center justify-end">
                                             <i data-lucide="dollar-sign" class="w-4 h-4 mr-1 text-green-600"></i>
-                                            ₦<?php echo number_format(floatval($order['total_amount'] ?? 0), 2); ?>
+                                            <?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['total_amount'] ?? 0), 2); ?>
                                         </p>
                                     </div>
                                 </div>
@@ -160,28 +166,28 @@ if (!$product) {
                                             <i data-lucide="calculator" class="w-4 h-4 mr-2"></i>
                                             Subtotal
                                         </span>
-                                        <span class="text-gray-900">₦<?php echo number_format(floatval($order['total_amount'] ?? 0) - floatval($order['shipping_fee'] ?? 0), 2); ?></span>
+                                        <span class="text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['total_amount'] ?? 0) - floatval($order['shipping_fee'] ?? 0), 2); ?></span>
                                     </div>
                                     <div class="flex justify-between text-sm">
                                         <span class="text-gray-600 flex items-center">
                                             <i data-lucide="truck" class="w-4 h-4 mr-2"></i>
                                             Shipping
                                         </span>
-                                        <span class="text-gray-900">₦<?php echo number_format(floatval($order['shipping_fee'] ?? 0), 2); ?></span>
+                                        <span class="text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['shipping_fee'] ?? 0), 2); ?></span>
                                     </div>
                                     <div class="flex justify-between text-sm">
                                         <span class="text-gray-600 flex items-center">
                                             <i data-lucide="percent" class="w-4 h-4 mr-2"></i>
                                             Tax
                                         </span>
-                                        <span class="text-gray-900">₦<?php echo number_format(floatval($order['tax_amount'] ?? 0), 2); ?></span>
+                                        <span class="text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['tax_amount'] ?? 0), 2); ?></span>
                                     </div>
                                     <div class="flex justify-between text-lg font-semibold pt-3 border-t border-gray-200">
                                         <span class="text-gray-900 flex items-center">
                                             <i data-lucide="dollar-sign" class="w-5 h-5 mr-2 text-green-600"></i>
                                             Total
                                         </span>
-                                        <span class="text-gray-900">₦<?php echo number_format(floatval($order['total_amount'] ?? 0), 2); ?></span>
+                                        <span class="text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['total_amount'] ?? 0), 2); ?></span>
                                     </div>
                                 </div>
                             </div>
@@ -318,8 +324,14 @@ if (!$product) {
                         <div class="p-6">
                             <div class="flex items-center space-x-4 mb-4">
                                 <?php if ($customer['avatar']): ?>
-                                    <img src="../assets/img/avatars/<?php echo htmlspecialchars($customer['avatar']); ?>"
-                                        alt="Customer" class="w-12 h-12 rounded-full object-cover">
+                                    <?php
+                                    // Generate user avatar URL with fallback
+                                    $userAvatarFile = !empty($customer['avatar']) && $customer['avatar'] !== DEFAULT_USER_AVATAR
+                                        ? $customer['avatar']
+                                        : DEFAULT_USER_AVATAR;
+                                    $userAvatarUrl = USER_AVATAR_URL . htmlspecialchars($userAvatarFile);
+                                    ?>
+                                    <img src="<?php echo $userAvatarUrl; ?>" alt="Customer" class="w-12 h-12 rounded-full object-cover">
                                 <?php else: ?>
                                     <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
                                         <i data-lucide="user" class="w-6 h-6 text-gray-400"></i>

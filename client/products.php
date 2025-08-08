@@ -1,6 +1,7 @@
 <?php
 require_once 'util/util.php';
 require_once 'initialize.php';
+require_once '../config/constants.php';
 
 // Get cart count for logged in users
 $cartCount = 0;
@@ -61,6 +62,7 @@ $paginatedProducts = array_slice($filteredProducts, $offset, $itemsPerPage);
 
 require_once 'partials/headers.php';
 ?>
+
 <body class="bg-gray-50 font-dm pb-24 overflow-x-hidden">
     <!-- Background Blobs -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
@@ -219,8 +221,14 @@ require_once 'partials/headers.php';
                             onclick="viewProduct(<?php echo $product['id']; ?>)"
                             style="animation-delay: <?php echo ($index * 0.1); ?>s;">
                             <div class="relative">
-                                <img src="../assets/uploads/<?php echo $product['image']; ?>"
-                                    alt="<?php echo $product['name']; ?>"
+                                <?php
+                                // Generate product image URL with fallback
+                                $productImage = !empty($product['image']) && $product['image'] !== DEFAULT_PRODUCT_IMAGE
+                                    ? PRODUCT_IMAGE_URL . htmlspecialchars($product['image'])
+                                    : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                                ?>
+                                <img src="<?php echo $productImage; ?>"
+                                    alt="<?php echo htmlspecialchars($product['name']); ?>"
                                     class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
 
@@ -259,7 +267,7 @@ require_once 'partials/headers.php';
                             <div class="p-5">
                                 <div class="mb-3">
                                     <span class="text-xs font-medium text-orange-500 uppercase tracking-wide">
-                                        <?php echo $product['category']; ?>
+                                        <?php echo htmlspecialchars($product['category']); ?>
                                     </span>
                                 </div>
                                 <h3 class="font-bold text-gray-900 text-lg mb-2 line-clamp-2 leading-tight">
@@ -272,7 +280,7 @@ require_once 'partials/headers.php';
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <span class="text-2xl font-bold text-orange-500">
-                                            ₦<?php echo number_format($product['price']); ?>
+                                            <?php echo CURRENCY_SYMBOL; ?><?php echo number_format($product['price']); ?>
                                         </span>
                                     </div>
 

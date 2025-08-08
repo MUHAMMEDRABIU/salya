@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/initialize.php';
 require_once __DIR__ . '/util/util.php';
+require_once __DIR__ . '/../config/constants.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -118,15 +119,16 @@ require_once 'partials/headers.php';
             <div class="relative z-10">
                 <div class="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
                     <div class="profile-avatar relative">
-                        <?php if (!empty($user['avatar']) && file_exists("../assets/uploads/avatars/" . $user['avatar'])): ?>
-                            <img src="../assets/uploads/avatars/<?php echo htmlspecialchars($user['avatar']); ?>"
-                                alt="Profile"
-                                class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-white/20">
-                        <?php else: ?>
-                            <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/20 flex items-center justify-center border-4 border-white/20">
-                                <i class="fas fa-user text-white text-2xl md:text-3xl"></i>
-                            </div>
-                        <?php endif; ?>
+                        <?php
+                        // Generate user avatar URL with fallback
+                        $userAvatarFile = !empty($user['avatar']) && $user['avatar'] !== DEFAULT_USER_AVATAR
+                            ? $user['avatar']
+                            : DEFAULT_USER_AVATAR;
+                        $userAvatarUrl = USER_AVATAR_URL . htmlspecialchars($userAvatarFile);
+                        ?>
+                        <img src="<?php echo $userAvatarUrl; ?>"
+                            alt="Profile"
+                            class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-white/20">
 
                         <button onclick="openAvatarUpload()" class="absolute bottom-0 right-0 w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors">
                             <i class="fas fa-camera text-gray-600 text-xs md:text-sm"></i>
@@ -176,7 +178,7 @@ require_once 'partials/headers.php';
                     <i class="fas fa-naira-sign text-green-600 text-lg md:text-xl"></i>
                 </div>
                 <p class="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-                    ₦<?php echo number_format(($userStats['total_amount'] ?? 0) / 1000, 1); ?>k
+                    <?php echo CURRENCY_SYMBOL; ?><?php echo number_format(($userStats['total_amount'] ?? 0) / 1000, 1); ?>k
                 </p>
                 <p class="text-gray-500 text-xs md:text-sm">Total Spent</p>
             </div>
