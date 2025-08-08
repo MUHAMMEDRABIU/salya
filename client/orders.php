@@ -284,7 +284,7 @@ require_once 'partials/headers.php';
                     </div>
                 </div>
             </div>
-            
+
             <!-- Results Info -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-slide-up" style="animation-delay: 0.4s;">
                 <div class="flex-1">
@@ -591,23 +591,42 @@ require_once 'partials/headers.php';
             if (refreshBtn) {
                 refreshBtn.addEventListener('click', function() {
                     const icon = this.querySelector('i');
-                    icon.style.animation = 'spin 1s linear infinite';
+                    const text = this.querySelector('span');
 
-                    // Simulate refresh
+                    // Add refreshing state
+                    this.classList.add('refreshing');
+                    this.disabled = true;
+                    icon.classList.add('animate-spin');
+
+                    if (text) {
+                        text.textContent = 'Refreshing...';
+                    }
+
+                    // Simulate refresh with proper timing
                     setTimeout(() => {
-                        icon.style.animation = '';
-                        showToasted('Orders refreshed successfully!', 'success');
-
-                        // Add success feedback
-                        this.classList.add('bg-green-500', 'text-white');
-                        icon.classList.remove('fa-sync-alt');
+                        // Success state
+                        this.classList.remove('refreshing');
+                        this.classList.add('success');
+                        icon.classList.remove('fa-sync-alt', 'animate-spin');
                         icon.classList.add('fa-check');
 
+                        if (text) {
+                            text.textContent = 'Refreshed!';
+                        }
+
+                        showToasted('Orders refreshed successfully!', 'success');
+
+                        // Reset to normal state
                         setTimeout(() => {
-                            this.classList.remove('bg-green-500', 'text-white');
+                            this.classList.remove('success');
+                            this.disabled = false;
                             icon.classList.remove('fa-check');
                             icon.classList.add('fa-sync-alt');
-                        }, 1000);
+
+                            if (text) {
+                                text.textContent = 'Refresh';
+                            }
+                        }, 1500);
                     }, 2000);
                 });
             }
