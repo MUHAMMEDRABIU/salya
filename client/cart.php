@@ -1,12 +1,7 @@
 <?php
-require_once 'util/util.php';
 require_once 'initialize.php';
-
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header('Location: index.php');
-    exit();
-}
+require_once '../config/constants.php';
+require_once 'util/util.php';
 
 $user_id = $_SESSION['user_id'];
 
@@ -111,17 +106,19 @@ require_once 'partials/headers.php';
                                                 <!-- Image and Name Row -->
                                                 <div class="flex items-center space-x-3">
                                                     <div class="relative overflow-hidden rounded-lg flex-shrink-0">
-                                                        <img src="../assets/uploads/<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="w-14 h-14 xs:w-16 xs:h-16 object-cover transition-transform duration-300 hover:scale-110">
+                                                        <?php
+                                                        // Generate product image URL with fallback
+                                                        $productImage = !empty($item['image']) && $item['image'] !== DEFAULT_PRODUCT_IMAGE
+                                                            ? PRODUCT_IMAGE_URL . htmlspecialchars($item['image'])
+                                                            : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                                                        ?>
+                                                        <img src="<?php echo $productImage; ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="w-14 h-14 xs:w-16 xs:h-16 object-cover transition-transform duration-300 hover:scale-110">
                                                         <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                                                     </div>
                                                     <div class="flex-1 min-w-0 pr-2">
                                                         <h3 class="font-semibold text-custom-dark text-sm leading-tight truncate"><?php echo htmlspecialchars($item['name']); ?></h3>
-                                                        <p class="text-accent font-bold text-base mt-1">₦<?php echo number_format($item['price']); ?></p>
+                                                        <p class="text-accent font-bold text-base mt-1"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($item['price']); ?></p>
                                                     </div>
-                                                    <!-- Remove button for mobile -->
-                                                    <button class="remove-item-btn text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all duration-300 flex-shrink-0" data-item-id="<?php echo $item['product_id']; ?>">
-                                                        <i class="fas fa-times text-sm"></i>
-                                                    </button>
                                                 </div>
 
                                                 <!-- ✅ FIXED: Quantity Controls Row with proper updating -->
@@ -141,12 +138,18 @@ require_once 'partials/headers.php';
                                             <!-- Desktop Layout (>= sm) -->
                                             <div class="hidden sm:flex items-center space-x-4">
                                                 <div class="relative overflow-hidden rounded-xl flex-shrink-0">
-                                                    <img src="../assets/uploads/<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="w-20 h-20 object-cover transition-transform duration-300 hover:scale-110">
+                                                    <?php
+                                                    // Generate product image URL with fallback for desktop
+                                                    $productImageDesktop = !empty($item['image']) && $item['image'] !== DEFAULT_PRODUCT_IMAGE
+                                                        ? PRODUCT_IMAGE_URL . htmlspecialchars($item['image'])
+                                                        : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                                                    ?>
+                                                    <img src="<?php echo $productImageDesktop; ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="w-20 h-20 object-cover transition-transform duration-300 hover:scale-110">
                                                     <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                                                 </div>
                                                 <div class="flex-1">
                                                     <h3 class="font-semibold text-custom-dark text-lg"><?php echo htmlspecialchars($item['name']); ?></h3>
-                                                    <p class="text-accent font-bold text-lg">₦<?php echo number_format($item['price']); ?></p>
+                                                    <p class="text-accent font-bold text-lg"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($item['price']); ?></p>
                                                 </div>
                                                 <div class="flex items-center space-x-3">
                                                     <button class="quantity-btn decrease-btn w-10 h-10 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center hover:from-accent hover:to-orange-600 hover:text-white transition-all duration-300 shadow-soft" data-action="decrease">
@@ -198,27 +201,27 @@ require_once 'partials/headers.php';
                             <div class="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
                                 <div class="flex justify-between items-center p-3 bg-white/50 rounded-lg">
                                     <span class="text-gray-700 font-medium text-sm sm:text-base">Subtotal</span>
-                                    <span id="subtotal" class="font-bold text-custom-dark text-base sm:text-lg">₦<?php echo number_format($subtotal); ?></span>
+                                    <span id="subtotal" class="font-bold text-custom-dark text-base sm:text-lg"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($subtotal); ?></span>
                                 </div>
                                 <div class="flex justify-between items-center p-3 bg-white/50 rounded-lg">
                                     <span class="text-gray-700 font-medium text-sm sm:text-base">Delivery Fee</span>
-                                    <span id="delivery-fee" class="font-bold text-custom-dark text-base sm:text-lg">₦<?php echo number_format($delivery_fee); ?></span>
+                                    <span id="delivery-fee" class="font-bold text-custom-dark text-base sm:text-lg"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($delivery_fee); ?></span>
                                 </div>
                                 <?php if ($subtotal >= 10000): ?>
                                     <div class="text-green-600 text-xs sm:text-sm font-medium p-3 bg-green-50 rounded-lg flex items-center">
                                         <i class="fas fa-check-circle mr-2 flex-shrink-0"></i>
-                                        <span>Free delivery on orders ₦10,000+</span>
+                                        <span>Free delivery on orders <?php echo CURRENCY_SYMBOL; ?>10,000+</span>
                                     </div>
                                 <?php else: ?>
                                     <div class="text-amber-600 text-xs sm:text-sm font-medium p-3 bg-amber-50 rounded-lg flex items-center">
                                         <i class="fas fa-info-circle mr-2 flex-shrink-0"></i>
-                                        <span>Add ₦<?php echo number_format(10000 - $subtotal); ?> more for free delivery</span>
+                                        <span>Add <?php echo CURRENCY_SYMBOL; ?><?php echo number_format(10000 - $subtotal); ?> more for free delivery</span>
                                     </div>
                                 <?php endif; ?>
                                 <hr class="border-white/30">
                                 <div class="flex justify-between text-lg sm:text-xl font-bold p-3 sm:p-4 bg-white/70 rounded-xl shadow-soft">
                                     <span class="text-custom-dark">Total</span>
-                                    <span id="total" class="text-accent">₦<?php echo number_format($total); ?></span>
+                                    <span id="total" class="text-accent"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($total); ?></span>
                                 </div>
                             </div>
 
@@ -673,7 +676,7 @@ require_once 'partials/headers.php';
             // Update subtotal
             const subtotalEl = document.getElementById('subtotal');
             if (subtotalEl && apiResponse.subtotal !== undefined) {
-                subtotalEl.textContent = `₦${apiResponse.subtotal.toLocaleString()}`;
+                subtotalEl.textContent = `<?php echo CURRENCY_SYMBOL; ?>${apiResponse.subtotal.toLocaleString()}`;
                 subtotalEl.style.transform = 'scale(1.1)';
                 setTimeout(() => subtotalEl.style.transform = 'scale(1)', 200);
             }
@@ -681,7 +684,7 @@ require_once 'partials/headers.php';
             // Update delivery fee
             const deliveryEl = document.getElementById('delivery-fee');
             if (deliveryEl && apiResponse.delivery_fee !== undefined) {
-                deliveryEl.textContent = `₦${apiResponse.delivery_fee.toLocaleString()}`;
+                deliveryEl.textContent = `<?php echo CURRENCY_SYMBOL; ?>${apiResponse.delivery_fee.toLocaleString()}`;
                 deliveryEl.style.transform = 'scale(1.1)';
                 setTimeout(() => deliveryEl.style.transform = 'scale(1)', 200);
             }
@@ -689,7 +692,7 @@ require_once 'partials/headers.php';
             // Update total
             const totalEl = document.getElementById('total');
             if (totalEl && apiResponse.total !== undefined) {
-                totalEl.textContent = `₦${apiResponse.total.toLocaleString()}`;
+                totalEl.textContent = `<?php echo CURRENCY_SYMBOL; ?>${apiResponse.total.toLocaleString()}`;
                 totalEl.style.transform = 'scale(1.1)';
                 setTimeout(() => totalEl.style.transform = 'scale(1)', 200);
             }

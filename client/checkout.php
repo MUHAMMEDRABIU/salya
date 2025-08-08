@@ -1,6 +1,7 @@
 <?php
-require_once 'util/util.php';
 require_once 'initialize.php';
+require_once '../config/constants.php';
+require_once 'util/util.php';
 require_once '../helpers/monnify.php';
 
 // Check if user is logged in
@@ -161,7 +162,7 @@ require_once 'partials/headers.php';
                                 <div>
                                     <h4 class="font-semibold text-yellow-800 mb-2">Important Instructions:</h4>
                                     <ul class="text-sm text-yellow-700 space-y-1">
-                                        <li>• Transfer the exact amount: <strong>₦<?php echo number_format($total, 2); ?></strong></li>
+                                        <li>• Transfer the exact amount: <strong><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($total, 2); ?></strong></li>
                                         <li>• This account number is permanently yours for all orders</li>
                                         <li>• Payment will be verified by our admin team</li>
                                         <li>• Click "I Have Made Payment" after transferring</li>
@@ -234,12 +235,18 @@ require_once 'partials/headers.php';
                         <?php if (!empty($cart_items)) : ?>
                             <?php foreach ($cart_items as $item) : ?>
                                 <div class="flex items-center space-x-4 p-3 bg-white bg-opacity-50 rounded-xl shadow-soft">
-                                    <img src="../assets/uploads/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="w-16 h-16 rounded-lg object-cover">
+                                    <?php
+                                    // Generate product image URL with fallback
+                                    $productImage = !empty($item['image']) && $item['image'] !== DEFAULT_PRODUCT_IMAGE
+                                        ? PRODUCT_IMAGE_URL . htmlspecialchars($item['image'])
+                                        : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
+                                    ?>
+                                    <img src="<?php echo $productImage; ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="w-16 h-16 rounded-lg object-cover">
                                     <div class="flex-1">
                                         <h4 class="font-medium text-dark"><?= htmlspecialchars($item['name']) ?></h4>
                                         <p class="text-sm text-gray-600">Qty: <?= $item['quantity'] ?></p>
                                         <div class="flex items-center justify-between">
-                                            <span class="font-semibold text-dark">₦<?= number_format($item['price'] * $item['quantity'], 2) ?></span>
+                                            <span class="font-semibold text-dark"><?php echo CURRENCY_SYMBOL; ?><?= number_format($item['price'] * $item['quantity'], 2) ?></span>
                                         </div>
                                     </div>
                                 </div>
@@ -250,22 +257,21 @@ require_once 'partials/headers.php';
                     <div class="border-t border-slate-200 pt-4 space-y-2">
                         <div class="flex justify-between mb-3">
                             <span class="text-gray-600">Subtotal:</span>
-                            <span id="subtotal-value">₦<?= number_format($subtotal, 2) ?></span>
+                            <span id="subtotal-value"><?php echo CURRENCY_SYMBOL; ?><?= number_format($subtotal, 2) ?></span>
                         </div>
                         <div class="flex justify-between mb-3">
                             <span class="text-gray-600">Delivery:</span>
-                            <span id="delivery-value">₦<?= number_format($delivery_fee, 2) ?></span>
+                            <span id="delivery-value"><?php echo CURRENCY_SYMBOL; ?><?= number_format($delivery_fee, 2) ?></span>
                         </div>
                         <div class="flex justify-between mb-3">
                             <span class="text-gray-600">Tax:</span>
-                            <span id="tax-value">₦<?= number_format($tax, 2) ?></span>
+                            <span id="tax-value"><?php echo CURRENCY_SYMBOL; ?><?= number_format($tax, 2) ?></span>
                         </div>
                         <div class="flex justify-between text-xl font-bold text-dark pt-2 border-t border-slate-200">
                             <span>Total:</span>
-                            <span id="total-value">₦<?= number_format($total, 2) ?></span>
+                            <span id="total-value"><?php echo CURRENCY_SYMBOL; ?><?= number_format($total, 2) ?></span>
                         </div>
                     </div>
-
                     <!-- Payment Status -->
                     <div id="paymentStatus" class="mb-6 p-4 rounded-lg border-2 border-yellow-200 bg-yellow-50" style="display: none;">
                         <div class="flex items-center">
@@ -382,9 +388,9 @@ require_once 'partials/headers.php';
                             <label for="standard" class="delivery-option-label flex items-center p-3 border-2 border-custom-accent bg-blue-50 rounded-xl cursor-pointer transition-all">
                                 <div class="flex-1">
                                     <h4 class="font-semibold text-custom-dark">Standard Delivery</h4>
-                                    <p class="text-sm text-gray-600">3-5 business days • Free for orders above ₦10,000</p>
+                                    <p class="text-sm text-gray-600">3-5 business days • Free for orders above <?php echo CURRENCY_SYMBOL; ?>10,000</p>
                                 </div>
-                                <div class="text-custom-accent font-semibold">₦<?= number_format($delivery_fee) ?></div>
+                                <div class="text-custom-accent font-semibold"><?php echo CURRENCY_SYMBOL; ?><?= number_format($delivery_fee) ?></div>
                             </label>
                         </div>
                         <div>
@@ -394,7 +400,7 @@ require_once 'partials/headers.php';
                                     <h4 class="font-semibold text-custom-dark">Express Delivery</h4>
                                     <p class="text-sm text-gray-600">1-2 business days • Fast delivery</p>
                                 </div>
-                                <div class="text-custom-accent font-semibold">₦4,500</div>
+                                <div class="text-custom-accent font-semibold"><?php echo CURRENCY_SYMBOL; ?>4,500</div>
                             </label>
                         </div>
                     </div>
@@ -532,7 +538,7 @@ require_once 'partials/headers.php';
         function initializeFormHandlers() {
             // Delivery form submission
             document.getElementById('deliveryForm').addEventListener('submit', handleDeliveryFormSubmit);
-            
+
             // Delivery option selection
             document.querySelectorAll('input[name="delivery_option"]').forEach(radio => {
                 radio.addEventListener('change', function() {
@@ -760,7 +766,7 @@ require_once 'partials/headers.php';
         // Show order success
         function showOrderSuccess(orderNumber) {
             const checkoutContainer = document.getElementById('checkoutContainer');
-            
+
             checkoutContainer.innerHTML = `
                 <div class="lg:col-span-3 flex items-center justify-center min-h-[60vh]">
                     <div class="text-center max-w-md mx-auto">
@@ -788,9 +794,9 @@ require_once 'partials/headers.php';
                                 <span class="text-sm text-gray-600">Order Number:</span>
                                 <span class="font-bold text-green-800">${orderNumber}</span>
                             </div>
-                            <div class="flex justify-between items-center">
+                           <div class="flex justify-between items-center">
                                 <span class="text-sm text-gray-600">Total Amount:</span>
-                                <span class="font-bold text-green-800">₦<?php echo number_format($total); ?></span>
+                                <span class="font-bold text-green-800"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($total); ?></span>
                             </div>
                         </div>
 
@@ -882,4 +888,5 @@ require_once 'partials/headers.php';
         }
     </script>
 </body>
+
 </html>
