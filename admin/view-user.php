@@ -106,7 +106,7 @@ require __DIR__ . '/partials/headers.php';
                                 <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500">
                                     <div class="flex items-center">
                                         <i data-lucide="calendar" class="w-4 h-4 mr-1"></i>
-                                        Admin since <?= date('M Y', strtotime($user['created_at'])) ?>
+                                        Joined <?= date('M Y', strtotime($user['created_at'])) ?>
                                     </div>
                                 </div>
                             </div>
@@ -195,7 +195,9 @@ require __DIR__ . '/partials/headers.php';
                                         </tr>
                                     <?php else: ?>
                                         <?php foreach ($orders as $order): ?>
-                                            <tr class="hover:bg-gray-50">
+                                            <tr
+                                                class="hover:bg-gray-50 cursor-pointer"
+                                                data-order="<?= htmlspecialchars($order['order_number']) ?>">
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                     #<?= htmlspecialchars($order['order_number']) ?>
                                                 </td>
@@ -207,21 +209,21 @@ require __DIR__ . '/partials/headers.php';
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                                        <?php
-                                                        switch ($order['status']) {
-                                                            case 'delivered':
-                                                                echo 'bg-green-100 text-green-800';
-                                                                break;
-                                                            case 'pending':
-                                                                echo 'bg-yellow-100 text-yellow-800';
-                                                                break;
-                                                            case 'cancelled':
-                                                                echo 'bg-red-100 text-red-800';
-                                                                break;
-                                                            default:
-                                                                echo 'bg-gray-100 text-gray-800';
-                                                        }
-                                                        ?>">
+                                                <?php
+                                                switch ($order['status']) {
+                                                    case 'delivered':
+                                                        echo 'bg-green-100 text-green-800';
+                                                        break;
+                                                    case 'pending':
+                                                        echo 'bg-yellow-100 text-yellow-800';
+                                                        break;
+                                                    case 'cancelled':
+                                                        echo 'bg-red-100 text-red-800';
+                                                        break;
+                                                    default:
+                                                        echo 'bg-gray-100 text-gray-800';
+                                                }
+                                                ?>">
                                                         <?= htmlspecialchars(ucfirst($order['status'])) ?>
                                                     </span>
                                                 </td>
@@ -229,6 +231,7 @@ require __DIR__ . '/partials/headers.php';
                                         <?php endforeach; ?>
                                     <?php endif; ?>
                                 </tbody>
+
                             </table>
                         </div>
                     </div>
@@ -547,6 +550,14 @@ require __DIR__ . '/partials/headers.php';
     <script src="../assets/js/toast.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            
+            document.querySelectorAll('tr[data-order]').forEach(function(row) {
+                row.addEventListener('click', function() {
+                    const orderNumber = this.getAttribute('data-order');
+                    window.location.href = `view-order.php?order_number=${encodeURIComponent(orderNumber)}`;
+                });
+            });
+            
             // Modal elements
             const editUserModal = document.getElementById('editUserModal');
             const editModalContent = document.getElementById('editModalContent');

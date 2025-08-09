@@ -9,7 +9,7 @@ try {
     }
 
     $userId = (int) $input['user_id'];
-    $tempPassword = bin2hex(random_bytes(4)); // e.g., 8-char temp password
+    $tempPassword = 'bin2hex(random_bytes(4))'; // e.g., 8-char temp password
     $hashedPassword = password_hash($tempPassword, PASSWORD_DEFAULT);
 
     $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");

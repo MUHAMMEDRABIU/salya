@@ -103,11 +103,11 @@ require __DIR__ . '/partials/headers.php';
                                                 ? PRODUCT_IMAGE_URL . htmlspecialchars($item['product_image'])
                                                 : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
                                             ?>
-                                            <img src="<?php echo $productImage; ?>" 
-                                                 alt="<?php echo htmlspecialchars($item['product_name']); ?>" 
-                                                 class="w-16 h-16 rounded-lg object-cover"
-                                                 onerror="this.src='<?php echo PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE; ?>';">
-                                            
+                                            <img src="<?php echo $productImage; ?>"
+                                                alt="<?php echo htmlspecialchars($item['product_name']); ?>"
+                                                class="w-16 h-16 rounded-lg object-cover"
+                                                onerror="this.src='<?php echo PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE; ?>';">
+
                                             <div class="flex-1">
                                                 <h4 class="font-semibold text-gray-900"><?php echo htmlspecialchars($item['product_name']); ?></h4>
                                                 <div class="flex items-center space-x-4 mt-2">

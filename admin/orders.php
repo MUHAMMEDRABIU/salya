@@ -101,7 +101,7 @@ require __DIR__ . '/partials/headers.php';
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
@@ -163,7 +163,7 @@ require __DIR__ . '/partials/headers.php';
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <?php echo date('M d, Y', strtotime($order['created_at'])); ?>
+                                            <?php echo date('M d, Y, g:i A', strtotime($order['created_at'])); ?>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                             <a href="view-order.php?order_number=<?= urlencode($order['order_number']) ?>" class="text-xs bg-gray-100 px-3 rounded py-1 text-orange-600 hover:text-orange-900 mr-3">View</a>
@@ -198,6 +198,46 @@ require __DIR__ . '/partials/headers.php';
     <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
 
     <script src="js/script.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            let table = $('table').DataTable({
+                ajax: 'api/fetch-orders.php',
+                columns: [{
+                        data: 'order_id'
+                    },
+                    {
+                        data: 'customer'
+                    },
+                    {
+                        data: 'reference'
+                    },
+                    {
+                        data: 'amount'
+                    },
+                    {
+                        data: 'status'
+                    },
+                    {
+                        data: 'timestamp'
+                    },
+                    {
+                        data: 'actions'
+                    }
+                ],
+                paging: true,
+                searching: true,
+                ordering: true
+            });
+
+            // Auto-refresh every 10 seconds
+            setInterval(function() {
+                table.ajax.reload(null, false); // false to stay on the same page
+            }, 10000);
+        });
+    </script>
+
 </body>
 
 </html>

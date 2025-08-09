@@ -8,10 +8,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="shortcut icon" href="../assets/img/favicon.png" type="image/x-icon">
-    
+
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="css/style.css">
 
     <style>

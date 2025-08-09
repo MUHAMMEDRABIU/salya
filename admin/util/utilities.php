@@ -263,8 +263,8 @@ function getTotalProducts($pdo)
 function getAllOrders($pdo)
 {
     try {
-        $stmt = $pdo->query("SELECT * FROM orders");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // <-- fetchAll, not fetch
+        $stmt = $pdo->query("SELECT * FROM orders ORDER BY created_at DESC");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
         error_log("Error fetching orders: " . $e->getMessage());
         return [];
