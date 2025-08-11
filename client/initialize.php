@@ -2,7 +2,7 @@
 session_start();
 require_once __DIR__ . '/../config/database.php';
 if (!isset($_SESSION['user_id'])) {
-    header("Location: /frozen_foods/index.php");
+    header("Location: /salya/index.php");
     exit();
 }
 try {
