@@ -4,9 +4,7 @@ define('APP_NAME', 'Salya Frozen Foods');
 define('APP_VERSION', '1.0.0');
 define('APP_URL', 'http://localhost/salya');
 define('APP_TIMEZONE', 'Africa/Lagos');
-define('BASE_URL', $scheme . '://' . $_SERVER['HTTP_HOST'] . '/salya'); // adjust folder
-define('CSS_URL', BASE_URL . '/client/css/');
-define('IMG_URL', BASE_URL . '/client/img/');
+
 // =============================================================================
 // FILE UPLOAD CONFIGURATION
 // =============================================================================

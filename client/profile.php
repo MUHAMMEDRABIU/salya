@@ -70,7 +70,7 @@ require_once 'partials/headers.php';
             <div class="absolute inset-0 bg-black/10"></div>
             <div class="relative z-10">
                 <div class="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
-                    <div class="profile-avatar relative">
+                    <div class="relative">
                         <?php
                         // Generate user avatar URL with fallback
                         $userAvatarFile = !empty($user['avatar']) && $user['avatar'] !== DEFAULT_USER_AVATAR
@@ -82,8 +82,8 @@ require_once 'partials/headers.php';
                             alt="Profile"
                             class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-white/20">
 
-                        <button onclick="openAvatarUpload()" class="absolute bottom-0 right-0 w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors">
-                            <i class="fas fa-camera text-gray-600 text-xs md:text-sm"></i>
+                        <button onclick="openAvatarUpload()" class="bg-white absolute bottom-0 right-0 w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors">
+                            <i class="fa text-accent fa-camera text-gray-600 text-xs md:text-sm"></i>
                         </button>
                     </div>
                     <div class="flex-1 text-center sm:text-left">
