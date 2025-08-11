@@ -1,0 +1,24 @@
+{
+  "name": "salya",
+  "version": "1.0.0",
+  "description": "**Frozen Foods** is a PHP-based web application designed to facilitate the ordering and delivery of frozen food products across Nigeria. The project aims to provide a seamless, modern, and user-friendly experience for both customers and administrators.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+    "scripts": {
+    "dev:css": "tailwindcss -i ./client/css/tailwind.css -o ./client/css/tailwind.build.css --watch",
+    "build:css": "tailwindcss -i ./client/css/tailwind.css -o ./client/css/tailwind.build.css --minify",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MUHAMMEDRABIU/salya.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MUHAMMEDRABIU/salya/issues"
+  },
+  "h
