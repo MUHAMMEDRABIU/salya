@@ -64,11 +64,11 @@
 
             <div class="flex flex-col sm:flex-row gap-3 pt-4">
                 <button type="button" onclick="closeModal('editProfileModal')"
-                    class="w-full px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors">
+                    class="w-full px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
                     Cancel
                 </button>
                 <button type="submit"
-                    class="w-full px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors font-semibold">
+                    class="w-full px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors font-semibold cursor-pointer">
                     Save Changes
                 </button>
             </div>
@@ -893,7 +893,12 @@
                 updateAvatarDisplay(null);
 
                 closeModal('avatarUploadModal');
+                resetAvatarForm();
                 showToasted('Avatar removed successfully!', 'success');
+                // reload
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             } else {
                 throw new Error(result.message || 'Failed to remove avatar');
             }
