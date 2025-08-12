@@ -81,6 +81,75 @@ require __DIR__ . '/partials/headers.php';
             </div>
 
 
+            <!-- Category Management Section -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-800">Category Management</h3>
+                        <button onclick="openAddCategoryModal()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                            <i data-lucide="folder-plus" class="w-4 h-4 mr-2 inline"></i>
+                            Add Category
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <?php
+                        // Fetch categories from database
+                        try {
+                            $stmt = $pdo->query("SELECT * FROM categories ORDER BY name ASC");
+                            $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                            foreach ($categories as $category):
+                        ?>
+                                <div class="category-card bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors border border-gray-200">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                                                <i data-lucide="folder" class="w-4 h-4 text-orange-600"></i>
+                                            </div>
+                                            <h4 class="font-semibold text-gray-800"><?php echo htmlspecialchars($category['name']); ?></h4>
+                                        </div>
+                                        <div class="flex items-center space-x-1">
+                                            <button onclick="editCategory(<?php echo $category['id']; ?>)" class="text-gray-400 hover:text-blue-500 p-1">
+                                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                            </button>
+                                            <button onclick="deleteCategory(<?php echo $category['id']; ?>)" class="text-gray-400 hover:text-red-500 p-1">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <?php if (!empty($category['description'])): ?>
+                                        <p class="text-sm text-gray-600 mb-3"><?php echo htmlspecialchars(substr($category['description'], 0, 80)) . (strlen($category['description']) > 80 ? '...' : ''); ?></p>
+                                    <?php endif; ?>
+
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-gray-500">
+                                            <?php
+                                            // Get product count for this category
+                                            $countStmt = $pdo->prepare("SELECT COUNT(*) FROM products WHERE category_id = ?");
+                                            $countStmt->execute([$category['id']]);
+                                            $productCount = $countStmt->fetchColumn();
+                                            echo $productCount . ' product' . ($productCount !== 1 ? 's' : '');
+                                            ?>
+                                        </span>
+                                        <span class="text-xs text-gray-400">
+                                            <?php echo date('M j, Y', strtotime($category['created_at'])); ?>
+                                        </span>
+                                    </div>
+                                </div>
+                        <?php
+                            endforeach;
+                        } catch (Exception $e) {
+                            echo '<div class="col-span-full text-center text-gray-500 py-8">Error loading categories</div>';
+                        }
+                        ?>
+                    </div>
+                </div>
+            </div>
+
             <!-- Products Management -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div class="p-6 border-b border-gray-200">
@@ -186,6 +255,100 @@ require __DIR__ . '/partials/headers.php';
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div id="addCategoryModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-95 opacity-0" id="addCategoryModalContent">
+            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold text-gray-900">Add New Category</h2>
+                    <button id="closeCategoryModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <form id="addCategoryForm" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Category Name *</label>
+                    <input type="text" name="name" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                        placeholder="e.g., Chicken, Fish, Turkey">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                    <textarea name="description" rows="3"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                        placeholder="Brief description of this category..."></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Category Image</label>
+                    <input type="file" name="image" accept="image/*"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                    <p class="text-xs text-gray-500 mt-1">Optional: Upload an image for this category</p>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" id="cancelCategoryBtn" class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 flex items-center">
+                        <i data-lucide="folder-plus" class="w-4 h-4 mr-2"></i>
+                        Add Category
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div id="editCategoryModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-95 opacity-0" id="editCategoryModalContent">
+            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold text-gray-900">Edit Category</h2>
+                    <button id="closeEditCategoryModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <form id="editCategoryForm" class="p-6 space-y-4">
+                <input type="hidden" name="category_id" id="editCategoryId">
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Category Name *</label>
+                    <input type="text" name="name" id="editCategoryName" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                    <textarea name="description" id="editCategoryDescription" rows="3"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Category Image</label>
+                    <input type="file" name="image" accept="image/*"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                    <p class="text-xs text-gray-500 mt-1">Leave empty to keep current image</p>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" id="cancelEditCategoryBtn" class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 flex items-center">
+                        <i data-lucide="save" class="w-4 h-4 mr-2"></i>
+                        Update Category
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Add Product Modal -->
@@ -382,143 +545,145 @@ require __DIR__ . '/partials/headers.php';
             // Modal elements
             const addProductModal = document.getElementById('addProductModal');
             const addModalContent = document.getElementById('addModalContent');
-            const closeAddModalBtn = document.getElementById('closeAddModalBtn');
-            const cancelAddBtn = document.getElementById('cancelAddBtn');
             const addProductForm = document.getElementById('addProductForm');
             const imageInput = document.getElementById('imageInput');
             const imagePreview = document.getElementById('imagePreview');
 
-            // Function to open add product modal
+            // Category modal elements
+            const addCategoryModal = document.getElementById('addCategoryModal');
+            const addCategoryModalContent = document.getElementById('addCategoryModalContent');
+            const editCategoryModal = document.getElementById('editCategoryModal');
+            const editCategoryModalContent = document.getElementById('editCategoryModalContent');
+
+            // =============================================================================
+            // CATEGORY MANAGEMENT FUNCTIONS
+            // =============================================================================
+
+            // Make functions global by attaching to window
+            window.openAddCategoryModal = function() {
+                addCategoryModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                setTimeout(() => {
+                    addCategoryModalContent.classList.remove('scale-95', 'opacity-0');
+                    addCategoryModalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            };
+
+            window.editCategory = function(categoryId) {
+                fetch(`api/get-category.php?id=${categoryId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('editCategoryId').value = data.category.id;
+                            document.getElementById('editCategoryName').value = data.category.name;
+                            document.getElementById('editCategoryDescription').value = data.category.description || '';
+
+                            editCategoryModal.classList.remove('hidden');
+                            document.body.style.overflow = 'hidden';
+                            setTimeout(() => {
+                                editCategoryModalContent.classList.remove('scale-95', 'opacity-0');
+                                editCategoryModalContent.classList.add('scale-100', 'opacity-100');
+                            }, 10);
+                        } else {
+                            showToasted(data.message || 'Failed to load category', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToasted('Failed to load category', 'error');
+                    });
+            };
+
+            window.deleteCategory = function(categoryId) {
+                if (confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
+                    fetch('api/delete-category.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: `category_id=${categoryId}`
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showToasted('Category deleted successfully', 'success');
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                showToasted(data.message || 'Failed to delete category', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showToasted('Failed to delete category', 'error');
+                        });
+                }
+            };
+
+            function closeAddCategoryModal() {
+                addCategoryModalContent.classList.remove('scale-100', 'opacity-100');
+                addCategoryModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    addCategoryModal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                    document.getElementById('addCategoryForm').reset();
+                }, 300);
+            }
+
+            function closeEditCategoryModal() {
+                editCategoryModalContent.classList.remove('scale-100', 'opacity-100');
+                editCategoryModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    editCategoryModal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                    document.getElementById('editCategoryForm').reset();
+                }, 300);
+            }
+
+            // =============================================================================
+            // PRODUCT MANAGEMENT FUNCTIONS
+            // =============================================================================
+
             window.openAddProductModal = function() {
                 addProductModal.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
-
-                // Trigger animation
                 setTimeout(() => {
                     addModalContent.classList.remove('scale-95', 'opacity-0');
                     addModalContent.classList.add('scale-100', 'opacity-100');
                 }, 10);
             };
 
-            // Function to close modal
-            function closeAddModal() {
+            function closeAddProductModal() {
                 addModalContent.classList.remove('scale-100', 'opacity-100');
                 addModalContent.classList.add('scale-95', 'opacity-0');
-
                 setTimeout(() => {
                     addProductModal.classList.add('hidden');
                     document.body.style.overflow = '';
-                    resetForm();
+                    addProductForm.reset();
+                    imagePreview.src = "<?php echo PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE; ?>";
                 }, 300);
             }
 
-            // Function to reset form
-            function resetForm() {
-                addProductForm.reset();
-                imagePreview.src = "<?php echo PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE; ?>";
-            }
-
-            // Close modal events
-            closeAddModalBtn.addEventListener('click', closeAddModal);
-            cancelAddBtn.addEventListener('click', closeAddModal);
-
-            // Close modal when clicking outside
-            addProductModal.addEventListener('click', (e) => {
-                if (e.target === addProductModal) {
-                    closeAddModal();
-                }
-            });
-
-            // Close modal with Escape key
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && !addProductModal.classList.contains('hidden')) {
-                    closeAddModal();
-                }
-            });
-
-            // Image preview functionality
-            imageInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    // Validate file size using PHP constant
-                    if (file.size > <?php echo MAX_PRODUCT_IMAGE_SIZE; ?>) {
-                        showToasted('File size too large. Maximum size is <?php echo number_format(MAX_PRODUCT_IMAGE_SIZE / (1024 * 1024), 0); ?>MB.', 'error');
-                        this.value = '';
-                        return;
-                    }
-
-                    // Validate file type
-                    const allowedTypes = [
-                        '<?php echo ALLOWED_IMAGE_JPEG; ?>',
-                        '<?php echo ALLOWED_IMAGE_PNG; ?>',
-                        '<?php echo ALLOWED_IMAGE_GIF; ?>',
-                        '<?php echo ALLOWED_IMAGE_WEBP; ?>'
-                    ];
-                    if (!allowedTypes.includes(file.type)) {
-                        showToasted('Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'error');
-                        this.value = '';
-                        return;
-                    }
-
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        imagePreview.src = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            // Form submission with confirmation
-            addProductForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-
-                // Get form data
-                const formData = new FormData(addProductForm);
-                const productName = formData.get('name');
-                const productPrice = formData.get('price');
-
+            async function submitProduct(formData) {
                 const submitBtn = document.getElementById('submitProductBtn');
                 const originalText = submitBtn.innerHTML;
 
-                // Show loading state
                 submitBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i>Adding Product...';
                 submitBtn.disabled = true;
 
-                try {
-                    // Submit form with AJAX
-                    submitProduct(formData, submitBtn, originalText);
-                } catch (error) {
-                    console.error('Error:', error);
-                    showToasted('An error occurred while adding the product', 'error');
-                    // Restore button state
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                }
-            });
-
-            // AJAX form submission function
-            async function submitProduct(formData, submitBtn, originalText) {
                 try {
                     const response = await fetch('api/add-product.php', {
                         method: 'POST',
                         body: formData
                     });
 
-                    // Check if response is ok
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
                     const result = await response.json();
 
                     if (result.success) {
-                        // Show success message
                         showToasted('Product added successfully!', 'success');
-
-                        // Close modal after short delay
                         setTimeout(() => {
-                            closeAddModal();
-                            // Optionally reload the page to show new product
+                            closeAddProductModal();
                             window.location.reload();
                         }, 1500);
                     } else {
@@ -534,23 +699,132 @@ require __DIR__ . '/partials/headers.php';
                         showToasted('An unexpected error occurred while adding the product', 'error');
                     }
                 } finally {
-                    // Restore button state
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
                 }
             }
 
-            // Form validation
+            // =============================================================================
+            // EVENT LISTENERS
+            // =============================================================================
+
+            // Category form submissions
+            document.getElementById('addCategoryForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+
+                fetch('api/add-category.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToasted('Category added successfully', 'success');
+                            closeAddCategoryModal();
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            showToasted(data.message || 'Failed to add category', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToasted('Failed to add category', 'error');
+                    });
+            });
+
+            document.getElementById('editCategoryForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+
+                fetch('api/edit-category.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToasted('Category updated successfully', 'success');
+                            closeEditCategoryModal();
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            showToasted(data.message || 'Failed to update category', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToasted('Failed to update category', 'error');
+                    });
+            });
+
+            // Category modal close buttons
+            document.getElementById('closeCategoryModalBtn').addEventListener('click', closeAddCategoryModal);
+            document.getElementById('cancelCategoryBtn').addEventListener('click', closeAddCategoryModal);
+            document.getElementById('closeEditCategoryModalBtn').addEventListener('click', closeEditCategoryModal);
+            document.getElementById('cancelEditCategoryBtn').addEventListener('click', closeEditCategoryModal);
+
+            // Product modal close buttons
+            document.getElementById('closeAddModalBtn').addEventListener('click', closeAddProductModal);
+            document.getElementById('cancelAddBtn').addEventListener('click', closeAddProductModal);
+
+            // Product form submission
+            addProductForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(addProductForm);
+                submitProduct(formData);
+            });
+
+            // Image preview
+            imageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // Validate file size
+                if (file.size > <?php echo MAX_PRODUCT_IMAGE_SIZE; ?>) {
+                    showToasted('File size too large. Maximum size is <?php echo number_format(MAX_PRODUCT_IMAGE_SIZE / (1024 * 1024), 0); ?>MB.', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                // Validate file type
+                const allowedTypes = ['<?php echo ALLOWED_IMAGE_JPEG; ?>', '<?php echo ALLOWED_IMAGE_PNG; ?>', '<?php echo ALLOWED_IMAGE_GIF; ?>', '<?php echo ALLOWED_IMAGE_WEBP; ?>'];
+                if (!allowedTypes.includes(file.type)) {
+                    showToasted('Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => imagePreview.src = e.target.result;
+                reader.readAsDataURL(file);
+            });
+
+            // Close modals when clicking outside
+            [addProductModal, addCategoryModal, editCategoryModal].forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        if (modal === addProductModal) closeAddProductModal();
+                        else if (modal === addCategoryModal) closeAddCategoryModal();
+                        else if (modal === editCategoryModal) closeEditCategoryModal();
+                    }
+                });
+            });
+
+            // Close modals with Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (!addProductModal.classList.contains('hidden')) closeAddProductModal();
+                    if (!addCategoryModal.classList.contains('hidden')) closeAddCategoryModal();
+                    if (!editCategoryModal.classList.contains('hidden')) closeEditCategoryModal();
+                }
+            });
+
+            // Form validation for required fields
             const requiredFields = addProductForm.querySelectorAll('[required]');
             requiredFields.forEach(field => {
                 field.addEventListener('blur', function() {
-                    if (!this.value.trim()) {
-                        this.classList.add('border-red-500');
-                        this.classList.remove('border-gray-300');
-                    } else {
-                        this.classList.remove('border-red-500');
-                        this.classList.add('border-gray-300');
-                    }
+                    this.classList.toggle('border-red-500', !this.value.trim());
+                    this.classList.toggle('border-gray-300', this.value.trim());
                 });
 
                 field.addEventListener('input', function() {
@@ -561,24 +835,18 @@ require __DIR__ . '/partials/headers.php';
                 });
             });
 
-            // Price formatting
+            // Price and stock validation
             const priceInput = addProductForm.querySelector('input[name="price"]');
-            priceInput.addEventListener('input', function() {
-                const value = parseFloat(this.value);
-                if (!isNaN(value) && value >= 0) {
-                    this.classList.remove('border-red-500');
-                    this.classList.add('border-gray-300');
-                }
-            });
-
-            // Stock validation
             const stockInput = addProductForm.querySelector('input[name="in_stock"]');
-            stockInput.addEventListener('input', function() {
-                const value = parseInt(this.value);
-                if (!isNaN(value) && value >= 0) {
-                    this.classList.remove('border-red-500');
-                    this.classList.add('border-gray-300');
-                }
+
+            [priceInput, stockInput].forEach(input => {
+                input.addEventListener('input', function() {
+                    const value = input === priceInput ? parseFloat(this.value) : parseInt(this.value);
+                    if (!isNaN(value) && value >= 0) {
+                        this.classList.remove('border-red-500');
+                        this.classList.add('border-gray-300');
+                    }
+                });
             });
 
             // Initialize Lucide icons
