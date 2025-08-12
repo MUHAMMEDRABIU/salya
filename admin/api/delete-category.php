@@ -1,6 +1,5 @@
 <?php
 require_once '../../config/database.php';
-require_once '../../config/constants.php';
 require_once '../initialize.php';
 
 header('Content-Type: application/json');
@@ -41,8 +40,9 @@ try {
     }
 
     // Delete category image if it exists
-    if ($category['image_url'] && file_exists(CATEGORY_IMAGE_DIR . $category['image_url'])) {
-        unlink(CATEGORY_IMAGE_DIR . $category['image_url']);
+    $uploadDir = __DIR__ . '/../../assets/uploads/categories/';
+    if ($category['image_url'] && file_exists($uploadDir . $category['image_url'])) {
+        unlink($uploadDir . $category['image_url']);
     }
 
     // Delete category

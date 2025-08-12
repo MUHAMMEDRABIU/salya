@@ -86,7 +86,7 @@ require __DIR__ . '/partials/headers.php';
                 <div class="p-6 border-b border-gray-200">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-800">Category Management</h3>
-                        <button onclick="openAddCategoryModal()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                        <button onclick="openAddCategoryModal()" class="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 transition-colors">
                             <i data-lucide="folder-plus" class="w-4 h-4 mr-2 inline"></i>
                             Add Category
                         </button>
@@ -106,13 +106,13 @@ require __DIR__ . '/partials/headers.php';
                                 <div class="category-card bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors border border-gray-200">
                                     <div class="flex items-center justify-between mb-3">
                                         <div class="flex items-center space-x-2">
-                                            <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                                                <i data-lucide="folder" class="w-4 h-4 text-orange-600"></i>
+                                            <div class="w-8 h-8 bg-pink-100 rounded-lg flex items-center justify-center">
+                                                <i data-lucide="folder" class="w-4 h-4 text-pink-600"></i>
                                             </div>
                                             <h4 class="font-semibold text-gray-800"><?php echo htmlspecialchars($category['name']); ?></h4>
                                         </div>
                                         <div class="flex items-center space-x-1">
-                                            <button onclick="editCategory(<?php echo $category['id']; ?>)" class="text-gray-400 hover:text-blue-500 p-1">
+                                            <button onclick="editCategory(<?php echo $category['id']; ?>)" class="text-gray-400 hover:text-pink-500 p-1">
                                                 <i data-lucide="edit-2" class="w-4 h-4"></i>
                                             </button>
                                             <button onclick="deleteCategory(<?php echo $category['id']; ?>)" class="text-gray-400 hover:text-red-500 p-1">
@@ -259,95 +259,174 @@ require __DIR__ . '/partials/headers.php';
 
     <!-- Add Category Modal -->
     <div id="addCategoryModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-95 opacity-0" id="addCategoryModalContent">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0" id="addCategoryModalContent">
+            <!-- Modal Header -->
             <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-bold text-gray-900">Add New Category</h2>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">Add New Category</h2>
+                        <p class="text-sm text-gray-600 mt-1">Create a new category for your products</p>
+                    </div>
                     <button id="closeCategoryModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg">
-                        <i data-lucide="x" class="w-5 h-5"></i>
+                        <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
                 </div>
             </div>
 
-            <form id="addCategoryForm" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Category Name *</label>
-                    <input type="text" name="name" required
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                        placeholder="e.g., Chicken, Fish, Turkey">
+            <!-- Modal Body -->
+            <form id="addCategoryForm" class="p-6 space-y-8" enctype="multipart/form-data">
+                <!-- Basic Information -->
+                <div class="space-y-6">
+                    <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Basic Information</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-gray-700">Category Name *</label>
+                            <input type="text" name="name" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200"
+                                placeholder="e.g., Chicken, Fish, Turkey">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-gray-700">Category Slug</label>
+                            <input type="text" name="slug"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200"
+                                placeholder="Auto-generated from name">
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-gray-700">Description</label>
+                        <textarea name="description" rows="4"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200 resize-none"
+                            placeholder="Brief description of this category..."></textarea>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
-                    <textarea name="description" rows="3"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
-                        placeholder="Brief description of this category..."></textarea>
-                </div>
+                <!-- Category Image -->
+                <div class="space-y-6">
+                    <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Category Image</h3>
 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Category Image</label>
-                    <input type="file" name="image" accept="image/*"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
-                    <p class="text-xs text-gray-500 mt-1">Optional: Upload an image for this category</p>
-                </div>
-
-                <div class="flex justify-end space-x-3 pt-4">
-                    <button type="button" id="cancelCategoryBtn" class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 flex items-center">
-                        <i data-lucide="folder-plus" class="w-4 h-4 mr-2"></i>
-                        Add Category
-                    </button>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-6">
+                            <div class="flex-shrink-0">
+                                <img id="categoryImagePreview" src="data:image/svg+xml,%3csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100' height='100' fill='%23f3f4f6'/%3e%3ctext x='50%25' y='50%25' font-size='14' text-anchor='middle' dy='.3em' fill='%236b7280'%3eNo Image%3c/text%3e%3c/svg%3e"
+                                    alt="Category preview" class="w-24 h-24 rounded-lg object-cover border border-gray-300">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Upload Category Image</label>
+                                <input type="file" name="image" accept="image/*" id="categoryImageInput"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100">
+                                <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB (optional)</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
+
+            <!-- Modal Footer -->
+            <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-xl">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-500">
+                        <i data-lucide="info" class="w-4 h-4 inline mr-1"></i>
+                        All fields marked with * are required
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button type="button" id="cancelCategoryBtn" class="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
+                            Cancel
+                        </button>
+                        <button id="submitCategoryBtn" type="submit" form="addCategoryForm" class="px-6 py-2.5 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-all duration-200 font-medium hover:shadow-lg transform hover:-translate-y-0.5 flex items-center">
+                            <i data-lucide="folder-plus" class="w-4 h-4 mr-2"></i>
+                            Add Category
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Edit Category Modal -->
     <div id="editCategoryModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-95 opacity-0" id="editCategoryModalContent">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0" id="editCategoryModalContent">
+            <!-- Modal Header -->
             <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-bold text-gray-900">Edit Category</h2>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">Edit Category</h2>
+                        <p class="text-sm text-gray-600 mt-1">Update category information</p>
+                    </div>
                     <button id="closeEditCategoryModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg">
-                        <i data-lucide="x" class="w-5 h-5"></i>
+                        <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
                 </div>
             </div>
 
-            <form id="editCategoryForm" class="p-6 space-y-4">
+            <!-- Modal Body -->
+            <form id="editCategoryForm" class="p-6 space-y-8" enctype="multipart/form-data">
                 <input type="hidden" name="category_id" id="editCategoryId">
 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Category Name *</label>
-                    <input type="text" name="name" id="editCategoryName" required
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                <!-- Basic Information -->
+                <div class="space-y-6">
+                    <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Basic Information</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-gray-700">Category Name *</label>
+                            <input type="text" name="name" id="editCategoryName" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-gray-700">Category Slug</label>
+                            <input type="text" name="slug" id="editCategorySlug"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200">
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-gray-700">Description</label>
+                        <textarea name="description" id="editCategoryDescription" rows="4"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200 resize-none"></textarea>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
-                    <textarea name="description" id="editCategoryDescription" rows="3"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"></textarea>
-                </div>
+                <!-- Category Image -->
+                <div class="space-y-6">
+                    <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Category Image</h3>
 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Category Image</label>
-                    <input type="file" name="image" accept="image/*"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
-                    <p class="text-xs text-gray-500 mt-1">Leave empty to keep current image</p>
-                </div>
-
-                <div class="flex justify-end space-x-3 pt-4">
-                    <button type="button" id="cancelEditCategoryBtn" class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 flex items-center">
-                        <i data-lucide="save" class="w-4 h-4 mr-2"></i>
-                        Update Category
-                    </button>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-6">
+                            <div class="flex-shrink-0">
+                                <img id="editCategoryImagePreview" src="data:image/svg+xml,%3csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100' height='100' fill='%23f3f4f6'/%3e%3ctext x='50%25' y='50%25' font-size='14' text-anchor='middle' dy='.3em' fill='%236b7280'%3eNo Image%3c/text%3e%3c/svg%3e"
+                                    alt="Category preview" class="w-24 h-24 rounded-lg object-cover border border-gray-300">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Upload New Category Image</label>
+                                <input type="file" name="image" accept="image/*" id="editCategoryImageInput"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100">
+                                <p class="text-xs text-gray-500 mt-1">Leave empty to keep current image</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
+
+            <!-- Modal Footer -->
+            <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-xl">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-500">
+                        <i data-lucide="info" class="w-4 h-4 inline mr-1"></i>
+                        All fields marked with * are required
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button type="button" id="cancelEditCategoryBtn" class="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
+                            Cancel
+                        </button>
+                        <button id="submitEditCategoryBtn" type="submit" form="editCategoryForm" class="px-6 py-2.5 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-all duration-200 font-medium hover:shadow-lg transform hover:-translate-y-0.5 flex items-center">
+                            <i data-lucide="save" class="w-4 h-4 mr-2"></i>
+                            Update Category
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -569,14 +648,24 @@ require __DIR__ . '/partials/headers.php';
                 }, 10);
             };
 
+            // Update the editCategory function in the JavaScript section
             window.editCategory = function(categoryId) {
                 fetch(`api/get-category.php?id=${categoryId}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            document.getElementById('editCategoryId').value = data.category.id;
-                            document.getElementById('editCategoryName').value = data.category.name;
-                            document.getElementById('editCategoryDescription').value = data.category.description || '';
+                            const category = data.category;
+
+                            document.getElementById('editCategoryId').value = category.id;
+                            document.getElementById('editCategoryName').value = category.name;
+                            document.getElementById('editCategorySlug').value = category.slug || '';
+                            document.getElementById('editCategoryDescription').value = category.description || '';
+                            document.getElementById('editCategoryActive').checked = category.is_active == 1;
+
+                            // Update image preview if category has an image
+                            if (category.image_url) {
+                                document.getElementById('editCategoryImagePreview').src = `/salya/assets/uploads/categories/${category.image_url}`;
+                            }
 
                             editCategoryModal.classList.remove('hidden');
                             document.body.style.overflow = 'hidden';
@@ -707,6 +796,59 @@ require __DIR__ . '/partials/headers.php';
             // =============================================================================
             // EVENT LISTENERS
             // =============================================================================
+
+            // Category image preview functionality
+            document.getElementById('categoryImageInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const preview = document.getElementById('categoryImagePreview');
+
+                if (!file) return;
+
+                // Validate file size (5MB for categories)
+                if (file.size > 5 * 1024 * 1024) {
+                    showToasted('File size too large. Maximum size is 5MB.', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if (!allowedTypes.includes(file.type)) {
+                    showToasted('Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => preview.src = e.target.result;
+                reader.readAsDataURL(file);
+            });
+
+            document.getElementById('editCategoryImageInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const preview = document.getElementById('editCategoryImagePreview');
+
+                if (!file) return;
+
+                // Validate file size (5MB for categories)
+                if (file.size > 5 * 1024 * 1024) {
+                    showToasted('File size too large. Maximum size is 5MB.', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if (!allowedTypes.includes(file.type)) {
+                    showToasted('Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => preview.src = e.target.result;
+                reader.readAsDataURL(file);
+            });
 
             // Category form submissions
             document.getElementById('addCategoryForm').addEventListener('submit', function(e) {
