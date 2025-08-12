@@ -64,8 +64,8 @@ require_once 'partials/headers.php';
             </div>
         </div>
 
-        <!-- Updated Search Bar with Register/Login styling -->
-        <div class="search-container animate-slide-up" style="animation-delay: 0.1s;">
+        <div class="animate-slide-up" style="animation-delay: 0.1s;">
+            <!-- Search -->
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400">
@@ -77,7 +77,7 @@ require_once 'partials/headers.php';
                     type="text"
                     id="search-input"
                     placeholder="Search for chicken, fish, turkey..."
-                    class="w-full pl-12 pr-16 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all duration-200 hover:bg-white">
+                    class="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all duration-200">
                 <button class="absolute right-3 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center text-white hover:bg-orange-600 transition-all duration-300 hover:scale-105">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="3" x2="21" y1="6" y2="6" />
@@ -324,19 +324,6 @@ require_once 'partials/headers.php';
                             card.classList.remove('animate-fade-in');
                         }
                     });
-                });
-
-                // Enhanced search bar focus effects
-                searchInput.addEventListener('focus', function() {
-                    this.parentElement.style.transform = 'scale(1.02)';
-                    this.style.backgroundColor = '#ffffff';
-                });
-
-                searchInput.addEventListener('blur', function() {
-                    this.parentElement.style.transform = 'scale(1)';
-                    if (!this.value) {
-                        this.style.backgroundColor = '#f9fafb';
-                    }
                 });
             }
 

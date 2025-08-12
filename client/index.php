@@ -23,33 +23,51 @@ require __DIR__ . '/../components/header.php';
                             <form class="space-y-6">
                                 <div class="space-y-2"><label class="text-sm font-medium text-gray-700 block">Email Address</label>
                                     <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail h-5 w-5 text-gray-400">
+                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail h-5 w-5 text-gray-400">
                                                 <rect width="20" height="16" x="2" y="4" rx="2"></rect>
                                                 <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-                                            </svg></div><input type="email" class="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all duration-200" placeholder="Enter your email" value="">
+                                            </svg>
+                                        </div>
+                                        <input type="email" class="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all duration-200" placeholder="Enter your email">
                                     </div>
                                 </div>
                                 <div class="space-y-2"><label class="text-sm font-medium text-gray-700 block">Password</label>
                                     <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock h-5 w-5 text-gray-400">
+                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock h-5 w-5 text-gray-400">
                                                 <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
                                                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                                            </svg></div><input type="password" class="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all duration-200" placeholder="Enter your password" value=""><button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                                            </svg>
+                                        </div>
+                                        <input type="password" class="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all duration-200" placeholder="Enter your password" value="">
+                                        <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors duration-200">
                                                 <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                                                 <circle cx="12" cy="12" r="3"></circle>
-                                            </svg></button>
+                                            </svg>
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="text-right"><button type="button" class="text-orange-500 hover:text-orange-600 text-sm font-medium transition-colors duration-200">Forgot Password?</button></div><button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 rounded-2xl font-bold text-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"><span>Sign In</span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-5 h-5">
+                                <div class="text-right">
+                                    <button type="button" class="text-orange-500 hover:text-orange-600 text-sm font-medium transition-colors duration-200">Forgot Password?</button>
+                                </div>
+                                <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 rounded-2xl font-bold text-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2">
+                                    <span>Sign In</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-5 h-5">
                                         <path d="M5 12h14"></path>
                                         <path d="m12 5 7 7-7 7"></path>
-                                    </svg></button>
+                                    </svg>
+                                </button>
                             </form>
                             <div class="my-8 flex items-center">
-                                <div class="flex-1 border-t border-gray-200"></div><span class="px-4 text-sm text-gray-500 bg-white">or continue with</span>
+                                <div class="flex-1 border-t border-gray-200"></div>
+                                <span class="px-4 text-sm text-gray-500 bg-white">or continue with</span>
                                 <div class="flex-1 border-t border-gray-200"></div>
                             </div>
-                            <div class="grid grid-cols-2 gap-4"><button class="flex items-center justify-center space-x-2 py-3 px-4 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-colors duration-200 border border-gray-200"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chrome w-5 h-5 text-gray-600">
+                            <div class="grid grid-cols-2 gap-4">
+                                <button class="flex items-center justify-center space-x-2 py-3 px-4 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-colors duration-200 border border-gray-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chrome w-5 h-5 text-gray-600">
                                         <circle cx="12" cy="12" r="10"></circle>
                                         <circle cx="12" cy="12" r="4"></circle>
                                         <line x1="21.17" x2="12" y1="8" y2="8"></line>
@@ -58,7 +76,8 @@ require __DIR__ . '/../components/header.php';
                                     </svg><span class="text-sm font-medium text-gray-700">Google</span></button><button class="flex items-center justify-center space-x-2 py-3 px-4 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-colors duration-200 border border-gray-200"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-apple w-5 h-5 text-gray-600">
                                         <path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"></path>
                                         <path d="M10 2c1 .5 2 2 2 5"></path>
-                                    </svg><span class="text-sm font-medium text-gray-700">Apple</span></button></div>
+                                    </svg><span class="text-sm font-medium text-gray-700">Apple</span></button>
+                            </div>
                         </div>
                         <div class="text-center mt-8">
                             <p class="text-gray-600">Don't have an account? <a href="register.php" class="text-orange-500 hover:text-orange-600 font-semibold transition-colors duration-200">Create Account</a></p>
@@ -83,7 +102,7 @@ require __DIR__ . '/../components/header.php';
             </div>
         </div>
         <!-- End Overlay -->
-         
+
     </main>
     <script src="../assets/js/toast.js"></script>
     <script src="../assets/js/toggle-password.js"></script>
