@@ -176,12 +176,12 @@ require __DIR__ . '/partials/headers.php';
                                 </div>
                                 <div class="space-y-4">
                                     <div class="flex items-center justify-between py-3 border-b border-gray-100">
-                                        <span class="text-sm font-medium text-gray-600">Slug</span>
-                                        <span class="text-sm font-mono text-gray-900"><?php echo htmlspecialchars($product['slug'] ?? 'N/A'); ?></span>
+                                        <span class="text-sm font-medium text-gray-600">Dimensions</span>
+                                        <span class="text-sm font-mono text-gray-900"><?php echo htmlspecialchars($product['dimensions'] ?? 'N/A'); ?></span>
                                     </div>
                                     <div class="flex items-center justify-between py-3 border-b border-gray-100">
                                         <span class="text-sm font-medium text-gray-600">Weight</span>
-                                        <span class="text-sm text-gray-900"><?php echo htmlspecialchars($product['weight'] ?? 'N/A'); ?></span>
+                                        <span class="text-sm text-gray-900"><?php echo htmlspecialchars($product['weight'] ?? 'N/A'); ?>kg</span>
                                     </div>
                                     <div class="flex items-center justify-between py-3 border-b border-gray-100">
                                         <span class="text-sm font-medium text-gray-600">Created</span>

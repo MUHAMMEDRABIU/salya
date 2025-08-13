@@ -21,7 +21,6 @@ try {
     $description = trim($_POST['description'] ?? '');
     $slug = trim($_POST['slug'] ?? '');
     $isActive = isset($_POST['is_active']) ? 1 : 0;
-    $isFeatured = isset($_POST['is_featured']) ? 1 : 0;
     
     if (empty($categoryId) || empty($name)) {
         throw new Exception('Category ID and name are required');
@@ -83,10 +82,10 @@ try {
     // Update category
     $stmt = $pdo->prepare("
         UPDATE categories 
-        SET name = ?, slug = ?, description = ?, image_url = ?, is_active = ?, is_featured = ?, updated_at = NOW()
+        SET name = ?, slug = ?, description = ?, image_url = ?, is_active = ?, updated_at = NOW()
         WHERE id = ?
     ");
-    $result = $stmt->execute([$name, $slug, $description, $imageName, $isActive, $isFeatured, $categoryId]);
+    $result = $stmt->execute([$name, $slug, $description, $imageName, $isActive, $categoryId]);
 
     if (!$result) {
         throw new Exception('Failed to update category');
