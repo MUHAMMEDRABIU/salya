@@ -114,53 +114,7 @@ require_once 'partials/headers.php';
         </div>
 
         <!-- Stats Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-slide-up" style="animation-delay: 0.1s;">
-            <div class="stats-card bg-white rounded-2xl p-4 md:p-6 floating-card text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                    <i class="fas fa-shopping-bag text-blue-600 text-lg md:text-xl"></i>
-                </div>
-                <p class="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-                    <?php echo number_format($userStats['total_orders'] ?? 0); ?>
-                </p>
-                <p class="text-gray-500 text-xs md:text-sm">Total Orders</p>
-            </div>
-
-            <div class="stats-card bg-white rounded-2xl p-4 md:p-6 floating-card text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                <div class="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                    <i class="fas fa-naira-sign text-green-600 text-lg md:text-xl"></i>
-                </div>
-                <p class="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-                    <?php echo CURRENCY_SYMBOL; ?><?php echo number_format(($userStats['total_amount'] ?? 0) / 1000, 1); ?>k
-                </p>
-                <p class="text-gray-500 text-xs md:text-sm">Total Spent</p>
-            </div>
-
-            <div class="stats-card bg-white rounded-2xl p-4 md:p-6 floating-card text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                <div class="w-10 h-10 md:w-12 md:h-12 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                    <i class="fas fa-star text-orange-600 text-lg md:text-xl"></i>
-                </div>
-                <p class="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-                    <?php echo number_format($user['loyalty_points'] ?? 0); ?>
-                </p>
-                <p class="text-gray-500 text-xs md:text-sm">Loyalty Points</p>
-            </div>
-
-            <div class="stats-card bg-white rounded-2xl p-4 md:p-6 floating-card text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                <div class="w-10 h-10 md:w-12 md:h-12 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                    <i class="fas fa-trophy text-purple-600 text-lg md:text-xl"></i>
-                </div>
-                <p class="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-                    <?php
-                    $level = 'Bronze';
-                    $totalSpent = $userStats['total_amount'] ?? 0;
-                    if ($totalSpent >= 100000) $level = 'Gold';
-                    elseif ($totalSpent >= 50000) $level = 'Silver';
-                    echo $level;
-                    ?>
-                </p>
-                <p class="text-gray-500 text-xs md:text-sm">Member Level</p>
-            </div>
-        </div>
+        <
 
         <!-- Quick Actions -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 animate-slide-up" style="animation-delay: 0.2s;">

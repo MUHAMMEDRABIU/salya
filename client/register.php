@@ -304,7 +304,7 @@ require __DIR__ . '/../components/header.php';
         </div>
 
         <!-- Overlay -->
-        <div id="overlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+        <div id="overlay" class="fixed inset-0 bg-black bg-opacity-60 items-center justify-center z-50 hidden backdrop-blur-sm">
             <div class="text-white text-lg font-bold p-8 rounded-lg max-w-lg mx-4">
                 <div class="text-center">
                     <!-- Simple Orange Spinner -->
