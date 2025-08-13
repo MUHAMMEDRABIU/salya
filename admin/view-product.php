@@ -176,8 +176,8 @@ require __DIR__ . '/partials/headers.php';
                                 </div>
                                 <div class="space-y-4">
                                     <div class="flex items-center justify-between py-3 border-b border-gray-100">
-                                        <span class="text-sm font-medium text-gray-600">SKU</span>
-                                        <span class="text-sm font-mono text-gray-900"><?php echo htmlspecialchars($product['sku'] ?? 'N/A'); ?></span>
+                                        <span class="text-sm font-medium text-gray-600">Slug</span>
+                                        <span class="text-sm font-mono text-gray-900"><?php echo htmlspecialchars($product['slug'] ?? 'N/A'); ?></span>
                                     </div>
                                     <div class="flex items-center justify-between py-3 border-b border-gray-100">
                                         <span class="text-sm font-medium text-gray-600">Weight</span>
@@ -193,11 +193,11 @@ require __DIR__ . '/partials/headers.php';
                     </div>
 
                     <!-- Recent Orders -->
-                    <?php if (!empty($recentOrders)): ?>
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                            <div class="p-6 border-b border-gray-200">
-                                <h3 class="text-xl font-semibold text-gray-800">Recent Orders</h3>
-                            </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                        <div class="p-6 border-b border-gray-200">
+                            <h3 class="text-xl font-semibold text-gray-800">Recent Orders</h3>
+                        </div>
+                        <?php if (!empty($recentOrders)): ?>
                             <div class="p-6">
                                 <div class="space-y-4">
                                     <?php foreach ($recentOrders as $order): ?>
@@ -219,8 +219,16 @@ require __DIR__ . '/partials/headers.php';
                                     <?php endforeach; ?>
                                 </div>
                             </div>
-                        </div>
-                    <?php endif; ?>
+                        <?php else: ?>
+                            <div class="p-10 text-center">
+                                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                                    <i data-lucide="inbox" class="w-7 h-7 text-gray-400"></i>
+                                </div>
+                                <p class="text-gray-900 font-semibold">No recent orders</p>
+                                <p class="text-gray-600 text-sm mt-1">This product hasn’t been ordered recently.</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
 
                 <!-- Right Column - Quick Stats and Actions -->
@@ -268,20 +276,19 @@ require __DIR__ . '/partials/headers.php';
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm text-gray-600">Visibility</span>
                                     <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" class="sr-only peer" <?php echo ($product['is_active'] ?? 1) ? 'checked' : ''; ?>>
+                                        <input id="visibilityToggle" type="checkbox" class="sr-only peer"
+                                            <?php echo ((int)($product['is_active'] ?? 1) === 1) ? 'checked' : ''; ?>>
                                         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
                                     </label>
                                 </div>
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm text-gray-600">Featured</span>
                                     <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" class="sr-only peer" <?php echo ($product['is_featured'] ?? 0) ? 'checked' : ''; ?>>
+                                        <input id="featuredToggle" type="checkbox" class="sr-only peer" <?php echo ($product['is_featured'] ?? 0) ? 'checked' : ''; ?>>
                                         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
                                     </label>
                                 </div>
-                                <div class="pt-4 border-t border-gray-200">
-                                    <p class="text-xs text-gray-500">Last updated: <?php echo date('M d, Y \a\t g:i A', strtotime($product['updated_at'] ?? $product['created_at'])); ?></p>
-                                </div>
+                                <!-- ...existing code... -->
                             </div>
                         </div>
                     </div>
@@ -322,6 +329,22 @@ require __DIR__ . '/partials/headers.php';
             </div>
 
             <!-- Modal Body -->
+            <?php
+            // Pre-compute numeric weight and dimensions for the form
+            $weightVal = '';
+            if (!empty($product['weight'])) {
+                if (is_numeric($product['weight'])) {
+                    $weightVal = $product['weight'];
+                } elseif (preg_match('/([\d.]+)/', (string)$product['weight'], $m)) {
+                    $weightVal = $m[1];
+                }
+            }
+            $widthVal = $heightVal = '';
+            if (!empty($product['dimensions']) && preg_match('/^\s*([\d.]+)\s*x\s*([\d.]+)\s*(cm)?\s*$/i', (string)$product['dimensions'], $m)) {
+                $widthVal = $m[1];
+                $heightVal = $m[2];
+            }
+            ?>
             <form id="editProductForm" class="p-6 space-y-8" method="post">
                 <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
 
@@ -336,9 +359,10 @@ require __DIR__ . '/partials/headers.php';
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
                         </div>
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">SKU</label>
-                            <input type="text" name="sku" value="<?php echo htmlspecialchars($product['sku'] ?? ''); ?>"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
+                            <label class="block text-sm font-semibold text-gray-700">Slug</label>
+                            <input type="text" name="slug" value="<?php echo htmlspecialchars($product['slug'] ?? ''); ?>"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+                                placeholder="Auto-generated if left empty">
                         </div>
                     </div>
 
@@ -378,16 +402,22 @@ require __DIR__ . '/partials/headers.php';
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">Weight</label>
-                            <input type="text" name="weight" value="<?php echo htmlspecialchars($product['weight'] ?? ''); ?>"
-                                placeholder="e.g., 1kg, 500g"
+                            <label class="block text-sm font-semibold text-gray-700">Weight (kg)</label>
+                            <input type="number" name="weight" value="<?php echo htmlspecialchars($weightVal); ?>" min="0" step="0.01"
+                                placeholder="e.g., 1.25"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
                         </div>
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">Dimensions</label>
-                            <input type="text" name="dimensions" value="<?php echo htmlspecialchars($product['dimensions'] ?? ''); ?>"
-                                placeholder="e.g., 10x5x3 cm"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
+                            <label class="block text-sm font-semibold text-gray-700">Dimensions (cm)</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <input type="number" name="width" value="<?php echo htmlspecialchars($widthVal); ?>" min="0" step="0.01"
+                                    placeholder="Width"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
+                                <input type="number" name="height" value="<?php echo htmlspecialchars($heightVal); ?>" min="0" step="0.01"
+                                    placeholder="Height"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
+                            </div>
+                            <p class="text-xs text-gray-500">Will be saved as "widthxheight cm".</p>
                         </div>
                     </div>
                 </div>
@@ -515,6 +545,60 @@ require __DIR__ . '/partials/headers.php';
     <script src="../assets/js/loading-overlay.js"></script>
     <script src="../assets/js/toast.js"></script>
     <script>
+        // Unified status toggles (is_active, is_featured)
+        (() => {
+            const productId = <?php echo (int)$product['id']; ?>;
+
+            function addStatusToggle(el, field, onMsg, offMsg) {
+                if (!el) return;
+                el.addEventListener('change', async () => {
+                    const newVal = el.checked ? 1 : 0;
+                    el.disabled = true;
+
+                    try {
+                        const params = new URLSearchParams();
+                        params.set('product_id', String(productId));
+                        params.set(field, String(newVal));
+
+                        const resp = await fetch('api/update-product-status.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: params.toString()
+                        });
+
+                        const data = await resp.json().catch(() => null);
+                        if (!resp.ok || !data?.success) {
+                            el.checked = !el.checked; // revert on failure
+                            showToasted(data?.message || 'Failed to update status', 'error');
+                            return;
+                        }
+                        showToasted(newVal ? onMsg : offMsg, 'success');
+                    } catch (e) {
+                        el.checked = !el.checked; // revert on error
+                        showToasted('Network error updating status', 'error');
+                        console.error(e);
+                    } finally {
+                        el.disabled = false;
+                    }
+                });
+            }
+
+            addStatusToggle(
+                document.getElementById('visibilityToggle'),
+                'is_active',
+                'Product is now visible',
+                'Product is now hidden'
+            );
+
+            addStatusToggle(
+                document.getElementById('featuredToggle'),
+                'is_featured',
+                'Product marked as featured',
+                'Product unfeatured'
+            );
+        })();
         // Image gallery functionality
         document.querySelectorAll('.thumbnail-image').forEach(img => {
             img.addEventListener('click', function() {
@@ -600,47 +684,114 @@ require __DIR__ . '/partials/headers.php';
             }
         });
 
-        // Form submission
-        editProductForm.addEventListener('submit', (e) => {
+        // Helper: slugify
+        function slugify(str) {
+            return String(str || '')
+                .toLowerCase()
+                .trim()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+        }
+
+        // Replace submit handler with validation + derived fields
+        editProductForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const submitBtn = document.getElementById('updateProductBtn');
             const originalText = submitBtn.innerHTML;
 
-            // Show loading state
             submitBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i>Saving...';
             submitBtn.disabled = true;
 
             try {
                 const formData = new FormData(editProductForm);
 
-                const response = fetch('api/update-product.php', {
+                const name = (formData.get('name') || '').toString().trim();
+                const price = parseFloat(formData.get('price'));
+                const inStock = parseInt(formData.get('in_stock'), 10);
+                const categoryId = parseInt(formData.get('category_id'), 10);
+
+                const weightVal = formData.get('weight');
+                const weight = weightVal !== null && weightVal !== '' ? parseFloat(weightVal) : null;
+
+                const widthVal = formData.get('width');
+                const heightVal = formData.get('height');
+                const width = widthVal !== null && widthVal !== '' ? parseFloat(widthVal) : null;
+                const height = heightVal !== null && heightVal !== '' ? parseFloat(heightVal) : null;
+
+                if (!name) {
+                    showToasted('Product name is required', 'error');
+                    return;
+                }
+                if (!categoryId || isNaN(categoryId)) {
+                    showToasted('Please select a valid category', 'error');
+                    return;
+                }
+                if (isNaN(price) || price < 0) {
+                    showToasted('Price must be a valid non-negative number', 'error');
+                    return;
+                }
+                if (isNaN(inStock) || inStock < 0) {
+                    showToasted('Stock must be a valid non-negative integer', 'error');
+                    return;
+                }
+                if (weight !== null && (isNaN(weight) || weight < 0)) {
+                    showToasted('Weight must be a valid non-negative number', 'error');
+                    return;
+                }
+
+                const anyDimProvided = (width !== null || height !== null);
+                if (anyDimProvided && (width === null || height === null || isNaN(width) || isNaN(height) || width < 0 || height < 0)) {
+                    showToasted('Please provide valid non-negative width and height', 'error');
+                    return;
+                }
+
+                // Derive slug if empty
+                const currentSlug = (formData.get('slug') || '').toString().trim();
+                if (!currentSlug) formData.set('slug', slugify(name));
+
+                // Derive dimensions "WxH cm"
+                if (width !== null && height !== null) {
+                    formData.set('dimensions', `${width}x${height} cm`);
+                } else {
+                    formData.set('dimensions', '');
+                }
+                formData.delete('width');
+                formData.delete('height');
+
+                const resp = await fetch('api/update-product.php', {
                     method: 'POST',
                     body: formData
                 });
 
-                const result = JSON.stringify(response);
-                console.log(result);
+                const raw = await resp.text();
+                let data = null;
+                try {
+                    data = JSON.parse(raw);
+                } catch (_) {}
 
-                if (result.success) {
-                    // Show success message
+                if (!resp.ok) {
+                    const msg = (data && data.message) ? data.message : `HTTP ${resp.status}`;
+                    showToasted(msg, 'error');
+                    console.error('Update failed:', data || raw);
+                    return;
+                }
+
+                if (data && data.success) {
                     showToasted('Product updated successfully!', 'success');
-
-                    // Close modal after short delay
                     setTimeout(() => {
                         closeModal();
-                        // Optionally reload the page to show updated data
                         window.location.reload();
-                    }, 1500);
+                    }, 800);
                 } else {
-                    showToasted(result.message || 'Failed to update product', 'error');
-                    console.error('Update failed:', result);
+                    showToasted((data && data.message) || 'Failed to update product', 'error');
+                    console.error('Update failed:', data || raw);
                 }
             } catch (error) {
+                showToasted('Network error. Please try again.', 'error');
                 console.error('Error:', error);
-                showToasted('An error occurred while updating the product', 'error');
             } finally {
-                // Restore button state
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
@@ -651,36 +802,39 @@ require __DIR__ . '/partials/headers.php';
             const deleteConfirmModal = document.getElementById('deleteConfirmModal');
             deleteConfirmModal.classList.remove('hidden');
 
-            document.getElementById('deleteConfirmBtn').addEventListener('click', () => {
-                const productId = <?php echo $product['id']; ?>;
-                fetch('api/delete-product.php', {
+            const productId = <?php echo (int)$product['id']; ?>;
+
+            // Attach the confirm listener once per open
+            const confirmBtn = document.getElementById('deleteConfirmBtn');
+            confirmBtn.addEventListener('click', async () => {
+                const params = new URLSearchParams();
+                params.set('product_id', String(productId));
+
+                try {
+                    const resp = await fetch('api/delete-product.php', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/x-www-form-urlencoded'
                         },
-                        body: JSON.stringify({
-                            product_id: productId
-                        })
-                    })
-
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showToasted('Product deleted successfully!', 'success');
-                            setTimeout(() => {
-                                window.location.href = 'products.php';
-                            }, 1500);
-                        } else {
-                            showToasted(data.message || 'Failed to delete product', 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showToasted('An error occurred while deleting the product', 'error');
-                    })
-                    .finally(() => {
-                        deleteConfirmModal.classList.add('hidden');
+                        body: params.toString()
                     });
+                    const data = await resp.json().catch(() => null);
+
+                    if (!resp.ok || !data?.success) {
+                        showToasted(data?.message || 'Failed to delete product', 'error');
+                        return;
+                    }
+
+                    showToasted('Product deleted successfully!', 'success');
+                    setTimeout(() => window.location.href = 'products.php', 1200);
+                } catch (err) {
+                    console.error(err);
+                    showToasted('An error occurred while deleting the product', 'error');
+                } finally {
+                    deleteConfirmModal.classList.add('hidden');
+                }
+            }, {
+                once: true
             });
         });
 

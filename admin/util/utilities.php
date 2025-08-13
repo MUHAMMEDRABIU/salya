@@ -324,7 +324,13 @@ function getUserById($pdo, $userId) {
 
 function getProductById($pdo, $productId) {
     try {
-        $stmt = $pdo->prepare("SELECT * FROM products WHERE id = ?");
+        $stmt = $pdo->prepare("
+        SELECT p.*, c.name AS category_name
+        FROM products p
+        LEFT JOIN categories c ON c.id = p.category_id
+        WHERE p.id = ?
+        LIMIT 1
+    ");
         $stmt->execute([$productId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
@@ -453,20 +459,6 @@ function getProductStats(PDO $pdo)
 }
 
 /**
- * Delete product by ID
- */
-function deleteProduct(PDO $pdo, $productId)
-{
-    try {
-        $stmt = $pdo->prepare("DELETE FROM products WHERE id = ?");
-        return $stmt->execute([$productId]);
-    } catch (PDOException $e) {
-        error_log("Error deleting product: " . $e->getMessage());
-        return false;
-    }
-}
-
-/**
  * Fetch all categories (used in dropdowns)
  */
 function getAllCategories(PDO $pdo)
@@ -492,8 +484,8 @@ function getProductImages($pdo, $productId) {
     try {
         $stmt = $pdo->prepare("
             SELECT * FROM products 
-            WHERE product_id = ? 
-            ORDER BY sort_order ASC, created_at ASC
+            WHERE id = ? 
+            ORDER BY created_at ASC
         ");
         $stmt->execute([$productId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -506,23 +498,39 @@ function getProductImages($pdo, $productId) {
 /**
  * Get recent orders for a specific product
  */
-function getRecentOrdersForProduct($pdo, $productId, $limit = 5) {
-    try {
-        $stmt = $pdo->prepare("
-            SELECT o.*, u.first_name, u.last_name,
-                   CONCAT(u.first_name, ' ', u.last_name) as customer_name
-            FROM orders o
-            LEFT JOIN users u ON o.user_id = u.id
-            WHERE o.product_id = ?
-            ORDER BY o.created_at DESC
-            LIMIT ?
-        ");
-        $stmt->execute([$productId, $limit]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        error_log("Error fetching recent orders: " . $e->getMessage());
-        return [];
-    }
+function getRecentOrdersForProduct(PDO $pdo, int $productId, int $limit = 5): array
+{
+    if ($productId <= 0) return [];
+
+    $limit = max(1, (int)$limit);
+
+    $sql = "
+        SELECT
+            o.id AS order_id,
+            o.order_number,
+            COALESCE(o.status, 'pending') AS status,
+            COALESCE(
+                o.total_amount,
+                SUM(oi.quantity * oi.unit_price)
+            ) AS total_amount,
+            o.created_at,
+            COALESCE(NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), ''), 'Guest') AS customer_name
+        FROM order_items oi
+        INNER JOIN orders o ON oi.order_id = o.id
+        LEFT JOIN users u ON o.user_id = u.id
+        WHERE oi.product_id = :pid
+        GROUP BY
+            o.id, o.order_number, o.status, o.total_amount, o.created_at, u.first_name, u.last_name
+        ORDER BY o.created_at DESC
+        LIMIT :lim
+    ";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':pid', $productId, PDO::PARAM_INT);
+    $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
 /**

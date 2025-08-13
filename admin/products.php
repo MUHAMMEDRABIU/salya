@@ -460,10 +460,10 @@ require __DIR__ . '/partials/headers.php';
                                 placeholder="Enter product name">
                         </div>
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">SKU</label>
-                            <input type="text" name="sku"
+                            <label class="block text-sm font-semibold text-gray-700">Slug</label>
+                            <input type="text" name="slug"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
-                                placeholder="Product SKU (optional)">
+                                placeholder="Auto-generated if left empty">
                         </div>
                     </div>
 
@@ -472,6 +472,22 @@ require __DIR__ . '/partials/headers.php';
                         <textarea name="description" rows="4"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 resize-none"
                             placeholder="Describe your product..."></textarea>
+                    </div>
+
+                    <!-- NEW: Features and Nutritional Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-gray-700">Features</label>
+                            <textarea name="features" rows="4"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+                                placeholder="Key features, one per line"></textarea>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-gray-700">Nutritional Info</label>
+                            <textarea name="nutritional_info" rows="4"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+                                placeholder="Calories, protein, fat, etc."></textarea>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -507,18 +523,25 @@ require __DIR__ . '/partials/headers.php';
                         </div>
                     </div>
 
+                    <!-- REPLACED: Weight and Dimensions -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">Weight</label>
-                            <input type="text" name="weight"
-                                placeholder="e.g., 1kg, 500g"
+                            <label class="block text-sm font-semibold text-gray-700">Weight (kg)</label>
+                            <input type="number" name="weight" min="0" step="0.01"
+                                placeholder="e.g., 1.25"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
                         </div>
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">Dimensions</label>
-                            <input type="text" name="dimensions"
-                                placeholder="e.g., 10x5x3 cm"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
+                            <label class="block text-sm font-semibold text-gray-700">Dimensions (cm)</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <input type="number" name="width" min="0" step="0.01"
+                                    placeholder="Width"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
+                                <input type="number" name="height" min="0" step="0.01"
+                                    placeholder="Height"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
+                            </div>
+                            <p class="text-xs text-gray-500">Will be saved as "widthxheight cm".</p>
                         </div>
                     </div>
                 </div>
@@ -752,9 +775,62 @@ require __DIR__ . '/partials/headers.php';
                 }, 300);
             }
 
+            // Helper: slugify
+            function slugify(str) {
+                return String(str || '')
+                    .toLowerCase()
+                    .trim()
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-');
+            }
+
             async function submitProduct(formData) {
                 const submitBtn = document.getElementById('submitProductBtn');
                 const originalText = submitBtn.innerHTML;
+
+                // Client-side validations + derive fields
+                const name = (formData.get('name') || '').toString().trim();
+                const price = parseFloat(formData.get('price'));
+                const inStock = parseInt(formData.get('in_stock'), 10);
+                const categoryId = parseInt(formData.get('category_id'), 10);
+
+                const weightVal = formData.get('weight');
+                const weight = weightVal !== null && weightVal !== '' ? parseFloat(weightVal) : null;
+
+                const widthVal = formData.get('width');
+                const heightVal = formData.get('height');
+                const width = widthVal !== null && widthVal !== '' ? parseFloat(widthVal) : null;
+                const height = heightVal !== null && heightVal !== '' ? parseFloat(heightVal) : null;
+
+                if (!name) return showToasted('Product name is required', 'error');
+                if (!categoryId || isNaN(categoryId)) return showToasted('Please select a valid category', 'error');
+                if (isNaN(price) || price < 0) return showToasted('Price must be a valid non-negative number', 'error');
+                if (isNaN(inStock) || inStock < 0) return showToasted('Stock must be a valid non-negative integer', 'error');
+                if (weight !== null && (isNaN(weight) || weight < 0)) return showToasted('Weight must be a valid non-negative number', 'error');
+
+                // If one dimension is provided, both must be provided and valid
+                const anyDimProvided = (width !== null || height !== null);
+                if (anyDimProvided && (width === null || height === null || isNaN(width) || isNaN(height) || width < 0 || height < 0)) {
+                    return showToasted('Please provide valid non-negative width and height', 'error');
+                }
+
+                // Derive slug if missing
+                const currentSlug = (formData.get('slug') || '').toString().trim();
+                if (!currentSlug) formData.set('slug', slugify(name));
+
+                // Derive dimensions "WxH cm"
+                if (width !== null && height !== null) {
+                    formData.set('dimensions', `${width}x${height} cm`);
+                } else {
+                    formData.set('dimensions', '');
+                }
+                // Remove helper fields (width/height) to keep payload clean
+                formData.delete('width');
+                formData.delete('height');
+
+                // Mirror stock_quantity with in_stock for backend compatibility
+                formData.set('stock_quantity', String(inStock));
 
                 submitBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i>Adding Product...';
                 submitBtn.disabled = true;
@@ -764,29 +840,34 @@ require __DIR__ . '/partials/headers.php';
                         method: 'POST',
                         body: formData
                     });
+                    const raw = await response.text();
+                    let result = null;
+                    try {
+                        result = JSON.parse(raw);
+                    } catch (_) {}
 
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    if (!response.ok) throw new Error(result?.message || `HTTP ${response.status}`);
 
-                    const result = await response.json();
-
-                    if (result.success) {
+                    if (result?.success) {
                         showToasted('Product added successfully!', 'success');
                         setTimeout(() => {
-                            closeAddProductModal();
-                            window.location.reload();
-                        }, 1500);
+                            // close modal and refresh
+                            const addModalContent = document.getElementById('addModalContent');
+                            addModalContent.classList.remove('scale-100', 'opacity-100');
+                            addModalContent.classList.add('scale-95', 'opacity-0');
+                            setTimeout(() => {
+                                document.getElementById('addProductModal').classList.add('hidden');
+                                document.body.style.overflow = '';
+                                document.getElementById('addProductForm').reset();
+                                window.location.reload();
+                            }, 300);
+                        }, 800);
                     } else {
-                        showToasted(result.message || 'Failed to add product', 'error');
+                        showToasted(result?.message || 'Failed to add product', 'error');
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                        showToasted('Network error. Please check your connection and try again.', 'error');
-                    } else if (error.message.includes('HTTP error')) {
-                        showToasted('Server error. Please try again later.', 'error');
-                    } else {
-                        showToasted('An unexpected error occurred while adding the product', 'error');
-                    }
+                    showToasted(error.message || 'An unexpected error occurred while adding the product', 'error');
                 } finally {
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
