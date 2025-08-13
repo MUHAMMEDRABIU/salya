@@ -51,7 +51,8 @@ function getDashboardStats($pdo)
     }
 }
 
-function getAdminProfile($pdo, $admin_id){
+function getAdminProfile($pdo, $admin_id)
+{
     try {
         $stmt = $pdo->prepare("SELECT * FROM admins WHERE id = ?");
         $stmt->execute([$admin_id]);
@@ -271,7 +272,8 @@ function getAllOrders($pdo)
     }
 }
 
-function getOrderStatusCount($pdo, $status) {
+function getOrderStatusCount($pdo, $status)
+{
     try {
         $stmt = $pdo->prepare("SELECT COUNT(*) AS count FROM orders WHERE status = ?");
         $stmt->execute([$status]);
@@ -311,7 +313,8 @@ function getOrderStatistics($pdo, $order_id)
 }
 
 // function for getting user by id
-function getUserById($pdo, $userId) {
+function getUserById($pdo, $userId)
+{
     try {
         $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
         $stmt->execute([$userId]);
@@ -322,9 +325,16 @@ function getUserById($pdo, $userId) {
     }
 }
 
-function getProductById($pdo, $productId) {
+function getProductById($pdo, $productId)
+{
     try {
-        $stmt = $pdo->prepare("SELECT * FROM products WHERE id = ?");
+        $stmt = $pdo->prepare("
+        SELECT p.*, c.name AS category_name
+        FROM products p
+        LEFT JOIN categories c ON c.id = p.category_id
+        WHERE p.id = ?
+        LIMIT 1
+    ");
         $stmt->execute([$productId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
@@ -333,7 +343,8 @@ function getProductById($pdo, $productId) {
     }
 }
 
-function getOrderByNumber($pdo, $orderNumber) {
+function getOrderByNumber($pdo, $orderNumber)
+{
     try {
         $stmt = $pdo->prepare("SELECT * FROM orders WHERE order_number = ?");
         $stmt->execute([$orderNumber]);
@@ -344,7 +355,8 @@ function getOrderByNumber($pdo, $orderNumber) {
     }
 }
 
-function getOrderItems($pdo, $orderId) {
+function getOrderItems($pdo, $orderId)
+{
     try {
         $stmt = $pdo->prepare("SELECT * FROM order_items WHERE order_id = ?");
         $stmt->execute([$orderId]);
@@ -453,26 +465,12 @@ function getProductStats(PDO $pdo)
 }
 
 /**
- * Delete product by ID
- */
-function deleteProduct(PDO $pdo, $productId)
-{
-    try {
-        $stmt = $pdo->prepare("DELETE FROM products WHERE id = ?");
-        return $stmt->execute([$productId]);
-    } catch (PDOException $e) {
-        error_log("Error deleting product: " . $e->getMessage());
-        return false;
-    }
-}
-
-/**
  * Fetch all categories (used in dropdowns)
  */
 function getAllCategories(PDO $pdo)
 {
     try {
-        $stmt = $pdo->query("SELECT * FROM categories ORDER BY name ASC");
+        $stmt = $pdo->query("SELECT * FROM categories WHERE is_active = 1 ORDER BY name ASC");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
         error_log("Error fetching categories: " . $e->getMessage());
@@ -488,12 +486,13 @@ function getAllCategories(PDO $pdo)
 /**
  * Get product images (additional images beyond main image)
  */
-function getProductImages($pdo, $productId) {
+function getProductImages($pdo, $productId)
+{
     try {
         $stmt = $pdo->prepare("
             SELECT * FROM products 
-            WHERE product_id = ? 
-            ORDER BY sort_order ASC, created_at ASC
+            WHERE id = ? 
+            ORDER BY created_at ASC
         ");
         $stmt->execute([$productId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -506,23 +505,39 @@ function getProductImages($pdo, $productId) {
 /**
  * Get recent orders for a specific product
  */
-function getRecentOrdersForProduct($pdo, $productId, $limit = 5) {
-    try {
-        $stmt = $pdo->prepare("
-            SELECT o.*, u.first_name, u.last_name,
-                   CONCAT(u.first_name, ' ', u.last_name) as customer_name
-            FROM orders o
-            LEFT JOIN users u ON o.user_id = u.id
-            WHERE o.product_id = ?
-            ORDER BY o.created_at DESC
-            LIMIT ?
-        ");
-        $stmt->execute([$productId, $limit]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        error_log("Error fetching recent orders: " . $e->getMessage());
-        return [];
-    }
+function getRecentOrdersForProduct(PDO $pdo, int $productId, int $limit = 5): array
+{
+    if ($productId <= 0) return [];
+
+    $limit = max(1, (int)$limit);
+
+    $sql = "
+        SELECT
+            o.id AS order_id,
+            o.order_number,
+            COALESCE(o.status, 'pending') AS status,
+            COALESCE(
+                o.total_amount,
+                SUM(oi.quantity * oi.unit_price)
+            ) AS total_amount,
+            o.created_at,
+            COALESCE(NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), ''), 'Guest') AS customer_name
+        FROM order_items oi
+        INNER JOIN orders o ON oi.order_id = o.id
+        LEFT JOIN users u ON o.user_id = u.id
+        WHERE oi.product_id = :pid
+        GROUP BY
+            o.id, o.order_number, o.status, o.total_amount, o.created_at, u.first_name, u.last_name
+        ORDER BY o.created_at DESC
+        LIMIT :lim
+    ";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':pid', $productId, PDO::PARAM_INT);
+    $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
 /**
@@ -532,34 +547,45 @@ function getRecentOrdersForProduct($pdo, $productId, $limit = 5) {
 /**
  * Update product information
  */
-function updateProduct($pdo, $productId, $data) {
+function updateProduct($pdo, $productId, $data)
+{
     try {
         $sql = "UPDATE products SET ";
         $fields = [];
         $values = [];
-        
+
         // Build dynamic update query based on provided data
         $allowedFields = [
-            'name', 'description', 'price', 'in_stock', 'category_id', 
-            'sku', 'weight', 'dimensions', 'is_active', 'is_featured',
-            'meta_title', 'meta_description', 'image'
+            'name',
+            'description',
+            'price',
+            'in_stock',
+            'category_id',
+            'sku',
+            'weight',
+            'dimensions',
+            'is_active',
+            'is_featured',
+            'meta_title',
+            'meta_description',
+            'image'
         ];
-        
+
         foreach ($allowedFields as $field) {
             if (isset($data[$field])) {
                 $fields[] = "$field = ?";
                 $values[] = $data[$field];
             }
         }
-        
+
         if (empty($fields)) {
             return false;
         }
-        
+
         $sql .= implode(', ', $fields);
         $sql .= ", updated_at = NOW() WHERE id = ?";
         $values[] = $productId;
-            
+
         $stmt = $pdo->prepare($sql);
         return $stmt->execute($values);
     } catch (PDOException $e) {
@@ -571,14 +597,15 @@ function updateProduct($pdo, $productId, $data) {
 /**
  * Create new product
  */
-function createProduct($pdo, $data) {
+function createProduct($pdo, $data)
+{
     try {
         $sql = "INSERT INTO products (
             name, description, price, in_stock, category_id, 
             sku, weight, dimensions, is_active, is_featured,
             meta_title, meta_description, image, created_at, updated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
-        
+
         $stmt = $pdo->prepare($sql);
         $result = $stmt->execute([
             $data['name'],
@@ -595,7 +622,7 @@ function createProduct($pdo, $data) {
             $data['meta_description'] ?? null,
             $data['image'] ?? null
         ]);
-        
+
         if ($result) {
             return $pdo->lastInsertId();
         }
@@ -610,7 +637,8 @@ function createProduct($pdo, $data) {
 /**
  * Search products
  */
-function searchProducts($pdo, $searchTerm, $categoryId = null, $limit = 20, $offset = 0) {
+function searchProducts($pdo, $searchTerm, $categoryId = null, $limit = 20, $offset = 0)
+{
     try {
         $sql = "
             SELECT p.*, c.name as category_name 
@@ -618,18 +646,18 @@ function searchProducts($pdo, $searchTerm, $categoryId = null, $limit = 20, $off
             LEFT JOIN categories c ON p.category_id = c.id 
             WHERE (p.name LIKE ? OR p.description LIKE ? OR p.sku LIKE ?)
         ";
-        
+
         $params = ["%$searchTerm%", "%$searchTerm%", "%$searchTerm%"];
-        
+
         if ($categoryId) {
             $sql .= " AND p.category_id = ?";
             $params[] = $categoryId;
         }
-        
+
         $sql .= " ORDER BY p.created_at DESC LIMIT ? OFFSET ?";
         $params[] = $limit;
         $params[] = $offset;
-        
+
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -642,7 +670,8 @@ function searchProducts($pdo, $searchTerm, $categoryId = null, $limit = 20, $off
 /**
  * Get products by category
  */
-function getProductsByCategory($pdo, $categoryId, $limit = 20, $offset = 0) {
+function getProductsByCategory($pdo, $categoryId, $limit = 20, $offset = 0)
+{
     try {
         $stmt = $pdo->prepare("
             SELECT p.*, c.name as category_name 
@@ -663,7 +692,8 @@ function getProductsByCategory($pdo, $categoryId, $limit = 20, $offset = 0) {
 /**
  * Get low stock products
  */
-function getLowStockProducts($pdo, $threshold = 10) {
+function getLowStockProducts($pdo, $threshold = 10)
+{
     try {
         $stmt = $pdo->prepare("
             SELECT p.*, c.name as category_name 
@@ -683,7 +713,8 @@ function getLowStockProducts($pdo, $threshold = 10) {
 /**
  * Get out of stock products
  */
-function getOutOfStockProducts($pdo) {
+function getOutOfStockProducts($pdo)
+{
     try {
         $stmt = $pdo->prepare("
             SELECT p.*, c.name as category_name 
@@ -703,7 +734,8 @@ function getOutOfStockProducts($pdo) {
 /**
  * Update product stock
  */
-function updateProductStock($pdo, $productId, $newStock) {
+function updateProductStock($pdo, $productId, $newStock)
+{
     try {
         $stmt = $pdo->prepare("
             UPDATE products 
@@ -720,7 +752,8 @@ function updateProductStock($pdo, $productId, $newStock) {
 /**
  * Delete product image
  */
-function deleteProductImage($pdo, $imageId) {
+function deleteProductImage($pdo, $imageId)
+{
     try {
         $stmt = $pdo->prepare("DELETE FROM product_images WHERE id = ?");
         return $stmt->execute([$imageId]);
@@ -733,7 +766,8 @@ function deleteProductImage($pdo, $imageId) {
 /**
  * Get featured products
  */
-function getFeaturedProducts($pdo, $limit = 10) {
+function getFeaturedProducts($pdo, $limit = 10)
+{
     try {
         $stmt = $pdo->prepare("
             SELECT p.*, c.name as category_name 
@@ -754,7 +788,8 @@ function getFeaturedProducts($pdo, $limit = 10) {
 /**
  * Toggle product status (active/inactive)
  */
-function toggleProductStatus($pdo, $productId) {
+function toggleProductStatus($pdo, $productId)
+{
     try {
         $stmt = $pdo->prepare("
             UPDATE products 
@@ -772,7 +807,8 @@ function toggleProductStatus($pdo, $productId) {
 /**
  * Toggle product featured status
  */
-function toggleProductFeatured($pdo, $productId) {
+function toggleProductFeatured($pdo, $productId)
+{
     try {
         $stmt = $pdo->prepare("
             UPDATE products 
@@ -790,10 +826,11 @@ function toggleProductFeatured($pdo, $productId) {
 /**
  * Get product count by status
  */
-function getProductCountByStatus($pdo, $status = 'active') {
+function getProductCountByStatus($pdo, $status = 'active')
+{
     try {
         $sql = "SELECT COUNT(*) as count FROM products WHERE ";
-        
+
         switch ($status) {
             case 'active':
                 $sql .= "is_active = 1";
@@ -813,7 +850,7 @@ function getProductCountByStatus($pdo, $status = 'active') {
             default:
                 $sql .= "1 = 1"; // All products
         }
-        
+
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC)['count'];
@@ -826,38 +863,39 @@ function getProductCountByStatus($pdo, $status = 'active') {
 /**
  * Handle file upload for product images
  */
-function handleProductImageUpload($file, $uploadDir = '../assets/uploads/') {
+function handleProductImageUpload($file, $uploadDir = '../assets/uploads/')
+{
     try {
         // Validate file
         if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
             return ['success' => false, 'message' => 'No file uploaded'];
         }
-        
+
         // Check file size (max 10MB)
         if ($file['size'] > 10 * 1024 * 1024) {
             return ['success' => false, 'message' => 'File size too large (max 10MB)'];
         }
-        
+
         // Check file type
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $mimeType = finfo_file($finfo, $file['tmp_name']);
         finfo_close($finfo);
-        
+
         if (!in_array($mimeType, $allowedTypes)) {
             return ['success' => false, 'message' => 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed'];
         }
-        
+
         // Generate unique filename
         $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
         $filename = uniqid('product_') . '.' . $extension;
         $filepath = $uploadDir . $filename;
-        
+
         // Create upload directory if it doesn't exist
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
-        
+
         // Move uploaded file
         if (move_uploaded_file($file['tmp_name'], $filepath)) {
             return ['success' => true, 'filename' => $filename, 'filepath' => $filepath];
@@ -1020,7 +1058,8 @@ function getAdminActivityLog(PDO $pdo, int $adminId, int $limit = 10): array
 }
 
 // Function for login admin activity
-function logAdminActivity($pdo, $adminId, $action, $details = '') {
+function logAdminActivity($pdo, $adminId, $action, $details = '')
+{
     $stmt = $pdo->prepare("INSERT INTO admin_activity_log (admin_id, action, details, created_at) VALUES (?, ?, ?, NOW())");
     $stmt->execute([$adminId, $action, $details]);
 }

@@ -1,161 +1,227 @@
 <?php
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 
 require __DIR__ . '/../initialize.php';
 require __DIR__ . '/../util/utilities.php';
 require __DIR__ . '/../../config/constants.php';
 
-function logError($message, $data = [])
+function jsonResponse(int $status, array $payload): void
 {
-    $log = "[ADD PRODUCT ERROR] $message\n";
-    if (!empty($data)) {
-        $log .= print_r($data, true);
-    }
-    error_log($log);
-}
-
-function jsonError($message, $data = [])
-{
-    logError($message, $data);
-    echo json_encode([
-        'success' => false,
-        'message' => $message
-    ]);
+    http_response_code($status);
+    echo json_encode($payload);
     exit;
 }
-
-function sanitize($input)
+function slugify(string $str): string
 {
-    return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+    $str = strtolower(trim($str));
+    $str = preg_replace('/[^\w\s-]/', '', $str);
+    $str = preg_replace('/[\s_-]+/', '-', $str);
+    return trim($str, '-');
+}
+function uniqueSlug(PDO $pdo, string $base): string
+{
+    $slug = $base ?: 'product';
+    $try = $slug;
+    $i = 1;
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM products WHERE slug = ?');
+    while (true) {
+        $stmt->execute([$try]);
+        if ((int)$stmt->fetchColumn() === 0) return $try;
+        $try = $slug . '-' . $i++;
+        if ($i > 100) return $slug . '-' . uniqid();
+    }
+}
+function isValidJson(string $s): bool
+{
+    json_decode($s);
+    return json_last_error() === JSON_ERROR_NONE;
 }
 
-// Validate request method
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    jsonError('Invalid request method');
+    jsonResponse(405, ['success' => false, 'message' => 'Method not allowed']);
 }
 
 try {
+    // Required
+    $name       = trim($_POST['name'] ?? '');
+    $categoryId = filter_var($_POST['category_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    $price      = filter_var($_POST['price'] ?? null, FILTER_VALIDATE_FLOAT);
+    $inStock    = filter_var($_POST['in_stock'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+
     $errors = [];
+    if ($name === '')                       $errors[] = 'Product name is required';
+    if (!$categoryId)                        $errors[] = 'Category is required';
+    if ($price === false || $price < 0)     $errors[] = 'Price must be a valid non-negative number';
+    if ($inStock === false || $inStock < 0) $errors[] = 'Stock must be a valid non-negative integer';
+    if ($errors) jsonResponse(400, ['success' => false, 'message' => implode(', ', $errors)]);
 
-    // Sanitize & validate required fields
-    $name = $_POST['name'] ?? '';
-    $category_id = $_POST['category_id'] ?? '';
-    $price = $_POST['price'] ?? '';
-    $in_stock = $_POST['in_stock'] ?? '';
+    // Ensure category exists
+    $stmt = $pdo->prepare('SELECT id FROM categories WHERE id = ?');
+    $stmt->execute([$categoryId]);
+    if (!$stmt->fetchColumn()) {
+        jsonResponse(400, ['success' => false, 'message' => 'Invalid category selected']);
+    }
 
-    if (empty(trim($name))) $errors[] = 'Product name is required';
-    if (empty(trim($category_id))) $errors[] = 'Category is required';
-    if (empty(trim($price))) $errors[] = 'Price is required';
-    if (empty(trim($in_stock))) $errors[] = 'Stock quantity is required';
+    // Optionals
+    $slugInput       = trim($_POST['slug'] ?? '');
+    $description     = trim($_POST['description'] ?? '');
+    $featuresRaw     = trim($_POST['features'] ?? '');
+    $nutritionRaw    = trim($_POST['nutritional_info'] ?? '');
+    $weightInput     = trim($_POST['weight'] ?? '');
+    $dimensions      = trim($_POST['dimensions'] ?? '');
+    $metaTitle       = trim($_POST['meta_title'] ?? '');
+    $metaDescription = trim($_POST['meta_description'] ?? '');
+    $isActive        = isset($_POST['is_active']) ? 1 : 1; // default active
+    $isFeatured      = isset($_POST['is_featured']) ? 1 : 0;
 
-    if (!is_numeric($price) || $price < 0) $errors[] = 'Price must be a valid positive number';
-    if (!filter_var($in_stock, FILTER_VALIDATE_INT) || $in_stock < 0) $errors[] = 'Stock must be a valid positive integer';
+    // Weight validation
+    $weight = null;
+    if ($weightInput !== '') {
+        $w = filter_var($weightInput, FILTER_VALIDATE_FLOAT);
+        if ($w === false || $w < 0) {
+            jsonResponse(400, ['success' => false, 'message' => 'Weight must be a valid non-negative number']);
+        }
+        $weight = $w;
+    }
 
-    // Validate image if provided
+    // Slug
+    $baseSlug = $slugInput !== '' ? slugify($slugInput) : slugify($name);
+    $slug     = uniqueSlug($pdo, $baseSlug);
+
+    // Features -> JSON (array of strings). Default to [] to satisfy CHECK(json_valid(features))
+    if ($featuresRaw !== '' && isValidJson($featuresRaw)) {
+        $featuresJson = $featuresRaw;
+    } else {
+        $lines = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $featuresRaw)), fn($l) => $l !== ''));
+        $featuresJson = json_encode($lines, JSON_UNESCAPED_UNICODE);
+    }
+    if ($featuresJson === '' || !isValidJson($featuresJson)) {
+        $featuresJson = '[]';
+    }
+
+    // Nutritional info -> JSON. Try to parse JSON first; else parse key:value lines into an object.
+    if ($nutritionRaw !== '' && isValidJson($nutritionRaw)) {
+        $nutritionJson = $nutritionRaw;
+    } else {
+        $obj = [];
+        foreach (preg_split('/\r\n|\r|\n/', $nutritionRaw) as $row) {
+            $row = trim($row);
+            if ($row === '') continue;
+            // Accept "Key: Value" or "Key - Value"
+            if (preg_match('/^\s*([^:-]+)\s*[:\-]\s*(.+)\s*$/u', $row, $m)) {
+                $key = trim($m[1]);
+                $val = trim($m[2]);
+                if ($key !== '') $obj[$key] = $val;
+            } else {
+                // Fallback: push as array entry
+                $obj[] = $row;
+            }
+        }
+        // If empty, default to {} (valid JSON)
+        $nutritionJson = json_encode(empty($obj) ? (object)[] : $obj, JSON_UNESCAPED_UNICODE);
+    }
+    if ($nutritionJson === '' || !isValidJson($nutritionJson)) {
+        $nutritionJson = '{}';
+    }
+
+    // Image (optional)
+    $imageName = "default-product.jpg";
     if (!empty($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
         $file = $_FILES['image'];
 
         if ($file['error'] !== UPLOAD_ERR_OK) {
-            $errors[] = 'File upload error occurred';
-        } elseif ($file['size'] > MAX_PRODUCT_IMAGE_SIZE) {
-            $errors[] = 'File size too large. Max: ' . number_format(MAX_PRODUCT_IMAGE_SIZE / (1024 * 1024), 0) . 'MB';
-        } else {
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mime = finfo_file($finfo, $file['tmp_name']);
-            finfo_close($finfo);
-
-            $allowed = [
-                ALLOWED_IMAGE_JPEG,
-                ALLOWED_IMAGE_PNG,
-                ALLOWED_IMAGE_GIF,
-                ALLOWED_IMAGE_WEBP
-            ];
-            if (!in_array($mime, $allowed)) {
-                $errors[] = 'Invalid file type. Only JPG, PNG, GIF, and WebP allowed';
-            }
+            jsonResponse(400, ['success' => false, 'message' => 'File upload error occurred']);
         }
-    }
-
-    // Check category exists
-    $stmt = $pdo->prepare("SELECT id FROM categories WHERE id = ?");
-    $stmt->execute([$category_id]);
-    if (!$stmt->fetch()) {
-        $errors[] = 'Invalid category selected';
-    }
-
-    // Return errors
-    if (!empty($errors)) {
-        jsonError(implode(', ', $errors), $_POST);
-    }
-
-    // Sanitize optional fields
-    $sku = sanitize($_POST['sku'] ?? '');
-    $description = sanitize($_POST['description'] ?? '');
-    $weight = sanitize($_POST['weight'] ?? '');
-    $dimensions = sanitize($_POST['dimensions'] ?? '');
-    $meta_title = sanitize($_POST['meta_title'] ?? '');
-    $meta_description = sanitize($_POST['meta_description'] ?? '');
-    $is_active = isset($_POST['is_active']) ? 1 : 0;
-    $is_featured = isset($_POST['is_featured']) ? 1 : 0;
-
-    // Handle image
-    $imageName = null;
-    if (!empty($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = PRODUCT_IMAGE_DIR;
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
+        if ($file['size'] > MAX_PRODUCT_IMAGE_SIZE) {
+            jsonResponse(400, ['success' => false, 'message' => 'File size too large. Max: ' . number_format(MAX_PRODUCT_IMAGE_SIZE / (1024 * 1024), 0) . 'MB']);
         }
 
-        $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime  = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+
+        $allowed = [ALLOWED_IMAGE_JPEG, ALLOWED_IMAGE_PNG, ALLOWED_IMAGE_GIF, ALLOWED_IMAGE_WEBP];
+        if (!in_array($mime, $allowed, true)) {
+            jsonResponse(400, ['success' => false, 'message' => 'Invalid file type. Only JPG, PNG, GIF, and WebP allowed']);
+        }
+
+        if (!is_dir(PRODUCT_IMAGE_DIR)) {
+            mkdir(PRODUCT_IMAGE_DIR, 0755, true);
+        }
+
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+            $ext = match ($mime) {
+                ALLOWED_IMAGE_JPEG => 'jpg',
+                ALLOWED_IMAGE_PNG  => 'png',
+                ALLOWED_IMAGE_GIF  => 'gif',
+                ALLOWED_IMAGE_WEBP => 'webp',
+                default            => 'jpg',
+            };
+        }
+
         $imageName = 'product_' . uniqid('', true) . '_' . time() . '.' . $ext;
-        $uploadPath = $uploadDir . $imageName;
+        $destPath  = PRODUCT_IMAGE_DIR . $imageName;
 
-        if (!move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath)) {
-            jsonError('Failed to upload image', $_FILES);
-        }
-    } else {
-        // If no image provided, check if it's an actual error
-        if (!empty($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
-            jsonError('Image upload error', $_FILES);
+        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+            jsonResponse(500, ['success' => false, 'message' => 'Failed to upload image']);
         }
     }
 
-    // Insert into DB
-    $sql = "INSERT INTO products (
-        name, sku, description, category_id, price, in_stock, weight,
-        dimensions, image, is_active, is_featured, meta_title, meta_description, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+    // Derived/defaults
+    $stockQuantity = $inStock;
+    $rating = 4;
+    $reviewsCount = 0;
 
+    // Insert
+    $sql = "INSERT INTO products (
+                category_id, name, slug, description, price, image,
+                rating, reviews_count, stock_quantity, in_stock,
+                weight, dimensions, features, nutritional_info,
+                is_active, is_featured, meta_title, meta_description,
+                created_at, updated_at
+            ) VALUES (
+                ?, ?, ?, ?, ?,
+                ?, ?, ?, ?,
+                ?, ?, ?, ?, ?,
+                ?, ?, ?, ?,
+                NOW(), NOW()
+            )";
     $stmt = $pdo->prepare($sql);
-    $success = $stmt->execute([
-        sanitize($name),
-        $sku,
+    $ok = $stmt->execute([
+        $categoryId,
+        $name,
+        $slug,
         $description,
-        $category_id,
         $price,
-        $in_stock,
+        $imageName,
+        $rating,
+        $reviewsCount,
+        $stockQuantity,
+        $inStock,
         $weight,
         $dimensions,
-        $imageName,
-        $is_active,
-        $is_featured,
-        $meta_title,
-        $meta_description
+        $featuresJson,
+        $nutritionJson,
+        $isActive,
+        $isFeatured,
+        $metaTitle,
+        $metaDescription
     ]);
 
-    if ($success) {
-        echo json_encode([
-            'success' => true,
-            'message' => 'Product added successfully',
-            'product_id' => $pdo->lastInsertId(),
-            'image_url' => $imageName ? PRODUCT_IMAGE_URL . $imageName : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE
-        ]);
-    } else {
-        jsonError('Failed to insert product into database');
+    if (!$ok) {
+        if ($imageName && is_file(PRODUCT_IMAGE_DIR . $imageName)) @unlink(PRODUCT_IMAGE_DIR . $imageName);
+        jsonResponse(500, ['success' => false, 'message' => 'Failed to insert product into database']);
     }
-} catch (Exception $e) {
-    jsonError('An unexpected error occurred: ' . $e->getMessage(), [
-        'exception' => $e->getTraceAsString(),
-        'input' => $_POST
+
+    jsonResponse(200, [
+        'success'    => true,
+        'message'    => 'Product added successfully',
+        'product_id' => $pdo->lastInsertId(),
+        'image_url'  => PRODUCT_IMAGE_URL . ($imageName ?: DEFAULT_PRODUCT_IMAGE),
+        'slug'       => $slug
     ]);
+} catch (Throwable $e) {
+    error_log('[add-product.php] ' . $e->getMessage());
+    jsonResponse(500, ['success' => false, 'message' => 'An unexpected error occurred']);
 }

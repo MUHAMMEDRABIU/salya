@@ -38,6 +38,7 @@ define('BANNER_IMAGE_URL', BASE_UPLOAD_URL . 'banners/');
 // File size limits (in bytes)
 define('MAX_AVATAR_SIZE', 2 * 1024 * 1024);      // 2MB
 define('MAX_PRODUCT_IMAGE_SIZE', 10 * 1024 * 1024); // 10MB
+define('MAX_CATEGORY_IMAGE_SIZE', 5 * 1024 * 1024); // 5MB
 define('MAX_DOCUMENT_SIZE', 5 * 1024 * 1024);    // 5MB
 define('MAX_BANNER_SIZE', 15 * 1024 * 1024);     // 15MB
 

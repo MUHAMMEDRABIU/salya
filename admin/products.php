@@ -5,6 +5,7 @@ require __DIR__ . '/../config/constants.php';
 
 $productStats = getProductStats($pdo);
 $products = getAllProducts($pdo);
+$allCategories = getAllCategories($pdo);
 
 require __DIR__ . '/partials/headers.php';
 ?>
@@ -80,6 +81,85 @@ require __DIR__ . '/partials/headers.php';
                 </div>
             </div>
 
+            <!-- Category Management Section -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-800">Category Management</h3>
+                        <button onclick="openAddCategoryModal()" class="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 transition-colors">
+                            <i data-lucide="folder-plus" class="w-4 h-4 mr-2 inline"></i>
+                            Add Category
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <?php if (empty($allCategories)): ?>
+                            <div class="col-span-full bg-gray-50 rounded-lg p-8 text-center border border-dashed border-gray-300">
+                                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-3">
+                                    <i data-lucide="inbox" class="w-7 h-7 text-gray-400"></i>
+                                </div>
+                                <p class="text-gray-900 font-semibold">No categories yet</p>
+                                <p class="text-gray-600 text-sm mt-1">Create your first category to organize products.</p>
+                                <button onclick="openAddCategoryModal()" class="mt-4 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600">
+                                    <i data-lucide="folder-plus" class="w-4 h-4 mr-2 inline"></i>
+                                    Add Category
+                                </button>
+                            </div>
+                        <?php else: ?>
+                            <?php foreach ($allCategories as $cat): ?>
+                                <?php
+                                $catId   = (int)($cat['id'] ?? 0);
+                                $catName = htmlspecialchars($cat['name'] ?? 'Untitled');
+                                $desc    = trim((string)($cat['description'] ?? ''));
+                                // Product count for this category
+                                $countStmt = $pdo->prepare("SELECT COUNT(*) FROM products WHERE category_id = ?");
+                                $countStmt->execute([$catId]);
+                                $productCount = (int)$countStmt->fetchColumn();
+                                // Created at
+                                $createdAt = $cat['created_at'] ?? null;
+                                $createdAtFmt = $createdAt ? date('M j, Y', strtotime($createdAt)) : '-';
+                                ?>
+                                <div class="category-card bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors border border-gray-200">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-8 h-8 bg-pink-100 rounded-lg flex items-center justify-center">
+                                                <i data-lucide="folder" class="w-4 h-4 text-pink-600"></i>
+                                            </div>
+                                            <h4 class="font-semibold text-gray-800"><?php echo $catName; ?></h4>
+                                        </div>
+                                        <div class="flex items-center space-x-1">
+                                            <button onclick="editCategory(<?php echo $catId; ?>)" class="text-gray-400 hover:text-pink-500 p-1">
+                                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                            </button>
+                                            <button onclick="deleteCategory(<?php echo $catId; ?>)" class="text-gray-400 hover:text-red-500 p-1">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <?php if ($desc !== ''): ?>
+                                        <p class="text-sm text-gray-600 mb-3">
+                                            <?php
+                                            $short = mb_substr($desc, 0, 80);
+                                            echo htmlspecialchars($short) . (mb_strlen($desc) > 80 ? '...' : '');
+                                            ?>
+                                        </p>
+                                    <?php endif; ?>
+
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-gray-500">
+                                            <?php echo $productCount . ' product' . ($productCount === 1 ? '' : 's'); ?>
+                                        </span>
+                                        <span class="text-xs text-gray-400"><?php echo $createdAtFmt; ?></span>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
 
             <!-- Products Management -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -87,11 +167,14 @@ require __DIR__ . '/partials/headers.php';
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-800">Product Inventory</h3>
                         <div class="flex items-center space-x-4">
-                            <select class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500">
-                                <option>All Categories</option>
-                                <option>Chicken</option>
-                                <option>Fish</option>
-                                <option>Turkey</option>
+                            <select id="categoryFilter"
+                                class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                <option value="">All Categories</option>
+                                <?php foreach ($allCategories as $cat): ?>
+                                    <option value="<?php echo (int)$cat['id']; ?>">
+                                        <?php echo htmlspecialchars($cat['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
                             <button onclick="openAddProductModal()" class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
                                 <i data-lucide="plus" class="w-4 h-4 mr-2 inline"></i>
@@ -120,7 +203,7 @@ require __DIR__ . '/partials/headers.php';
                                 </tr>
                             <?php endif; ?>
                             <?php foreach ($products as $product): ?>
-                                <tr class="hover:bg-gray-50">
+                                <tr class="hover:bg-gray-50" data-category-id="<?= (int)$product['category_id'] ?>">
                                     <td class="px-6 py-4 whitespace">
                                         <div class="flex items-center">
                                             <?php
@@ -188,6 +271,191 @@ require __DIR__ . '/partials/headers.php';
         </main>
     </div>
 
+    <!-- Add Category Modal -->
+    <div id="addCategoryModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0" id="addCategoryModalContent">
+            <!-- Modal Header -->
+            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">Add New Category</h2>
+                        <p class="text-sm text-gray-600 mt-1">Create a new category for your products</p>
+                    </div>
+                    <button id="closeCategoryModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <form id="addCategoryForm" class="p-6 space-y-8" enctype="multipart/form-data">
+                <!-- Basic Information -->
+                <div class="space-y-6">
+                    <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Basic Information</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-gray-700">Category Name *</label>
+                            <input type="text" name="name" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200"
+                                placeholder="e.g., Chicken, Fish, Turkey">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-gray-700">Category Slug</label>
+                            <input type="text" name="slug"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200"
+                                placeholder="Auto-generated from name">
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-gray-700">Description</label>
+                        <textarea name="description" rows="4"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200 resize-none"
+                            placeholder="Brief description of this category..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Category Image -->
+                <div class="space-y-6">
+                    <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Category Image</h3>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-6">
+                            <div class="flex-shrink-0">
+                                <img id="categoryImagePreview" src="data:image/svg+xml,%3csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100' height='100' fill='%23f3f4f6'/%3e%3ctext x='50%25' y='50%25' font-size='14' text-anchor='middle' dy='.3em' fill='%236b7280'%3eNo Image%3c/text%3e%3c/svg%3e"
+                                    alt="Category preview" class="w-24 h-24 rounded-lg object-cover border border-gray-300">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Upload Category Image</label>
+                                <input type="file" name="image" accept="image/*" id="categoryImageInput"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100">
+                                <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB (optional)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Modal Footer -->
+            <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-xl">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-500">
+                        <i data-lucide="info" class="w-4 h-4 inline mr-1"></i>
+                        All fields marked with * are required
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button type="button" id="cancelCategoryBtn" class="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
+                            Cancel
+                        </button>
+                        <button id="submitCategoryBtn" type="submit" form="addCategoryForm" class="px-6 py-2.5 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-all duration-200 font-medium hover:shadow-lg transform hover:-translate-y-0.5 flex items-center">
+                            <i data-lucide="folder-plus" class="w-4 h-4 mr-2"></i>
+                            Add Category
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div id="editCategoryModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0" id="editCategoryModalContent">
+            <!-- Modal Header -->
+            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">Edit Category</h2>
+                        <p class="text-sm text-gray-600 mt-1">Update category information</p>
+                    </div>
+                    <button id="closeEditCategoryModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <form id="editCategoryForm" class="p-6 space-y-8" enctype="multipart/form-data">
+                <input type="hidden" name="category_id" id="editCategoryId">
+
+                <!-- Basic Information -->
+                <div class="space-y-6">
+                    <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Basic Information</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-gray-700">Category Name *</label>
+                            <input type="text" name="name" id="editCategoryName" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-gray-700">Category Slug</label>
+                            <input type="text" name="slug" id="editCategorySlug"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200">
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-gray-700">Description</label>
+                        <textarea name="description" id="editCategoryDescription" rows="4"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200 resize-none"></textarea>
+                    </div>
+
+                    <!-- NEW: Active status toggle -->
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700">Active</label>
+                            <p class="text-xs text-gray-500">Show this category in your store</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="is_active" id="editCategoryActive" value="1" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Category Image -->
+                <div class="space-y-6">
+                    <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Category Image</h3>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-6">
+                            <div class="flex-shrink-0">
+                                <img id="editCategoryImagePreview" src="data:image/svg+xml,%3csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100' height='100' fill='%23f3f4f6'/%3e%3ctext x='50%25' y='50%25' font-size='14' text-anchor='middle' dy='.3em' fill='%236b7280'%3eNo Image%3c/text%3e%3c/svg%3e"
+                                    alt="Category preview" class="w-24 h-24 rounded-lg object-cover border border-gray-300">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Upload New Category Image</label>
+                                <input type="file" name="image" accept="image/*" id="editCategoryImageInput"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100">
+                                <p class="text-xs text-gray-500 mt-1">Leave empty to keep current image</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Modal Footer -->
+            <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-xl">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-500">
+                        <i data-lucide="info" class="w-4 h-4 inline mr-1"></i>
+                        All fields marked with * are required
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button type="button" id="cancelEditCategoryBtn" class="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
+                            Cancel
+                        </button>
+                        <button id="submitEditCategoryBtn" type="submit" form="editCategoryForm" class="px-6 py-2.5 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-all duration-200 font-medium hover:shadow-lg transform hover:-translate-y-0.5 flex items-center">
+                            <i data-lucide="save" class="w-4 h-4 mr-2"></i>
+                            Update Category
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Add Product Modal -->
     <div id="addProductModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0" id="addModalContent">
@@ -218,10 +486,10 @@ require __DIR__ . '/partials/headers.php';
                                 placeholder="Enter product name">
                         </div>
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">SKU</label>
-                            <input type="text" name="sku"
+                            <label class="block text-sm font-semibold text-gray-700">Slug</label>
+                            <input type="text" name="slug"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
-                                placeholder="Product SKU (optional)">
+                                placeholder="Auto-generated if left empty">
                         </div>
                     </div>
 
@@ -230,6 +498,22 @@ require __DIR__ . '/partials/headers.php';
                         <textarea name="description" rows="4"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 resize-none"
                             placeholder="Describe your product..."></textarea>
+                    </div>
+
+                    <!-- NEW: Features and Nutritional Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-gray-700">Features</label>
+                            <textarea name="features" rows="4"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+                                placeholder="Key features, one per line"></textarea>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-gray-700">Nutritional Info</label>
+                            <textarea name="nutritional_info" rows="4"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+                                placeholder="Calories, protein, fat, etc."></textarea>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -265,18 +549,25 @@ require __DIR__ . '/partials/headers.php';
                         </div>
                     </div>
 
+                    <!-- REPLACED: Weight and Dimensions -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">Weight</label>
-                            <input type="text" name="weight"
-                                placeholder="e.g., 1kg, 500g"
+                            <label class="block text-sm font-semibold text-gray-700">Weight (kg)</label>
+                            <input type="number" name="weight" min="0" step="0.01"
+                                placeholder="e.g., 1.25"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
                         </div>
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">Dimensions</label>
-                            <input type="text" name="dimensions"
-                                placeholder="e.g., 10x5x3 cm"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
+                            <label class="block text-sm font-semibold text-gray-700">Dimensions (cm)</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <input type="number" name="width" min="0" step="0.01"
+                                    placeholder="Width"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
+                                <input type="number" name="height" min="0" step="0.01"
+                                    placeholder="Height"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
+                            </div>
+                            <p class="text-xs text-gray-500">Will be saved as "widthxheight cm".</p>
                         </div>
                     </div>
                 </div>
@@ -382,175 +673,442 @@ require __DIR__ . '/partials/headers.php';
             // Modal elements
             const addProductModal = document.getElementById('addProductModal');
             const addModalContent = document.getElementById('addModalContent');
-            const closeAddModalBtn = document.getElementById('closeAddModalBtn');
-            const cancelAddBtn = document.getElementById('cancelAddBtn');
             const addProductForm = document.getElementById('addProductForm');
             const imageInput = document.getElementById('imageInput');
             const imagePreview = document.getElementById('imagePreview');
 
-            // Function to open add product modal
+            // Category modal elements
+            const addCategoryModal = document.getElementById('addCategoryModal');
+            const addCategoryModalContent = document.getElementById('addCategoryModalContent');
+            const editCategoryModal = document.getElementById('editCategoryModal');
+            const editCategoryModalContent = document.getElementById('editCategoryModalContent');
+
+            // =============================================================================
+            // CATEGORY MANAGEMENT FUNCTIONS
+            // =============================================================================
+
+            // Make functions global by attaching to window
+            window.openAddCategoryModal = function() {
+                addCategoryModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                setTimeout(() => {
+                    addCategoryModalContent.classList.remove('scale-95', 'opacity-0');
+                    addCategoryModalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            };
+
+            // Update the editCategory function
+            window.editCategory = function(categoryId) {
+                fetch(`api/get-category.php?id=${categoryId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const category = data.category;
+
+                            document.getElementById('editCategoryId').value = category.id;
+                            document.getElementById('editCategoryName').value = category.name || '';
+                            document.getElementById('editCategorySlug').value = category.slug || '';
+                            document.getElementById('editCategoryDescription').value = category.description || '';
+
+                            const activeEl = document.getElementById('editCategoryActive');
+                            if (activeEl) activeEl.checked = Number(category.is_active) === 1;
+
+                            if (category.image_url) {
+                                document.getElementById('editCategoryImagePreview').src = `/salya/assets/uploads/categories/${category.image_url}`;
+                            }
+
+                            editCategoryModal.classList.remove('hidden');
+                            document.body.style.overflow = 'hidden';
+                            setTimeout(() => {
+                                editCategoryModalContent.classList.remove('scale-95', 'opacity-0');
+                                editCategoryModalContent.classList.add('scale-100', 'opacity-100');
+                            }, 10);
+                        } else {
+                            showToasted(data.message || 'Failed to load category', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToasted('Failed to load category', 'error');
+                    });
+            };
+
+            // Ensure unchecked checkbox sends 0
+            document.getElementById('editCategoryForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const fd = new FormData(this);
+                if (!fd.has('is_active')) fd.set('is_active', '0');
+
+                fetch('api/edit-category.php', {
+                        method: 'POST',
+                        body: fd
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToasted('Category updated successfully', 'success');
+                            (function closeEditCategoryModal() {
+                                editCategoryModalContent.classList.remove('scale-100', 'opacity-100');
+                                editCategoryModalContent.classList.add('scale-95', 'opacity-0');
+                                setTimeout(() => {
+                                    editCategoryModal.classList.add('hidden');
+                                    document.body.style.overflow = '';
+                                    document.getElementById('editCategoryForm').reset();
+                                }, 300);
+                            })();
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            showToasted(data.message || 'Failed to update category', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        showToasted('Failed to update category', 'error');
+                    });
+            });
+
+            window.deleteCategory = function(categoryId) {
+                if (confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
+                    fetch('api/delete-category.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: `category_id=${categoryId}`
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showToasted('Category deleted successfully', 'success');
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                showToasted(data.message || 'Failed to delete category', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showToasted('Failed to delete category', 'error');
+                        });
+                }
+            };
+
+            function closeAddCategoryModal() {
+                addCategoryModalContent.classList.remove('scale-100', 'opacity-100');
+                addCategoryModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    addCategoryModal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                    document.getElementById('addCategoryForm').reset();
+                }, 300);
+            }
+
+            function closeEditCategoryModal() {
+                editCategoryModalContent.classList.remove('scale-100', 'opacity-100');
+                editCategoryModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    editCategoryModal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                    document.getElementById('editCategoryForm').reset();
+                }, 300);
+            }
+
+            // =============================================================================
+            // PRODUCT MANAGEMENT FUNCTIONS
+            // =============================================================================
+
             window.openAddProductModal = function() {
                 addProductModal.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
-
-                // Trigger animation
                 setTimeout(() => {
                     addModalContent.classList.remove('scale-95', 'opacity-0');
                     addModalContent.classList.add('scale-100', 'opacity-100');
                 }, 10);
             };
 
-            // Function to close modal
-            function closeAddModal() {
+            function closeAddProductModal() {
                 addModalContent.classList.remove('scale-100', 'opacity-100');
                 addModalContent.classList.add('scale-95', 'opacity-0');
-
                 setTimeout(() => {
                     addProductModal.classList.add('hidden');
                     document.body.style.overflow = '';
-                    resetForm();
+                    addProductForm.reset();
+                    imagePreview.src = "<?php echo PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE; ?>";
                 }, 300);
             }
 
-            // Function to reset form
-            function resetForm() {
-                addProductForm.reset();
-                imagePreview.src = "<?php echo PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE; ?>";
+            // Helper: slugify
+            function slugify(str) {
+                return String(str || '')
+                    .toLowerCase()
+                    .trim()
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-');
             }
 
-            // Close modal events
-            closeAddModalBtn.addEventListener('click', closeAddModal);
-            cancelAddBtn.addEventListener('click', closeAddModal);
-
-            // Close modal when clicking outside
-            addProductModal.addEventListener('click', (e) => {
-                if (e.target === addProductModal) {
-                    closeAddModal();
-                }
-            });
-
-            // Close modal with Escape key
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && !addProductModal.classList.contains('hidden')) {
-                    closeAddModal();
-                }
-            });
-
-            // Image preview functionality
-            imageInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    // Validate file size using PHP constant
-                    if (file.size > <?php echo MAX_PRODUCT_IMAGE_SIZE; ?>) {
-                        showToasted('File size too large. Maximum size is <?php echo number_format(MAX_PRODUCT_IMAGE_SIZE / (1024 * 1024), 0); ?>MB.', 'error');
-                        this.value = '';
-                        return;
-                    }
-
-                    // Validate file type
-                    const allowedTypes = [
-                        '<?php echo ALLOWED_IMAGE_JPEG; ?>',
-                        '<?php echo ALLOWED_IMAGE_PNG; ?>',
-                        '<?php echo ALLOWED_IMAGE_GIF; ?>',
-                        '<?php echo ALLOWED_IMAGE_WEBP; ?>'
-                    ];
-                    if (!allowedTypes.includes(file.type)) {
-                        showToasted('Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'error');
-                        this.value = '';
-                        return;
-                    }
-
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        imagePreview.src = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            // Form submission with confirmation
-            addProductForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-
-                // Get form data
-                const formData = new FormData(addProductForm);
-                const productName = formData.get('name');
-                const productPrice = formData.get('price');
-
+            async function submitProduct(formData) {
                 const submitBtn = document.getElementById('submitProductBtn');
                 const originalText = submitBtn.innerHTML;
 
-                // Show loading state
+                // Client-side validations + derive fields
+                const name = (formData.get('name') || '').toString().trim();
+                const price = parseFloat(formData.get('price'));
+                const inStock = parseInt(formData.get('in_stock'), 10);
+                const categoryId = parseInt(formData.get('category_id'), 10);
+
+                const weightVal = formData.get('weight');
+                const weight = weightVal !== null && weightVal !== '' ? parseFloat(weightVal) : null;
+
+                const widthVal = formData.get('width');
+                const heightVal = formData.get('height');
+                const width = widthVal !== null && widthVal !== '' ? parseFloat(widthVal) : null;
+                const height = heightVal !== null && heightVal !== '' ? parseFloat(heightVal) : null;
+
+                if (!name) return showToasted('Product name is required', 'error');
+                if (!categoryId || isNaN(categoryId)) return showToasted('Please select a valid category', 'error');
+                if (isNaN(price) || price < 0) return showToasted('Price must be a valid non-negative number', 'error');
+                if (isNaN(inStock) || inStock < 0) return showToasted('Stock must be a valid non-negative integer', 'error');
+                if (weight !== null && (isNaN(weight) || weight < 0)) return showToasted('Weight must be a valid non-negative number', 'error');
+
+                // If one dimension is provided, both must be provided and valid
+                const anyDimProvided = (width !== null || height !== null);
+                if (anyDimProvided && (width === null || height === null || isNaN(width) || isNaN(height) || width < 0 || height < 0)) {
+                    return showToasted('Please provide valid non-negative width and height', 'error');
+                }
+
+                // Derive slug if missing
+                const currentSlug = (formData.get('slug') || '').toString().trim();
+                if (!currentSlug) formData.set('slug', slugify(name));
+
+                // Derive dimensions "WxH cm"
+                if (width !== null && height !== null) {
+                    formData.set('dimensions', `${width}x${height} cm`);
+                } else {
+                    formData.set('dimensions', '');
+                }
+                // Remove helper fields (width/height) to keep payload clean
+                formData.delete('width');
+                formData.delete('height');
+
+                // Mirror stock_quantity with in_stock for backend compatibility
+                formData.set('stock_quantity', String(inStock));
+
                 submitBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i>Adding Product...';
                 submitBtn.disabled = true;
 
-                try {
-                    // Submit form with AJAX
-                    submitProduct(formData, submitBtn, originalText);
-                } catch (error) {
-                    console.error('Error:', error);
-                    showToasted('An error occurred while adding the product', 'error');
-                    // Restore button state
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                }
-            });
-
-            // AJAX form submission function
-            async function submitProduct(formData, submitBtn, originalText) {
                 try {
                     const response = await fetch('api/add-product.php', {
                         method: 'POST',
                         body: formData
                     });
+                    const raw = await response.text();
+                    let result = null;
+                    try {
+                        result = JSON.parse(raw);
+                    } catch (_) {}
 
-                    // Check if response is ok
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(result?.message || `HTTP ${response.status}`);
 
-                    const result = await response.json();
-
-                    if (result.success) {
-                        // Show success message
+                    if (result?.success) {
                         showToasted('Product added successfully!', 'success');
-
-                        // Close modal after short delay
                         setTimeout(() => {
-                            closeAddModal();
-                            // Optionally reload the page to show new product
-                            window.location.reload();
-                        }, 1500);
+                            // close modal and refresh
+                            const addModalContent = document.getElementById('addModalContent');
+                            addModalContent.classList.remove('scale-100', 'opacity-100');
+                            addModalContent.classList.add('scale-95', 'opacity-0');
+                            setTimeout(() => {
+                                document.getElementById('addProductModal').classList.add('hidden');
+                                document.body.style.overflow = '';
+                                document.getElementById('addProductForm').reset();
+                                window.location.reload();
+                            }, 300);
+                        }, 800);
                     } else {
-                        showToasted(result.message || 'Failed to add product', 'error');
+                        showToasted(result?.message || 'Failed to add product', 'error');
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                        showToasted('Network error. Please check your connection and try again.', 'error');
-                    } else if (error.message.includes('HTTP error')) {
-                        showToasted('Server error. Please try again later.', 'error');
-                    } else {
-                        showToasted('An unexpected error occurred while adding the product', 'error');
-                    }
+                    showToasted(error.message || 'An unexpected error occurred while adding the product', 'error');
                 } finally {
-                    // Restore button state
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
                 }
             }
 
-            // Form validation
+            // =============================================================================
+            // EVENT LISTENERS
+            // =============================================================================
+
+            // Category image preview functionality
+            document.getElementById('categoryImageInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const preview = document.getElementById('categoryImagePreview');
+
+                if (!file) return;
+
+                // Validate file size (5MB for categories)
+                if (file.size > 5 * 1024 * 1024) {
+                    showToasted('File size too large. Maximum size is 5MB.', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if (!allowedTypes.includes(file.type)) {
+                    showToasted('Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => preview.src = e.target.result;
+                reader.readAsDataURL(file);
+            });
+
+            document.getElementById('editCategoryImageInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const preview = document.getElementById('editCategoryImagePreview');
+
+                if (!file) return;
+
+                // Validate file size (5MB for categories)
+                if (file.size > 5 * 1024 * 1024) {
+                    showToasted('File size too large. Maximum size is 5MB.', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if (!allowedTypes.includes(file.type)) {
+                    showToasted('Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => preview.src = e.target.result;
+                reader.readAsDataURL(file);
+            });
+
+            // Category form submissions
+            document.getElementById('addCategoryForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+
+                fetch('api/add-category.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToasted('Category added successfully', 'success');
+                            closeAddCategoryModal();
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            showToasted(data.message || 'Failed to add category', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToasted('Failed to add category', 'error');
+                    });
+            });
+
+            document.getElementById('editCategoryForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+
+                fetch('api/edit-category.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToasted('Category updated successfully', 'success');
+                            closeEditCategoryModal();
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            showToasted(data.message || 'Failed to update category', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToasted('Failed to update category', 'error');
+                    });
+            });
+
+            // Category modal close buttons
+            document.getElementById('closeCategoryModalBtn').addEventListener('click', closeAddCategoryModal);
+            document.getElementById('cancelCategoryBtn').addEventListener('click', closeAddCategoryModal);
+            document.getElementById('closeEditCategoryModalBtn').addEventListener('click', closeEditCategoryModal);
+            document.getElementById('cancelEditCategoryBtn').addEventListener('click', closeEditCategoryModal);
+
+            // Product modal close buttons
+            document.getElementById('closeAddModalBtn').addEventListener('click', closeAddProductModal);
+            document.getElementById('cancelAddBtn').addEventListener('click', closeAddProductModal);
+
+            // Product form submission
+            addProductForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(addProductForm);
+                submitProduct(formData);
+            });
+
+            // Image preview
+            imageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // Validate file size
+                if (file.size > <?php echo MAX_PRODUCT_IMAGE_SIZE; ?>) {
+                    showToasted('File size too large. Maximum size is <?php echo number_format(MAX_PRODUCT_IMAGE_SIZE / (1024 * 1024), 0); ?>MB.', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                // Validate file type
+                const allowedTypes = ['<?php echo ALLOWED_IMAGE_JPEG; ?>', '<?php echo ALLOWED_IMAGE_PNG; ?>', '<?php echo ALLOWED_IMAGE_GIF; ?>', '<?php echo ALLOWED_IMAGE_WEBP; ?>'];
+                if (!allowedTypes.includes(file.type)) {
+                    showToasted('Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => imagePreview.src = e.target.result;
+                reader.readAsDataURL(file);
+            });
+
+            // Close modals when clicking outside
+            [addProductModal, addCategoryModal, editCategoryModal].forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        if (modal === addProductModal) closeAddProductModal();
+                        else if (modal === addCategoryModal) closeAddCategoryModal();
+                        else if (modal === editCategoryModal) closeEditCategoryModal();
+                    }
+                });
+            });
+
+            // Close modals with Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (!addProductModal.classList.contains('hidden')) closeAddProductModal();
+                    if (!addCategoryModal.classList.contains('hidden')) closeAddCategoryModal();
+                    if (!editCategoryModal.classList.contains('hidden')) closeEditCategoryModal();
+                }
+            });
+
+            // Form validation for required fields
             const requiredFields = addProductForm.querySelectorAll('[required]');
             requiredFields.forEach(field => {
                 field.addEventListener('blur', function() {
-                    if (!this.value.trim()) {
-                        this.classList.add('border-red-500');
-                        this.classList.remove('border-gray-300');
-                    } else {
-                        this.classList.remove('border-red-500');
-                        this.classList.add('border-gray-300');
-                    }
+                    this.classList.toggle('border-red-500', !this.value.trim());
+                    this.classList.toggle('border-gray-300', this.value.trim());
                 });
 
                 field.addEventListener('input', function() {
@@ -561,24 +1119,18 @@ require __DIR__ . '/partials/headers.php';
                 });
             });
 
-            // Price formatting
+            // Price and stock validation
             const priceInput = addProductForm.querySelector('input[name="price"]');
-            priceInput.addEventListener('input', function() {
-                const value = parseFloat(this.value);
-                if (!isNaN(value) && value >= 0) {
-                    this.classList.remove('border-red-500');
-                    this.classList.add('border-gray-300');
-                }
-            });
-
-            // Stock validation
             const stockInput = addProductForm.querySelector('input[name="in_stock"]');
-            stockInput.addEventListener('input', function() {
-                const value = parseInt(this.value);
-                if (!isNaN(value) && value >= 0) {
-                    this.classList.remove('border-red-500');
-                    this.classList.add('border-gray-300');
-                }
+
+            [priceInput, stockInput].forEach(input => {
+                input.addEventListener('input', function() {
+                    const value = input === priceInput ? parseFloat(this.value) : parseInt(this.value);
+                    if (!isNaN(value) && value >= 0) {
+                        this.classList.remove('border-red-500');
+                        this.classList.add('border-gray-300');
+                    }
+                });
             });
 
             // Initialize Lucide icons
