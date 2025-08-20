@@ -22,8 +22,6 @@ overlay.addEventListener("click", () => {
   overlay.classList.add("hidden");
 });
 
-
-
 // Utility functions
 function showNotification(message, type = "success") {
   const notification = document.createElement("div");
@@ -119,114 +117,129 @@ window.dashboardUtils = {
   hideLoading,
 };
 
-
 // User dropdown functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const userDropdown = document.getElementById('userDropdown');
-    const userDropdownMenu = document.getElementById('userDropdownMenu');
-    const dropdownIcon = document.getElementById('dropdownIcon');
-    let isDropdownOpen = false;
+document.addEventListener("DOMContentLoaded", function () {
+  const userDropdown = document.getElementById("userDropdown");
+  const userDropdownMenu = document.getElementById("userDropdownMenu");
+  const dropdownIcon = document.getElementById("dropdownIcon");
+  let isDropdownOpen = false;
 
-    // Toggle dropdown
-    userDropdown.addEventListener('click', function(e) {
-        e.stopPropagation();
-        toggleDropdown();
-    });
+  // Toggle dropdown
+  userDropdown.addEventListener("click", function (e) {
+    e.stopPropagation();
+    toggleDropdown();
+  });
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!userDropdown.contains(e.target) && !userDropdownMenu.contains(e.target)) {
-            closeDropdown();
-        }
-    });
-
-    // Close dropdown on escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && isDropdownOpen) {
-            closeDropdown();
-        }
-    });
-
-    function toggleDropdown() {
-        if (isDropdownOpen) {
-            closeDropdown();
-        } else {
-            openDropdown();
-        }
+  // Close dropdown when clicking outside
+  document.addEventListener("click", function (e) {
+    if (
+      !userDropdown.contains(e.target) &&
+      !userDropdownMenu.contains(e.target)
+    ) {
+      closeDropdown();
     }
+  });
 
-    function openDropdown() {
-        userDropdownMenu.classList.remove('opacity-0', 'invisible', 'scale-95');
-        userDropdownMenu.classList.add('opacity-100', 'visible', 'scale-100');
-        dropdownIcon.style.transform = 'rotate(180deg)';
-        isDropdownOpen = true;
+  // Close dropdown on escape key
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && isDropdownOpen) {
+      closeDropdown();
     }
+  });
 
-    function closeDropdown() {
-        userDropdownMenu.classList.remove('opacity-100', 'visible', 'scale-100');
-        userDropdownMenu.classList.add('opacity-0', 'invisible', 'scale-95');
-        dropdownIcon.style.transform = 'rotate(0deg)';
-        isDropdownOpen = false;
+  function toggleDropdown() {
+    if (isDropdownOpen) {
+      closeDropdown();
+    } else {
+      openDropdown();
     }
+  }
+
+  function openDropdown() {
+    userDropdownMenu.classList.remove("opacity-0", "invisible", "scale-95");
+    userDropdownMenu.classList.add("opacity-100", "visible", "scale-100");
+    dropdownIcon.style.transform = "rotate(180deg)";
+    isDropdownOpen = true;
+  }
+
+  function closeDropdown() {
+    userDropdownMenu.classList.remove("opacity-100", "visible", "scale-100");
+    userDropdownMenu.classList.add("opacity-0", "invisible", "scale-95");
+    dropdownIcon.style.transform = "rotate(0deg)";
+    isDropdownOpen = false;
+  }
 });
 
 // Enhanced admin sign out modal functionality
 document.addEventListener("DOMContentLoaded", function () {
-    const signOutModal = document.getElementById("signOutModal");
-    const cancelSignOut = document.getElementById("cancelSignOut");
-    const confirmSignOut = document.getElementById("confirmSignOut");
+  const signOutModal = document.getElementById("signOutModal");
+  const cancelSignOut = document.getElementById("cancelSignOut");
+  const confirmSignOut = document.getElementById("confirmSignOut");
 
-    function handleSignOut() {
-        // Show modal
-        signOutModal.classList.remove("hidden");  
+  function handleSignOut() {
+    // Show modal
+    signOutModal.classList.remove("hidden");
+  }
+
+  cancelSignOut.addEventListener("click", function () {
+    // Hide modal
+    signOutModal.classList.add("hidden");
+  });
+
+  confirmSignOut.addEventListener("click", async function () {
+    const originalText = confirmSignOut.innerHTML;
+
+    // Show loading state
+    confirmSignOut.innerHTML =
+      '<i class="fas fa-spinner fa-spin mr-2"></i>Signing out...';
+    confirmSignOut.disabled = true;
+
+    try {
+      // Clear any admin-specific local storage
+      localStorage.removeItem("admin_preferences");
+      localStorage.removeItem("dashboard_filters");
+      sessionStorage.clear();
+
+      // Add fade effect
+      document.body.style.transition = "opacity 0.3s ease-out";
+      document.body.style.opacity = "0.7";
+
+      // Small delay for visual feedback
+      setTimeout(() => {
+        window.location.href = "logout.php";
+      }, 300);
+    } catch (error) {
+      console.error("Admin logout error:", error);
+
+      // Restore button state
+      confirmSignOut.innerHTML = originalText;
+      confirmSignOut.disabled = false;
+
+      // Fallback: direct redirect
+      window.location.href = "logout.php";
     }
+  });
 
-    cancelSignOut.addEventListener("click", function () {
-        // Hide modal
-        signOutModal.classList.add("hidden");
+  // Close modal on escape key
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !signOutModal.classList.contains("hidden")) {
+      signOutModal.classList.add("hidden");
+    }
+  });
+
+  // Export the function for use in other files
+  window.handleSignOut = handleSignOut;
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  fetch("api/fetch-notifications.php")
+    .then((res) => res.json())
+    .then((data) => {
+      // Count unread notifications (is_read == 0)
+      let count = Array.isArray(data)
+        ? data.filter((n) => n.is_read === 0 || n.is_read === "0").length
+        : 0;
+      const badge = document.getElementById("notificationCount");
+      if (badge) badge.textContent = count;
     });
-
-    confirmSignOut.addEventListener("click", async function () {
-        const originalText = confirmSignOut.innerHTML;
-        
-        // Show loading state
-        confirmSignOut.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Signing out...';
-        confirmSignOut.disabled = true;
-        
-        try {
-            // Clear any admin-specific local storage
-            localStorage.removeItem('admin_preferences');
-            localStorage.removeItem('dashboard_filters');
-            sessionStorage.clear();
-            
-            // Add fade effect
-            document.body.style.transition = 'opacity 0.3s ease-out';
-            document.body.style.opacity = '0.7';
-            
-            // Small delay for visual feedback
-            setTimeout(() => {
-                window.location.href = "logout.php";
-            }, 300);
-            
-        } catch (error) {
-            console.error('Admin logout error:', error);
-            
-            // Restore button state
-            confirmSignOut.innerHTML = originalText;
-            confirmSignOut.disabled = false;
-            
-            // Fallback: direct redirect
-            window.location.href = "logout.php";
-        }
-    });
-
-    // Close modal on escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && !signOutModal.classList.contains('hidden')) {
-            signOutModal.classList.add("hidden");
-        }
-    });
-
-    // Export the function for use in other files
-    window.handleSignOut = handleSignOut;
 });

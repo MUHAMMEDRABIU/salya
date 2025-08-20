@@ -70,7 +70,14 @@
                     ];
                 }
                 ?>
-                <div id="notificationsList"></div>
+                <div id="notificationsLoader" class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 text-center text-gray-500">
+                    <svg class="animate-spin h-8 w-8 mx-auto mb-2 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    <div class="font-semibold mb-1">Loading notifications...</div>
+                </div>
+                <div id="notificationsList" style="display:none"></div>
                 <div id="notificationsEmpty" class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 text-center text-gray-500 hidden">
                     <i data-lucide="bell-off" class="w-8 h-8 mx-auto mb-2 text-gray-400"></i>
                     <div class="font-semibold mb-1">No notifications found.</div>
@@ -93,7 +100,7 @@
     <script src="js/script.js"></script>
     <script>
         // Fetch and render notifications dynamically
-        window.addEventListener('load', function() {
+        document.addEventListener('DOMContentLoaded', function() {
             const filterButtons = document.querySelectorAll('.flex.items-center.space-x-4 > button');
             const notificationsList = document.getElementById('notificationsList');
             const notificationsEmpty = document.getElementById('notificationsEmpty');
@@ -102,6 +109,7 @@
             function renderNotifications(filterType = 'all') {
                 notificationsList.innerHTML = '';
                 let filtered = (filterType === 'all') ? notifications : notifications.filter(n => n.type === filterType);
+                document.getElementById('notificationsLoader').style.display = 'none';
                 if (filtered.length === 0) {
                     notificationsList.style.display = 'none';
                     notificationsEmpty.style.display = '';
@@ -137,6 +145,9 @@
 
             // Fetch notifications from API
             function fetchAndRenderNotifications() {
+                document.getElementById('notificationsLoader').style.display = '';
+                notificationsList.style.display = 'none';
+                notificationsEmpty.style.display = 'none';
                 fetch('api/fetch-notifications.php', {
                         cache: 'no-store'
                     })
