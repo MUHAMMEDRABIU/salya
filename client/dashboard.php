@@ -25,7 +25,7 @@ require_once 'partials/headers.php';
 
 <body class="bg-gray font-dm pb-24 overflow-x-hidden">
     <!-- Main Content -->
-    <main class="px-4 pt-6 space-y-6 animate-fade-in">
+    <main class="px-4 pt-6 space-y-6 animate-fade-in mb-8">
         <!-- Welcome Section -->
         <div class="gradient-bg rounded-3xl p-6 text-white floating-card animate-slide-up">
             <div class="flex items-center justify-between mb-4">
