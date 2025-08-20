@@ -20,134 +20,88 @@
 
             <!-- Notifications List -->
             <div class="space-y-4">
-                <!-- New Order Notification -->
-                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 border-l-4 border-l-orange-500">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-start space-x-4">
-                            <div class="bg-orange-100 p-2 rounded-lg">
-                                <i data-lucide="shopping-cart" class="w-5 h-5 text-orange-600"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-lg font-semibold text-gray-900">New Order Received</h3>
-                                <p class="text-gray-600 mt-1">Order #ORD-1234 from John Smith for $45.99</p>
-                                <p class="text-sm text-gray-500 mt-2">2 minutes ago</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="w-2 h-2 bg-orange-500 rounded-full"></span>
-                            <button class="text-gray-400 hover:text-gray-600">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
-                        </div>
+                <?php
+                // Fetch notifications from DB
+                require_once __DIR__ . '/../config/database.php';
+                $notifications = [];
+                $borderMap = [
+                    'order' => 'border-l-orange-500',
+                    'stock' => 'border-l-red-500',
+                    'user' => 'border-l-blue-500',
+                ];
+                $bgMap = [
+                    'order' => 'bg-orange-100',
+                    'stock' => 'bg-red-100',
+                    'user' => 'bg-blue-100',
+                    'system' => 'bg-gray-100',
+                    'report' => 'bg-green-100',
+                    'payment' => 'bg-green-100',
+                ];
+                $dotMap = [
+                    'order' => 'bg-orange-500',
+                    'stock' => 'bg-red-500',
+                    'user' => 'bg-blue-500',
+                ];
+                $stmt = $pdo->query("SELECT * FROM admin_notifications ORDER BY created_at DESC LIMIT 30");
+                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    // Calculate time ago
+                    $created = strtotime($row['created_at']);
+                    $now = time();
+                    $diff = $now - $created;
+                    if ($diff < 60) {
+                        $timeAgo = $diff . ' seconds ago';
+                    } elseif ($diff < 3600) {
+                        $timeAgo = floor($diff / 60) . ' minutes ago';
+                    } elseif ($diff < 86400) {
+                        $timeAgo = floor($diff / 3600) . ' hours ago';
+                    } else {
+                        $timeAgo = date('M d, Y h:i A', $created);
+                    }
+                    $notifications[] = [
+                        'type' => $row['type'],
+                        'title' => $row['title'],
+                        'message' => $row['message'],
+                        'icon' => $row['icon'],
+                        'color' => $row['color'],
+                        'time' => $timeAgo,
+                        'border' => $borderMap[$row['type']] ?? '',
+                        'bg' => $bgMap[$row['type']] ?? 'bg-gray-100',
+                        'dot' => $dotMap[$row['type']] ?? '',
+                    ];
+                }
+                ?>
+                <?php if (empty($notifications)): ?>
+                    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 text-center text-gray-500">
+                        <i data-lucide="bell-off" class="w-8 h-8 mx-auto mb-2 text-gray-400"></i>
+                        <div class="font-semibold mb-1">No notifications found.</div>
+                        <div class="text-sm">You're all caught up!</div>
                     </div>
-                </div>
-
-                <!-- Low Stock Alert -->
-                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 border-l-4 border-l-red-500">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-start space-x-4">
-                            <div class="bg-red-100 p-2 rounded-lg">
-                                <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-lg font-semibold text-gray-900">Low Stock Alert</h3>
-                                <p class="text-gray-600 mt-1">Turkey Wings is running low (only 5 items left)</p>
-                                <p class="text-sm text-gray-500 mt-2">15 minutes ago</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-                            <button class="text-gray-400 hover:text-gray-600">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- New User Registration -->
-                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 border-l-4 border-l-blue-500">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-start space-x-4">
-                            <div class="bg-blue-100 p-2 rounded-lg">
-                                <i data-lucide="user-plus" class="w-5 h-5 text-blue-600"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-lg font-semibold text-gray-900">New User Registration</h3>
-                                <p class="text-gray-600 mt-1">Sarah Johnson just signed up for an account</p>
-                                <p class="text-sm text-gray-500 mt-2">1 hour ago</p>
+                <?php else: ?>
+                    <?php foreach ($notifications as $notif): ?>
+                        <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 <?php echo $notif['border']; ?>">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start space-x-4">
+                                    <div class="<?php echo $notif['bg']; ?> p-2 rounded-lg">
+                                        <i data-lucide="<?php echo $notif['icon']; ?>" class="w-5 h-5 text-<?php echo $notif['color']; ?>-600"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="text-lg font-semibold text-gray-900"><?php echo $notif['title']; ?></h3>
+                                        <p class="text-gray-600 mt-1"><?php echo $notif['message']; ?></p>
+                                        <p class="text-sm text-gray-500 mt-2"><?php echo $notif['time']; ?></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <?php if (!empty($notif['dot'])): ?>
+                                        <span class="w-2 h-2 <?php echo $notif['dot']; ?> rounded-full"></span>
+                                    <?php endif; ?>
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <i data-lucide="x" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
-                            <button class="text-gray-400 hover:text-gray-600">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- System Update -->
-                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-start space-x-4">
-                            <div class="bg-gray-100 p-2 rounded-lg">
-                                <i data-lucide="settings" class="w-5 h-5 text-gray-600"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-lg font-semibold text-gray-900">System Update Complete</h3>
-                                <p class="text-gray-600 mt-1">Dashboard has been updated to version 2.1.0</p>
-                                <p class="text-sm text-gray-500 mt-2">3 hours ago</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <button class="text-gray-400 hover:text-gray-600">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Daily Sales Report -->
-                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-start space-x-4">
-                            <div class="bg-green-100 p-2 rounded-lg">
-                                <i data-lucide="bar-chart-3" class="w-5 h-5 text-green-600"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-lg font-semibold text-gray-900">Daily Sales Report</h3>
-                                <p class="text-gray-600 mt-1">Today's sales: $1,250.75 (23 orders)</p>
-                                <p class="text-sm text-gray-500 mt-2">Yesterday, 6:00 PM</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <button class="text-gray-400 hover:text-gray-600">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Payment Processed -->
-                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-start space-x-4">
-                            <div class="bg-green-100 p-2 rounded-lg">
-                                <i data-lucide="credit-card" class="w-5 h-5 text-green-600"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-lg font-semibold text-gray-900">Payment Processed</h3>
-                                <p class="text-gray-600 mt-1">Payment of $89.50 received from Mike Johnson</p>
-                                <p class="text-sm text-gray-500 mt-2">2 days ago</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <button class="text-gray-400 hover:text-gray-600">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
 
             <!-- Load More Button -->

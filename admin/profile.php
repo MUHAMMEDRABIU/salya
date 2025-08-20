@@ -778,47 +778,59 @@ require __DIR__ . '/partials/headers.php';
             confirmDialog.classList.add('hidden');
         }
 
-        // Event listeners for opening modals
-        editProfileBtn.addEventListener('click', () => {
-            populateEditProfileForm();
-            showModal(editProfileModal);
-        });
 
-        editPersonalBtn.addEventListener('click', () => {
-            populateEditProfileForm();
-            showModal(editProfileModal);
-        });
+        // Event listeners for opening modals (with null checks)
+        if (editProfileBtn && editProfileModal) {
+            editProfileBtn.addEventListener('click', () => {
+                populateEditProfileForm();
+                showModal(editProfileModal);
+            });
+        }
+        if (editPersonalBtn && editProfileModal) {
+            editPersonalBtn.addEventListener('click', () => {
+                populateEditProfileForm();
+                showModal(editProfileModal);
+            });
+        }
+        if (editAdminBtn && editProfileModal) {
+            editAdminBtn.addEventListener('click', () => {
+                populateEditProfileForm();
+                showModal(editProfileModal);
+            });
+        }
+        if (adminSettingsBtn && adminSettingsModal) {
+            adminSettingsBtn.addEventListener('click', () => {
+                populateAdminSettingsForm();
+                showModal(adminSettingsModal);
+            });
+        }
+        if (changePasswordBtn && adminSettingsModal) {
+            changePasswordBtn.addEventListener('click', () => {
+                showModal(adminSettingsModal);
+            });
+        }
 
-        editAdminBtn.addEventListener('click', () => {
-            populateEditProfileForm();
-            showModal(editProfileModal);
-        });
-
-        adminSettingsBtn.addEventListener('click', () => {
-            populateAdminSettingsForm();
-            showModal(adminSettingsModal);
-        });
-
-        changePasswordBtn.addEventListener('click', () => {
-            showModal(adminSettingsModal);
-        });
-
-        // Event listeners for closing modals
-        closeEditProfile.addEventListener('click', () => {
-            hideModal(editProfileModal);
-        });
-
-        closeAdminSettings.addEventListener('click', () => {
-            hideModal(adminSettingsModal);
-        });
-
-        cancelEditProfile.addEventListener('click', () => {
-            hideModal(editProfileModal);
-        });
-
-        cancelAdminSettings.addEventListener('click', () => {
-            hideModal(adminSettingsModal);
-        });
+        // Event listeners for closing modals (with null checks)
+        if (closeEditProfile && editProfileModal) {
+            closeEditProfile.addEventListener('click', () => {
+                hideModal(editProfileModal);
+            });
+        }
+        if (closeAdminSettings && adminSettingsModal) {
+            closeAdminSettings.addEventListener('click', () => {
+                hideModal(adminSettingsModal);
+            });
+        }
+        if (cancelEditProfile && editProfileModal) {
+            cancelEditProfile.addEventListener('click', () => {
+                hideModal(editProfileModal);
+            });
+        }
+        if (cancelAdminSettings && adminSettingsModal) {
+            cancelAdminSettings.addEventListener('click', () => {
+                hideModal(adminSettingsModal);
+            });
+        }
 
         // Event listeners for form submissions
         editProfileForm.addEventListener('submit', async (e) => {
@@ -1032,7 +1044,7 @@ require __DIR__ . '/partials/headers.php';
             }
         });
 
-         function updateNavbarProfile() {
+        function updateNavbarProfile() {
             // Avatar in navbar
             const navbarAvatar = document.getElementById('navbarAvatar');
             if (navbarAvatar && profileData.avatar)

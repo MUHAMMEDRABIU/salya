@@ -164,26 +164,10 @@ require __DIR__ . '/partials/headers.php';
                         <div class="p-6 border-b border-gray-200">
                             <h3 class="text-lg font-semibold text-gray-800">Security Settings</h3>
                         </div>
-                        <form id="securitySettingsForm" class="p-6 space-y-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-                                <input type="password" name="current_password" class="settings-input-focus w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                                <input type="password" name="new_password" class="settings-input-focus w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-                                <input type="password" name="confirm_password" class="settings-input-focus w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200">
-                            </div>
-                            <div class="flex justify-end">
-                                <button type="submit" class="settings-btn-hover bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-all duration-200 flex items-center">
-                                    <span class="settings-btn-text">Update Password</span>
-                                    <i data-lucide="loader" class="settings-btn-loading w-4 h-4 ml-2 hidden"></i>
-                                </button>
-                            </div>
-                        </form>
+                        <div class="p-6 space-y-6">
+                            <!-- Security settings content (no password update) -->
+                            <div class="text-gray-500 text-sm">Password update is now managed in the profile page.</div>
+                        </div>
                     </div>
 
                     <!-- Maintenance Settings -->
