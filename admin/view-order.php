@@ -412,10 +412,6 @@ require __DIR__ . '/partials/headers.php';
                             </h3>
                         </div>
                         <div class="p-6 space-y-3">
-                            <button class="w-full bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium flex items-center justify-center">
-                                <i data-lucide="mail" class="w-4 h-4 mr-2"></i>
-                                Send Email to Customer
-                            </button>
                             <button class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium flex items-center justify-center">
                                 <i data-lucide="printer" class="w-4 h-4 mr-2"></i>
                                 Print Order Details

@@ -113,8 +113,6 @@ require_once 'partials/headers.php';
             </div>
         </div>
 
-        <!-- Stats Cards -->
-        <
 
         <!-- Quick Actions -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 animate-slide-up" style="animation-delay: 0.2s;">

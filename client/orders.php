@@ -71,7 +71,7 @@ function getUserOrders($pdo, $user_id, $status = 'all')
                     oi.product_name as name,
                     oi.quantity,
                     oi.unit_price,
-                    oi.subtotal,
+                    oi.total_price,
                     oi.product_image as image
                 FROM order_items oi
                 WHERE oi.order_id = ?
@@ -118,7 +118,7 @@ require_once 'partials/headers.php';
     </div>
 
     <!-- Main Content -->
-    <main class="relative z-10">
+    <main class="relative z-10 mb-8">
         <div class="container mx-auto px-4 pt-6 space-y-6">
             <!-- Page Header -->
             <?php include 'partials/top-nav.php'; ?>
@@ -413,13 +413,13 @@ require_once 'partials/headers.php';
                                                             <?php echo htmlspecialchars($item['name']); ?>
                                                         </p>
                                                         <p class="text-gray-500 text-xs md:text-sm">
-                                                            Qty: <?php echo $item['quantity']; ?> × <?php echo CURRENCY_SYMBOL; ?><?php echo number_format($item['price']); ?>
+                                                            Qty: <?php echo $item['quantity']; ?> × <?php echo CURRENCY_SYMBOL; ?><?php echo number_format($item['unit_price']); ?>
                                                         </p>
                                                     </div>
 
                                                     <div class="text-right flex-shrink-0">
                                                         <span class="font-semibold text-orange-500 text-sm md:text-base">
-                                                            <?php echo CURRENCY_SYMBOL; ?><?php echo number_format($item['subtotal']); ?>
+                                                            <?php echo CURRENCY_SYMBOL; ?><?php echo number_format($item['total_price']); ?>
                                                         </span>
                                                     </div>
                                                 </div>
