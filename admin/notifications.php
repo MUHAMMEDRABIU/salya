@@ -70,35 +70,12 @@
                     ];
                 }
                 ?>
-                <?php if (empty($notifications)): ?>
-                    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 text-center text-gray-500">
-                        <i data-lucide="bell-off" class="w-8 h-8 mx-auto mb-2 text-gray-400"></i>
-                        <div class="font-semibold mb-1">No notifications found.</div>
-                        <div class="text-sm">You're all caught up!</div>
-                    </div>
-                <?php else: ?>
-                    <?php foreach ($notifications as $notif): ?>
-                        <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 <?php echo $notif['border']; ?>" data-type="<?php echo $notif['type']; ?>">
-                            <div class="flex items-start justify-between">
-                                <div class="flex items-start space-x-4">
-                                    <div class="<?php echo $notif['bg']; ?> p-2 rounded-lg">
-                                        <i data-lucide="<?php echo $notif['icon']; ?>" class="w-5 h-5 text-<?php echo $notif['color']; ?>-600"></i>
-                                    </div>
-                                    <div class="flex-1">
-                                        <h3 class="text-lg font-semibold text-gray-900"><?php echo $notif['title']; ?></h3>
-                                        <p class="text-gray-600 mt-1"><?php echo $notif['message']; ?></p>
-                                        <p class="text-sm text-gray-500 mt-2"><?php echo $notif['time']; ?></p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <?php if (!empty($notif['dot'])): ?>
-                                        <span class="w-2 h-2 <?php echo $notif['dot']; ?> rounded-full"></span>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                <div id="notificationsList"></div>
+                <div id="notificationsEmpty" class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 text-center text-gray-500 hidden">
+                    <i data-lucide="bell-off" class="w-8 h-8 mx-auto mb-2 text-gray-400"></i>
+                    <div class="font-semibold mb-1">No notifications found.</div>
+                    <div class="text-sm">You're all caught up!</div>
+                </div>
             </div>
 
             <!-- Load More Button -->
@@ -115,35 +92,61 @@
 
     <script src="js/script.js"></script>
     <script>
-        // Notification filtering
+        // Fetch and render notifications dynamically
         document.addEventListener('DOMContentLoaded', function() {
             const filterButtons = document.querySelectorAll('.flex.items-center.space-x-4 > button');
-            const notificationCards = document.querySelectorAll('.space-y-4 > div.bg-white[data-type]');
-            const emptyState = document.querySelector('.space-y-4 > .text-center');
+            const notificationsList = document.getElementById('notificationsList');
+            const notificationsEmpty = document.getElementById('notificationsEmpty');
+            let notifications = [];
 
-            function showAll() {
-                let anyVisible = false;
-                notificationCards.forEach(card => {
-                    card.style.display = '';
-                    anyVisible = true;
-                });
-                if (emptyState) emptyState.style.display = 'none';
+            function renderNotifications(filterType = 'all') {
+                notificationsList.innerHTML = '';
+                let filtered = (filterType === 'all') ? notifications : notifications.filter(n => n.type === filterType);
+                if (filtered.length === 0) {
+                    notificationsList.style.display = 'none';
+                    notificationsEmpty.style.display = '';
+                } else {
+                    notificationsList.style.display = '';
+                    notificationsEmpty.style.display = 'none';
+                    filtered.forEach(notif => {
+                        const card = document.createElement('div');
+                        card.className = `bg-white rounded-lg shadow-sm p-6 border border-gray-200 ${notif.border}`;
+                        card.setAttribute('data-type', notif.type);
+                        card.innerHTML = `
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-4">
+                                <div class="${notif.bg} p-2 rounded-lg">
+                                    <i data-lucide="${notif.icon}" class="w-5 h-5 text-${notif.color}-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-900">${notif.title}</h3>
+                                    <p class="text-gray-600 mt-1">${notif.message}</p>
+                                    <p class="text-sm text-gray-500 mt-2">${notif.time}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                ${notif.dot ? `<span class="w-2 h-2 ${notif.dot} rounded-full"></span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                        notificationsList.appendChild(card);
+                    });
+                    if (window.lucide) lucide.createIcons();
+                }
             }
 
-            function filterByType(type) {
-                let anyVisible = false;
-                notificationCards.forEach(card => {
-                    if (card.getAttribute('data-type') === type) {
-                        card.style.display = '';
-                        anyVisible = true;
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-                if (emptyState) emptyState.style.display = anyVisible ? 'none' : '';
-                if (!anyVisible && emptyState) emptyState.style.display = '';
+            // Fetch notifications from API
+            function fetchAndRenderNotifications() {
+                fetch('api/fetch-notifications.php', { cache: 'no-store' })
+                    .then(res => res.json())
+                    .then(data => {
+                        notifications = Array.isArray(data) ? data : [];
+                        renderNotifications('all');
+                    });
             }
+            fetchAndRenderNotifications();
 
+            // Optionally, re-render on filter change to always use latest notifications
             filterButtons.forEach(btn => {
                 btn.addEventListener('click', function() {
                     filterButtons.forEach(b => {
@@ -154,13 +157,35 @@
                     btn.classList.add('bg-orange-500', 'text-white');
                     let type = btn.textContent.trim().toLowerCase();
                     if (type === 'all') {
-                        showAll();
+                        renderNotifications('all');
                     } else if (type === 'orders') {
-                        filterByType('order');
+                        renderNotifications('order');
                     } else if (type === 'system') {
-                        filterByType('system');
+                        renderNotifications('system');
                     } else if (type === 'users') {
-                        filterByType('user');
+                        renderNotifications('user');
+                    }
+                });
+            });
+
+            // Filter logic
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterButtons.forEach(b => {
+                        b.classList.remove('bg-orange-500', 'text-white');
+                        b.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-300', 'hover:bg-gray-50');
+                    });
+                    btn.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-300', 'hover:bg-gray-50');
+                    btn.classList.add('bg-orange-500', 'text-white');
+                    let type = btn.textContent.trim().toLowerCase();
+                    if (type === 'all') {
+                        renderNotifications('all');
+                    } else if (type === 'orders') {
+                        renderNotifications('order');
+                    } else if (type === 'system') {
+                        renderNotifications('system');
+                    } else if (type === 'users') {
+                        renderNotifications('user');
                     }
                 });
             });
