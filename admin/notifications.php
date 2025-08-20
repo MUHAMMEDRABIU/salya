@@ -93,7 +93,7 @@
     <script src="js/script.js"></script>
     <script>
         // Fetch and render notifications dynamically
-        document.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('load', function() {
             const filterButtons = document.querySelectorAll('.flex.items-center.space-x-4 > button');
             const notificationsList = document.getElementById('notificationsList');
             const notificationsEmpty = document.getElementById('notificationsEmpty');
@@ -137,7 +137,9 @@
 
             // Fetch notifications from API
             function fetchAndRenderNotifications() {
-                fetch('api/fetch-notifications.php', { cache: 'no-store' })
+                fetch('api/fetch-notifications.php', {
+                        cache: 'no-store'
+                    })
                     .then(res => res.json())
                     .then(data => {
                         notifications = Array.isArray(data) ? data : [];
