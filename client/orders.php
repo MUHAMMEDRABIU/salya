@@ -70,7 +70,7 @@ function getUserOrders($pdo, $user_id, $status = 'all')
                 SELECT 
                     oi.product_name as name,
                     oi.quantity,
-                    oi.price,
+                    oi.unit_price,
                     oi.subtotal,
                     oi.product_image as image
                 FROM order_items oi

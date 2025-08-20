@@ -944,7 +944,7 @@ function getAnalyticsData(PDO $pdo): array
             : 0;
 
         // Top selling products
-        $stmt = $pdo->query("SELECT p.name, p.image, SUM(oi.quantity) AS total_sold, SUM(oi.quantity * oi.price) AS total_amount
+        $stmt = $pdo->query("SELECT p.name, p.image, SUM(oi.quantity) AS total_sold, SUM(oi.quantity * oi.unit_price) AS total_amount
             FROM order_items oi
             JOIN products p ON p.id = oi.product_id
             GROUP BY oi.product_id

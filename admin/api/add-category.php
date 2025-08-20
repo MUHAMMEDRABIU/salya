@@ -19,7 +19,6 @@ try {
     $name = trim($_POST['name'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $slug = trim($_POST['slug'] ?? '');
-    $isActive = isset($_POST['is_active']) ? 1 : 0;
 
     if (empty($name)) {
         throw new Exception('Category name is required');
@@ -64,6 +63,7 @@ try {
         }
     }
 
+    $isActive = 1;
     // Insert category
     $stmt = $pdo->prepare("
         INSERT INTO categories (name, slug, description, image_url, is_active, created_at) 
