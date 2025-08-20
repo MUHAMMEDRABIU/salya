@@ -313,8 +313,10 @@ require_once 'partials/headers.php';
     </div>
 
     <!-- Delivery Form Modal -->
-    <div id="deliveryFormModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div id="deliveryFormModal" class="fixed inset-0 z-[9999] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-white/60 backdrop-blur"></div>
+        <div class="relative bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <!-- Modal Content Starts Here -->
             <!-- Modal Header -->
             <div class="flex items-center justify-between p-6 border-b border-gray-100">
                 <h2 class="text-xl md:text-2xl font-bold text-custom-dark">Delivery Information</h2>
@@ -438,7 +440,7 @@ require_once 'partials/headers.php';
             </div>
 
             <!-- Fixed Action Buttons -->
-            <div class="border-t border-gray-100 p-6 bg-white">
+            <div class="border-t border-gray-100 p-6 bg-white sticky bottom-0 z-10">
                 <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
                     <button type="button" onclick="closeDeliveryForm()"
                         class="flex-1 px-6 py-4 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium text-center">

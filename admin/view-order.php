@@ -117,14 +117,14 @@ require __DIR__ . '/partials/headers.php';
                                                     </span>
                                                     <span class="text-sm text-gray-500 flex items-center">
                                                         <i data-lucide="tag" class="w-3 h-3 mr-1"></i>
-                                                        Unit: <?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($item['price']), 2); ?>
+                                                        Unit: <?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($item['unit_price']), 2); ?>
                                                     </span>
                                                 </div>
                                             </div>
                                             <div class="text-right">
                                                 <p class="font-semibold text-gray-900 flex items-center justify-end">
                                                     <i data-lucide="dollar-sign" class="w-4 h-4 mr-1 text-green-600"></i>
-                                                    <?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($item['subtotal']), 2); ?>
+                                                    <?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($item['total_price']), 2); ?>
                                                 </p>
                                             </div>
                                         </div>

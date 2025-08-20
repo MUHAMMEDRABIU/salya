@@ -272,6 +272,21 @@ require_once 'partials/headers.php';
     orderBtn.addEventListener('click', () => addToCart(true));
     addCartBtn.addEventListener('click', () => addToCart(false));
 
+    // Update cart count after add to cart
+    async function updateCartCount() {
+      try {
+        const res = await fetch('api/get-cart-count.php');
+        const data = await res.json();
+        const cartBadge = document.getElementById('cartCount');
+        if (cartBadge) {
+          cartBadge.textContent = data.count || 0;
+          cartBadge.parentElement.style.display = (data.count > 0) ? 'flex' : 'none';
+        }
+      } catch (err) {
+        // Optionally handle error
+      }
+    }
+
     if (backBtn) {
       backBtn.addEventListener('click', () => {
         window.history.length > 1 ? window.history.back() : window.location.href = 'dashboard.php';

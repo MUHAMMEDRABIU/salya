@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Get user profile by ID
  * @param int $user_id
@@ -423,7 +424,7 @@ function getProductImage($product)
 function getProductCategories($pdo)
 {
     try {
-        $stmt = $pdo->prepare("SELECT name FROM categories");
+        $stmt = $pdo->prepare("SELECT name FROM categories WHERE is_active = '1'");
         $stmt->execute();
         $categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
         return $categories;
@@ -514,7 +515,7 @@ function addUserAddress($pdo, $user_id, $address_data)
             (user_id, address_name, full_address, type, street_address, city, state, postal_code, landmark, is_default) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        
+
         return $stmt->execute([
             $user_id,
             $address_data['address_name'] ?? 'Home',
@@ -557,7 +558,7 @@ function updateUserAddress($pdo, $user_id, $address_id, $address_data)
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = ? AND user_id = ?
         ");
-        
+
         return $stmt->execute([
             $address_data['address_name'] ?? 'Home',
             $address_data['full_address'],
@@ -631,7 +632,7 @@ function getUserPreferences($pdo, $user_id)
         $stmt = $pdo->prepare("SELECT push_notifications, email_updates, language, theme FROM user_preferences WHERE user_id = ?");
         $stmt->execute([$user_id]);
         $prefs = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         // Always return a proper array with defaults
         return [
             'push_notifications' => (int)($prefs['push_notifications'] ?? 1),
@@ -764,36 +765,36 @@ function uploadUserAvatar($pdo, $user_id, $file)
 {
     $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     $max_size = 5 * 1024 * 1024; // 5MB
-    
+
     // Validate file
     if (!in_array($file['type'], $allowed_types)) {
         return ['success' => false, 'message' => 'Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'];
     }
-    
+
     if ($file['size'] > $max_size) {
         return ['success' => false, 'message' => 'File size too large. Maximum 5MB allowed.'];
     }
-    
+
     // Create upload directory if it doesn't exist
     $upload_dir = USER_AVATAR_DIR;
     if (!is_dir($upload_dir)) {
         mkdir($upload_dir, 0755, true);
     }
-    
+
     // Generate unique filename
     $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
     $filename = 'user_' . $user_id . '_' . time() . '.' . $extension;
     $filepath = $upload_dir . $filename;
-    
+
     // Upload file
     if (move_uploaded_file($file['tmp_name'], $filepath)) {
         try {
             // Update user avatar in database
             $stmt = $pdo->prepare("UPDATE users SET avatar = ? WHERE id = ?");
             $stmt->execute([$filename, $user_id]);
-            
+
             return [
-                'success' => true, 
+                'success' => true,
                 'message' => 'Avatar uploaded successfully',
                 'avatar_filename' => $filename
             ];
@@ -804,7 +805,7 @@ function uploadUserAvatar($pdo, $user_id, $file)
             return ['success' => false, 'message' => 'Failed to update avatar in database'];
         }
     }
-    
+
     return ['success' => false, 'message' => 'Failed to upload file'];
 }
 
@@ -821,7 +822,7 @@ function removeUserAvatar($pdo, $user_id)
         $stmt = $pdo->prepare("SELECT avatar FROM users WHERE id = ?");
         $stmt->execute([$user_id]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if ($user && $user['avatar'] && $user['avatar'] !== DEFAULT_USER_AVATAR) {
             // Delete file if it exists
             $filepath = USER_AVATAR_DIR . $user['avatar'];
@@ -829,11 +830,11 @@ function removeUserAvatar($pdo, $user_id)
                 unlink($filepath);
             }
         }
-        
+
         // Reset avatar to default in database
         $stmt = $pdo->prepare("UPDATE users SET avatar = ? WHERE id = ?");
         $stmt->execute([DEFAULT_USER_AVATAR, $user_id]);
-        
+
         return ['success' => true, 'message' => 'Avatar removed successfully'];
     } catch (PDOException $e) {
         error_log("Error removing user avatar: " . $e->getMessage());

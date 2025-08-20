@@ -98,7 +98,7 @@ try {
 
     // Insert order items
     $stmt = $pdo->prepare("
-        INSERT INTO order_items (order_id, product_id, product_name, product_image, quantity, price, subtotal)
+        INSERT INTO order_items (order_id, product_id, product_name, product_image, quantity, unit_price, total_price)
         VALUES (?, ?, ?, ?, ?, ?, ?)
     ");
 
