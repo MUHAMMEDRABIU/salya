@@ -78,7 +78,7 @@
                     </div>
                 <?php else: ?>
                     <?php foreach ($notifications as $notif): ?>
-                        <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 <?php echo $notif['border']; ?>">
+                        <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 <?php echo $notif['border']; ?>" data-type="<?php echo $notif['type']; ?>">
                             <div class="flex items-start justify-between">
                                 <div class="flex items-start space-x-4">
                                     <div class="<?php echo $notif['bg']; ?> p-2 rounded-lg">
@@ -94,9 +94,6 @@
                                     <?php if (!empty($notif['dot'])): ?>
                                         <span class="w-2 h-2 <?php echo $notif['dot']; ?> rounded-full"></span>
                                     <?php endif; ?>
-                                    <button class="text-gray-400 hover:text-gray-600">
-                                        <i data-lucide="x" class="w-4 h-4"></i>
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -117,6 +114,58 @@
     <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
 
     <script src="js/script.js"></script>
+    <script>
+        // Notification filtering
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterButtons = document.querySelectorAll('.flex.items-center.space-x-4 > button');
+            const notificationCards = document.querySelectorAll('.space-y-4 > div.bg-white[data-type]');
+            const emptyState = document.querySelector('.space-y-4 > .text-center');
+
+            function showAll() {
+                let anyVisible = false;
+                notificationCards.forEach(card => {
+                    card.style.display = '';
+                    anyVisible = true;
+                });
+                if (emptyState) emptyState.style.display = 'none';
+            }
+
+            function filterByType(type) {
+                let anyVisible = false;
+                notificationCards.forEach(card => {
+                    if (card.getAttribute('data-type') === type) {
+                        card.style.display = '';
+                        anyVisible = true;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                if (emptyState) emptyState.style.display = anyVisible ? 'none' : '';
+                if (!anyVisible && emptyState) emptyState.style.display = '';
+            }
+
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterButtons.forEach(b => {
+                        b.classList.remove('bg-orange-500', 'text-white');
+                        b.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-300', 'hover:bg-gray-50');
+                    });
+                    btn.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-300', 'hover:bg-gray-50');
+                    btn.classList.add('bg-orange-500', 'text-white');
+                    let type = btn.textContent.trim().toLowerCase();
+                    if (type === 'all') {
+                        showAll();
+                    } else if (type === 'orders') {
+                        filterByType('order');
+                    } else if (type === 'system') {
+                        filterByType('system');
+                    } else if (type === 'users') {
+                        filterByType('user');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
