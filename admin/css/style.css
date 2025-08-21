@@ -123,9 +123,8 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  ring: 2px;
-  ring-color: var(--accent-color);
   border-color: transparent;
+  box-shadow: 0 0 0 2px var(--accent-color);
 }
 
 /* Loading states */

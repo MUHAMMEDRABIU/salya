@@ -175,7 +175,7 @@ $topProducts = getTopProducts($pdo, 3);
                                         <div class="flex items-center space-x-3">
                                             <?php
                                             // Generate product image URL with fallback
-                                            $productImage = !empty($product['image']) && $product['image'] !== DEFAULT_PRODUCT_IMAGE 
+                                            $productImage = !empty($product['image']) && $product['image'] !== DEFAULT_PRODUCT_IMAGE
                                                 ? PRODUCT_IMAGE_URL . htmlspecialchars($product['image'])
                                                 : PRODUCT_IMAGE_URL . DEFAULT_PRODUCT_IMAGE;
                                             ?>
