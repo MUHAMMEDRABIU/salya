@@ -111,11 +111,11 @@ function getAllNotifications($pdo, $user_id = null)
 {
     try {
         if ($user_id) {
-            $stmt = $pdo->prepare("SELECT * FROM notifications WHERE user_id = :user_id ORDER BY `time` DESC");
+            $stmt = $pdo->prepare("SELECT * FROM user_notifications WHERE user_id = :user_id ORDER BY `time` DESC");
             $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
             $stmt->execute();
         } else {
-            $stmt = $pdo->query("SELECT * FROM notifications ORDER BY `time` DESC");
+            $stmt = $pdo->query("SELECT * FROM user_notifications ORDER BY `time` DESC");
         }
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
@@ -133,7 +133,7 @@ function getAllNotifications($pdo, $user_id = null)
 function getUnreadNotificationCount($pdo, $user_id)
 {
     try {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND (`read` = 0 OR `read` IS NULL)");
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM user_notifications WHERE user_id = ? AND (`read` = 0 OR `read` IS NULL)");
         $stmt->execute([$user_id]);
         return (int)$stmt->fetchColumn();
     } catch (Exception $e) {
