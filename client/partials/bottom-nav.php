@@ -1,4 +1,10 @@
-<?php $current_page = basename($_SERVER['PHP_SELF'], '.php'); ?>
+<?php
+$current_page = basename($_SERVER['PHP_SELF'], '.php');
+if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/../util/util.php';
+$user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+$unread_count = ($user_id && isset($pdo)) ? getUnreadNotificationCount($pdo, $user_id) : 0;
+?>
 <!-- Premium Bottom Navigation -->
 <nav class="fixed bottom-0 left-0 right-0 z-50 px-4 pb-5">
     <div class="nav-container rounded-3xl py-3 px-2 flex justify-around items-center max-w-md mx-auto">
@@ -31,7 +37,9 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                 </svg>
-                <div class="bottom-notification-badge absolute -top-1 -right-1 bg-red-500 text-white text-xs font-semibold rounded-full w-4 h-4 flex items-center justify-center">3</div>
+                <?php if ($unread_count > 0): ?>
+                    <div class="bottom-notification-badge absolute -top-1 -right-1 bg-red-500 text-white text-xs font-semibold rounded-full w-4 h-4 flex items-center justify-center"><?php echo $unread_count ?? 0; ?></div>
+                <?php endif; ?>
             </div>
             <span class="nav-label text-xs font-medium whitespace-nowrap">Notifications</span>
             <div class="bottom-nav-indicator absolute -bottom-2 left-1/2 w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
