@@ -15,6 +15,8 @@ $user_id = $_SESSION['user_id'];
 // Get user profile and statistics
 $user = getUserProfile($pdo, $user_id);
 $userStats = getUserStatistics($pdo, $user_id);
+// Get wallet balance
+$walletBalance = getUserWalletBalance($pdo, $user_id);
 
 // Get cart count for logged in users
 $cartCount = 0;
@@ -127,12 +129,12 @@ require_once 'partials/headers.php';
 
             <div class="stats-card bg-white rounded-2xl p-4 md:p-6 floating-card text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div class="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                    <i class="fas fa-naira-sign text-green-600 text-lg md:text-xl"></i>
+                    <i class="fas fa-wallet text-green-600 text-lg md:text-xl"></i>
                 </div>
                 <p class="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-                    <?php echo CURRENCY_SYMBOL; ?><?php echo number_format(($userStats['total_amount'] ?? 0) / 1000, 1); ?>k
+                    <?php echo CURRENCY_SYMBOL; ?><?php echo number_format($walletBalance, 2); ?>
                 </p>
-                <p class="text-gray-500 text-xs md:text-sm">Total Spent</p>
+                <p class="text-gray-500 text-xs md:text-sm">Wallet Balance</p>
             </div>
 
             <div class="stats-card bg-white rounded-2xl p-4 md:p-6 floating-card text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1">

@@ -19,6 +19,25 @@ function getUserProfile($pdo, $user_id)
 }
 
 /**
+ * Get user's wallet balance
+ * @param PDO $pdo
+ * @param int $user_id
+ * @return float
+ */
+function getUserWalletBalance($pdo, $user_id)
+{
+    try {
+        $stmt = $pdo->prepare("SELECT balance FROM wallets WHERE user_id = ? LIMIT 1");
+        $stmt->execute([$user_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return isset($result['balance']) ? (float)$result['balance'] : 0.00;
+    } catch (Exception $e) {
+        error_log("Error getting wallet balance: " . $e->getMessage());
+        return 0.00;
+    }
+}
+
+/**
  * Get user's cart items with product details from database
  */
 function getUserCartItems($pdo, $user_id)
@@ -85,89 +104,6 @@ function getUserCartTotals($pdo, $user_id)
             'total' => 500,
             'item_count' => 0
         ];
-    }
-}
-
-/**
- * Update user profile
- * @param PDO $pdo
- * @param int $user_id
- * @param array $profile_data
- * @return bool
- */
-function updateUserProfile($pdo, $user_id, $profile_data)
-{
-    $required_fields = ['name', 'email', 'phone', 'address'];
-    foreach ($required_fields as $field) {
-        if (!isset($profile_data[$field]) || empty(trim($profile_data[$field]))) {
-            return false;
-        }
-    }
-
-    if (!filter_var($profile_data['email'], FILTER_VALIDATE_EMAIL)) {
-        return false;
-    }
-
-    if (!validatePhoneNumber($profile_data['phone'])) {
-        return false;
-    }
-
-    try {
-        $stmt = $pdo->prepare("UPDATE users SET name = :name, email = :email, phone = :phone WHERE id = :user_id");
-        $stmt->bindParam(':name', $profile_data['name']);
-        $stmt->bindParam(':email', $profile_data['email']);
-        $stmt->bindParam(':phone', $profile_data['phone']);
-        $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
-        $stmt->execute();
-
-        // Optionally update address in user_addresses table
-        $stmt2 = $pdo->prepare("UPDATE user_addresses SET street_address = :address WHERE user_id = :user_id");
-        $stmt2->bindParam(':address', $profile_data['address']);
-        $stmt2->bindParam(':user_id', $user_id, PDO::PARAM_INT);
-        $stmt2->execute();
-
-        return true;
-    } catch (PDOException $e) {
-        error_log("Error updating user profile: " . $e->getMessage());
-        return false;
-    }
-}
-
-/**
- * Change user password
- * @param PDO $pdo
- * @param int $user_id
- * @param string $current_password
- * @param string $new_password
- * @return bool
- */
-function changeUserPassword($pdo, $user_id, $current_password, $new_password)
-{
-    if (strlen($new_password) < 6) {
-        return false;
-    }
-
-    try {
-        // Verify current password
-        $stmt = $pdo->prepare("SELECT password FROM users WHERE id = :user_id");
-        $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$user || !password_verify($current_password, $user['password'])) {
-            return false;
-        }
-
-        $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-        $stmt2 = $pdo->prepare("UPDATE users SET password = :password WHERE id = :user_id");
-        $stmt2->bindParam(':password', $hashed_password);
-        $stmt2->bindParam(':user_id', $user_id, PDO::PARAM_INT);
-        $stmt2->execute();
-
-        return true;
-    } catch (PDOException $e) {
-        error_log("Error changing password: " . $e->getMessage());
-        return false;
     }
 }
 
