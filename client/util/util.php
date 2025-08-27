@@ -1,6 +1,38 @@
 <?php
 
 /**
+ * Push a notification to the database for a user
+ * @param PDO $pdo
+ * @param int $user_id
+ * @param string $title
+ * @param string $message
+ * @param string $type (e.g. 'orders', 'promotions', 'updates')
+ * @param string $icon (FontAwesome class)
+ * @param string $color (Tailwind class)
+ * @param string|null $action_label
+ * @return bool
+ */
+function pushNotification($pdo, $user_id, $title, $message, $type = 'updates', $icon = 'fas fa-bell', $color = 'bg-gray-100', $action_label = null)
+{
+    try {
+        $stmt = $pdo->prepare("INSERT INTO user_notifications (user_id, title, message, type, icon, color, action_label, `time`, `read`) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), 0)");
+        $stmt->execute([
+            $user_id,
+            $title,
+            $message,
+            $type,
+            $icon,
+            $color,
+            $action_label
+        ]);
+        return true;
+    } catch (Exception $e) {
+        error_log('Push notification error: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
  * Get user profile by ID
  * @param int $user_id
  * @return array|null

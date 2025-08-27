@@ -3,16 +3,16 @@
 - Verified status not functioning properly.
 - Email sending functionality failed.
 - Create an activity branch to insert activities log where necessary
-- Create a consistency branch for consistency.
+- Create a consistency branch for consistency✅.
 - Pending tasks functionlity
 - Make the role a select form in the admin
 - Add breadcrumbs in necessary files.
-- Fix the security old password validation
+- Fix the security old password validation✅
 - A custom vector for 0 data found.
-- Fixing the cart count in the product page
-- Fix the responsive of the cart page
+- Fixing the cart count in the product page ✅
+- Fix the responsive of the cart page ✅
 - In checkout page if cart is 0 show a vector.
-- Hide the order summary box on the 3rd step.
+- Hide the order summary box on the 3rd step. ✅
 - Extra padding in the admin profile containers in small screen.
 - Validate input fields in user checkout page.
 - i want to add option to change language 
