@@ -124,6 +124,9 @@ $unread_count = count(array_filter($notifications, function ($n) {
     </div>
     <!-- Bottom navigation include -->
     <?php include 'partials/bottom-nav.php'; ?>
+    <!-- Scripts -->
+    <script src="../assets/js/toast.js"></script>
+    <script src="js/script.js"></script>
     <script>
         // Notification management
         let notifications = [];

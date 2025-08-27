@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../initialize.php';
+require_once __DIR__ . '/../util/util.php';
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
@@ -45,14 +46,22 @@ try {
         throw new Exception('Failed to update password');
     }
 
-    // Log security event
-    error_log("Password changed for user ID: $user_id at " . date('Y-m-d H:i:s'));
+    // Push notification for password change
+    pushNotification(
+        $pdo,
+        $user_id,
+        'Password Changed',
+        'Your password was updated successfully.',
+        'security',
+        'fas fa-key text-red-600',
+        'bg-red-100',
+        'View Profile'
+    );
 
     echo json_encode([
         'success' => true,
         'message' => 'Password updated successfully'
     ]);
-
 } catch (Exception $e) {
     error_log('Change password error: ' . $e->getMessage());
     echo json_encode([
@@ -60,4 +69,3 @@ try {
         'message' => $e->getMessage()
     ]);
 }
-?>

@@ -3,8 +3,42 @@ document?.addEventListener("DOMContentLoaded", function () {
 
   // Initialize cart count on page load
   updateCartCount();
+
+  // Poll cart count every 30 seconds for real-time updates
+  setInterval(updateCartCount, 30000);
+
+  // Initialize notification count on page load
+  updateNotificationCount();
+
+  // Poll notification count every 30 seconds for real-time updates
+  setInterval(updateNotificationCount, 30000);
 });
 
+/**
+ * Fetch and update notification count from server
+ */
+async function updateNotificationCount() {
+  try {
+    const response = await fetch("api/get-notification-count.php");
+    const data = await response.json();
+
+    if (data.success) {
+      // Try to find notification badge in bottom nav
+      const notifBadge = document.querySelector(".bottom-notification-badge");
+      if (notifBadge) {
+        const newCount = data.unread_count;
+        notifBadge.textContent = newCount;
+        notifBadge.style.display = newCount > 0 ? "flex" : "none";
+        // Add bounce animation for feedback
+        notifBadge.classList.remove("animate-bounce-gentle");
+        setTimeout(() => notifBadge.classList.add("animate-bounce-gentle"), 10);
+      }
+    }
+  } catch (error) {
+    console.log("Error updating notification count:", error);
+    // Silently fail
+  }
+}
 // Back button functionality
 document.getElementById("backBtn")?.addEventListener("click", function () {
   this.style.transform = "scale(0.95)";
@@ -54,53 +88,53 @@ async function updateCartCount() {
  */
 // Enhanced Add to Cart function using unified endpoint
 async function addToCart(productId, quantity = 1) {
-    try {
-        console.log('🔍 DEBUG - Adding to cart:', { productId, quantity }); // DEBUG
+  try {
+    console.log("🔍 DEBUG - Adding to cart:", { productId, quantity }); // DEBUG
 
-        const response = await fetch('api/update-cart.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                product_id: productId, // ✅ FIXED: Changed from 'id' to 'product_id'
-                quantity: quantity,
-                action: 'update'
-            })
-        });
+    const response = await fetch("api/update-cart.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        product_id: productId,
+        quantity: quantity,
+        action: "update",
+      }),
+    });
 
-        console.log('🔍 DEBUG - Add to cart response status:', response.status); // DEBUG
+    console.log("🔍 DEBUG - Add to cart response status:", response.status); // DEBUG
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        console.log('🔍 DEBUG - Add to cart result:', result); // DEBUG
-
-        if (result.success) {
-            // Update cart count if element exists
-            updateCartCount();
-            
-            // Show success message if showToasted function exists
-            if (typeof showToasted === 'function') {
-                showToasted(result.message || 'Added to cart!', 'success');
-            }
-            
-            return true;
-        } else {
-            if (typeof showToasted === 'function') {
-                showToasted(result.message || 'Failed to add to cart', 'error');
-            }
-            return false;
-        }
-    } catch (error) {
-        console.error('🔍 DEBUG - Add to cart error:', error);
-        if (typeof showToasted === 'function') {
-            showToasted('Network error occurred', 'error');
-        }
-        return false;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const result = await response.json();
+    console.log("🔍 DEBUG - Add to cart result:", result); // DEBUG
+
+    if (result.success) {
+      // Update cart count if element exists
+      updateCartCount();
+
+      // Show success message if showToasted function exists
+      if (typeof showToasted === "function") {
+        showToasted(result.message || "Added to cart!", "success");
+      }
+
+      return true;
+    } else {
+      if (typeof showToasted === "function") {
+        showToasted(result.message || "Failed to add to cart", "error");
+      }
+      return false;
+    }
+  } catch (error) {
+    console.error("🔍 DEBUG - Add to cart error:", error);
+    if (typeof showToasted === "function") {
+      showToasted("Network error occurred", "error");
+    }
+    return false;
+  }
 }
 
 /**
