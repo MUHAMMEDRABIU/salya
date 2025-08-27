@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../initialize.php';
+require_once __DIR__ . '/../util/util.php';
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
@@ -118,6 +120,15 @@ try {
     // Commit transaction
     $pdo->commit();
 
+    // Push notification for new order
+    $notifTitle = 'Order Placed';
+    $notifMessage = 'Your order #' . htmlspecialchars($order_number) . ' has been placed successfully.';
+    $notifType = 'orders';
+    // Custom color/icon logic for 'orders' type
+    $notifIcon = 'fa-solid fa-bag-shopping';
+    $notifColor = '#ea580c'; // Tailwind orange-600
+    $notifAction = 'View';
+    pushNotification($pdo, $user_id, $notifTitle, $notifMessage, $notifType, $notifIcon, $notifColor, $notifAction);
     echo json_encode([
         'success' => true,
         'message' => 'Order created successfully',
