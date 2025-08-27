@@ -17,3 +17,5 @@
 - Validate input fields in user checkout page.
 - i want to add option to change language 
 - Fix system overview for users today
+- Mark all as read not functional in the user notifications page.
+- Hide date header not functioning properly.
