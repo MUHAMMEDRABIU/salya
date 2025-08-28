@@ -94,7 +94,7 @@ $adminEmail = htmlspecialchars($admin['email'] ?? '');
         </div>
     </div>
 </header>
-<div id="signOutModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+<div id="signOutModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden backdrop-blur-sm">
     <div class="bg-white rounded-lg shadow-lg w-96 p-6">
         <h2 class="text-lg font-bold text-gray-800 mb-4">Sign Out</h2>
         <p class="text-sm text-gray-600 mb-6">Are you sure you want to sign out?</p>
