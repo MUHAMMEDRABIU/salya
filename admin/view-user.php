@@ -182,6 +182,7 @@ require __DIR__ . '/partials/headers.php';
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     </tr>
                                 </thead>
@@ -206,6 +207,9 @@ require __DIR__ . '/partials/headers.php';
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                     <?php echo CURRENCY_SYMBOL; ?><?= number_format((float)$order['total_amount'], 2) ?>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    <?= $order['payment_method']; ?>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
@@ -271,21 +275,61 @@ require __DIR__ . '/partials/headers.php';
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Account Details</h3>
                         <div class="space-y-4">
-                            <div>
-                                <p class="text-sm text-gray-500">User ID</p>
-                                <p class="text-sm font-medium text-gray-900">#<?= htmlspecialchars($user['id']) ?></p>
+                            <div class="flex items-center">
+                                <i data-lucide="badge" class="w-5 h-5 text-gray-400 mr-3"></i>
+                                <div>
+                                    <p class="text-sm text-gray-500">User ID</p>
+                                    <p class="text-sm font-medium text-gray-900">#<?= htmlspecialchars($user['id']) ?></p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-sm text-gray-500">Last Login</p>
-                                <p class="text-sm font-medium text-gray-900">
-                                    <?= $user['last_login'] ? date('M d, Y H:i', strtotime($user['last_login'])) : 'Never' ?>
-                                </p>
+                            <div class="flex items-center">
+                                <i data-lucide="clock" class="w-5 h-5 text-gray-400 mr-3"></i>
+                                <div>
+                                    <p class="text-sm text-gray-500">Last Login</p>
+                                    <p class="text-sm font-medium text-gray-900">
+                                        <?= $user['last_login'] ? date('M d, Y H:i', strtotime($user['last_login'])) : 'Never' ?>
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-sm text-gray-500">Verification status</p>
-                                <p class="text-sm font-medium <?= $user['verified'] ? 'text-green-600' : 'text-red-600' ?>">
-                                    <?= $user['verified'] ? 'Verified' : 'Not Verified' ?>
-                                </p>
+                            <div class="flex items-center">
+                                <i data-lucide="<?= $user['verified'] ? 'shield-check' : 'shield-x' ?>" class="w-5 h-5 mr-3 <?= $user['verified'] ? 'text-green-500' : 'text-red-500' ?>"></i>
+                                <div>
+                                    <p class="text-sm text-gray-500">Verification status</p>
+                                    <p class="text-sm font-medium <?= $user['verified'] ? 'text-green-600' : 'text-red-600' ?>">
+                                        <?= $user['verified'] ? 'Verified' : 'Not Verified' ?>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Virtual Account Card -->
+                    <?php
+                    $virtualAccount = getUserVirtualAccount($pdo, $user_id);
+                    ?>
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Bank Account Details</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <i data-lucide="credit-card" class="w-5 h-5 text-gray-400 mr-3"></i>
+                                <div>
+                                    <p class="text-sm text-gray-500">Account Number</p>
+                                    <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($virtualAccount['account_number']); ?></p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <i data-lucide="user" class="w-5 h-5 text-gray-400 mr-3"></i>
+                                <div>
+                                    <p class="text-sm text-gray-500">Account Name</p>
+                                    <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($virtualAccount['account_name']); ?></p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <i data-lucide="dollar-sign" class="w-5 h-5 text-gray-400 mr-3"></i>
+                                <div>
+                                    <p class="text-sm text-gray-500">Currency</p>
+                                    <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($virtualAccount['currency_code']); ?></p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -550,14 +594,14 @@ require __DIR__ . '/partials/headers.php';
     <script src="../assets/js/toast.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            
+
             document.querySelectorAll('tr[data-order]').forEach(function(row) {
                 row.addEventListener('click', function() {
                     const orderNumber = this.getAttribute('data-order');
                     window.location.href = `view-order.php?order_number=${encodeURIComponent(orderNumber)}`;
                 });
             });
-            
+
             // Modal elements
             const editUserModal = document.getElementById('editUserModal');
             const editModalContent = document.getElementById('editModalContent');

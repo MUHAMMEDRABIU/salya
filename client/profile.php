@@ -396,7 +396,7 @@ require_once 'partials/headers.php';
         </div>
 
         <!-- Sign Out Button -->
-        <div class="animate-slide-up" style="animation-delay: 0.6s;">
+        <div class="animate-slide-up mb-6" style="animation-delay: 0.6s;">
             <button onclick="openSignOutModal()"
                 class="w-full bg-red-50 border border-red-200 text-red-600 py-4 md:py-5 rounded-2xl font-semibold hover:bg-red-100 transition-all duration-300 transform hover:scale-[1.02]">
                 <i class="fas fa-sign-out-alt mr-2"></i>

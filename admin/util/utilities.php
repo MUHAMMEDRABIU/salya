@@ -1,4 +1,20 @@
 <?php
+
+/**
+ * Get virtual account details for a user
+ * Returns array with keys: account_number, account_name, currency_code (with fallback if missing)
+ */
+function getUserVirtualAccount($pdo, $user_id)
+{
+    $stmt = $pdo->prepare("SELECT account_number, account_name, currency_code FROM virtual_accounts WHERE user_id = ? AND is_active = 1 LIMIT 1");
+    $stmt->execute([$user_id]);
+    $account = $stmt->fetch(PDO::FETCH_ASSOC);
+    return [
+        'account_number' => $account['account_number'] ?? 'Unavailable',
+        'account_name' => $account['account_name'] ?? 'Unavailable',
+        'currency_code' => $account['currency_code'] ?? 'NGN',
+    ];
+}
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
