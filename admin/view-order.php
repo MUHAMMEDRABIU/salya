@@ -234,6 +234,98 @@ require __DIR__ . '/partials/headers.php';
 
                     <!-- Payment Information -->
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                        <!-- Order Information Card -->
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
+                            <div class="p-6 border-b border-gray-200">
+                                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                    <i data-lucide="info" class="w-5 h-5 mr-2 text-gray-600"></i>
+                                    Order Information
+                                </h3>
+                            </div>
+                            <div class="p-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="flex items-center">
+                                        <i data-lucide="calendar" class="w-5 h-5 text-gray-400 mr-3"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Order Date</p>
+                                            <p class="text-sm font-medium text-gray-900"><?php echo date('F d, Y \a\t g:i A', strtotime($order['created_at'])); ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i data-lucide="check-circle" class="w-5 h-5 text-green-500 mr-3"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Status</p>
+                                            <p class="text-sm font-medium text-gray-900"><?php echo ucfirst(str_replace('_', ' ', $order['status'])); ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i data-lucide="credit-card" class="w-5 h-5 text-gray-400 mr-3"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Payment Method</p>
+                                            <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($order['payment_method'] ?? 'Unavailable'); ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i data-lucide="shield" class="w-5 h-5 text-blue-500 mr-3"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Payment Status</p>
+                                            <p class="text-sm font-medium text-gray-900"><?php echo ucfirst($order['payment_status'] ?? 'Unavailable'); ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i data-lucide="calculator" class="w-5 h-5 text-gray-400 mr-3"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Subtotal</p>
+                                            <p class="text-sm font-medium text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['subtotal']), 2); ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i data-lucide="truck" class="w-5 h-5 text-gray-400 mr-3"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Delivery Fee</p>
+                                            <p class="text-sm font-medium text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['delivery_fee']), 2); ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i data-lucide="percent" class="w-5 h-5 text-gray-400 mr-3"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Discount</p>
+                                            <p class="text-sm font-medium text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['discount_amount']), 2); ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i data-lucide="dollar-sign" class="w-5 h-5 text-green-500 mr-3"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Total Amount</p>
+                                            <p class="text-sm font-medium text-gray-900"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format(floatval($order['total_amount']), 2); ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center md:col-span-2">
+                                        <i data-lucide="map-pin" class="w-5 h-5 text-gray-400 mr-3"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Delivery Address</p>
+                                            <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($order['delivery_address'] ?? 'Unavailable'); ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center md:col-span-2">
+                                        <i data-lucide="clock" class="w-5 h-5 text-gray-400 mr-3"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Delivery Date</p>
+                                            <p class="text-sm font-medium text-gray-900"><?php echo !empty($order['delivery_date']) ? date('F d, Y', strtotime($order['delivery_date'])) : '—'; ?></p>
+                                        </div>
+                                    </div>
+                                    <?php if (!empty($order['notes'])): ?>
+                                        <div class="flex items-center md:col-span-2">
+                                            <i data-lucide="file-text" class="w-5 h-5 text-gray-400 mr-3"></i>
+                                            <div>
+                                                <p class="text-sm text-gray-500">Notes</p>
+                                                <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($order['notes']); ?></p>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
                         <div class="p-6 border-b border-gray-200">
                             <h3 class="text-lg font-semibold text-gray-800 flex items-center">
                                 <i data-lucide="credit-card" class="w-5 h-5 mr-2 text-gray-600"></i>
