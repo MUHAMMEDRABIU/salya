@@ -19,3 +19,4 @@
 - Fix system overview for users today
 - Mark all as read not functional in the user notifications page.
 - Hide date header not functioning properly.
+- Incorrect spacing below the new order information card in view-order.php
