@@ -8,10 +8,11 @@ $page_groups = [
     'products'     => ['products', 'view-product'],
     'analytics'    => ['analytics'],
     'users'        => ['users', 'view-user'],
-    'notifications'=> ['notifications'],
+    'notifications' => ['notifications'],
 ];
 
-function is_active($group, $current_page, $page_groups) {
+function is_active($group, $current_page, $page_groups)
+{
     return in_array($current_page, $page_groups[$group]);
 }
 $page_titles = [
@@ -70,7 +71,7 @@ $page_title = isset($page_titles[$current_page]) ? $page_titles[$current_page] :
         <a href="notifications.php" class="flex items-center px-6 py-3 <?php echo $current_page === 'notifications' ? 'text-gray-700 bg-orange-50 border-r-4 border-orange-500' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-700'; ?>">
             <i data-lucide="bell" class="w-5 h-5 mr-3"></i>
             <span>Notifications</span>
-            <span class="ml-auto bg-orange-500 text-white text-xs rounded-full px-2 py-1">3</span>
+            <span id="notificationCount" class="ml-auto bg-orange-500 text-white text-xs rounded-full px-2 py-1">0</span>
         </a>
     </nav>
 </div>

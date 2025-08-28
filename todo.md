@@ -20,3 +20,5 @@
 - Mark all as read not functional in the user notifications page.
 - Hide date header not functioning properly.
 - Incorrect spacing below the new order information card in view-order.php
+- User password resetting by admin not working.
+- Admin notification fetch and notification count not working properly.

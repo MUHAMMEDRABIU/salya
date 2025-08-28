@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../initialize.php';
-require_once __DIR__ . '/../../util/util.php';
+require_once __DIR__ . '/../util/util.php';
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {

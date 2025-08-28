@@ -485,6 +485,13 @@ require __DIR__ . '/partials/headers.php';
                             <i data-lucide="save" class="w-4 h-4 mr-2"></i>
                             Save Changes
                         </button>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const submitEditBtn = document.getElementById('submitEditBtn');
+                                submitEditBtn.type = 'submit';
+                            });
+                        </script>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -516,7 +523,7 @@ require __DIR__ . '/partials/headers.php';
     </div>
 
     <!-- Send Email Modal -->
-    <div id="sendEmailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div id="sendEmailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl max-w-xl w-full transform transition-all duration-300 scale-95 opacity-0" id="emailModalContent">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
@@ -545,21 +552,21 @@ require __DIR__ . '/partials/headers.php';
     </div>
 
     <!-- Reset Password Modal -->
-    <div id="resetPasswordModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div id="resetPasswordModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full transform transition-all duration-300 scale-95 opacity-0" id="resetModalContent">
-            <div class="p-6">
+            <form id="resetForm" class="p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-semibold text-gray-900">Reset Password</h3>
-                    <button class="text-gray-400 hover:text-gray-600" onclick="closeResetModal()">
+                    <button type="button" class="text-gray-400 hover:text-gray-600" onclick="closeResetModal()">
                         <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
                 </div>
                 <p class="text-sm text-gray-600 mb-4">Are you sure you want to reset this user’s password? A temporary password will be emailed to them.</p>
                 <div class="flex justify-end gap-2">
-                    <button onclick="closeResetModal()" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
-                    <button id="confirmResetBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Confirm</button>
+                    <button type="button" onclick="closeResetModal()" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
+                    <button type="submit" id="confirmResetBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Confirm</button>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -729,7 +736,6 @@ require __DIR__ . '/partials/headers.php';
                 const formData = new FormData(editUserForm);
                 const submitBtn = document.getElementById('submitEditBtn');
                 const originalText = submitBtn.innerHTML;
-                submitBtn.addEventListener('click', alert('Submitting edit form'));
 
                 // Show loading state
                 submitBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i>Saving...';

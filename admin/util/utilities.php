@@ -85,6 +85,25 @@ function getAdminProfile($pdo, $admin_id)
         return [];
     }
 }
+
+
+/**
+ * Get unread notification count for a user
+ * @param PDO $pdo
+ * @param int $admin_id
+ * @return int
+ */
+function getUnreadNotificationCount($pdo)
+{
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM admin_notifications");
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    } catch (Exception $e) {
+        error_log("Error getting admin unread notification count: " . $e->getMessage());
+        return 0;
+    }
+}
 function getRecentOrders($pdo, $limit = 5)
 {
     try {

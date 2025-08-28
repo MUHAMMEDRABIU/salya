@@ -98,8 +98,8 @@ try {
 
     try {
         // Insert user into the database
-        $stmt = $pdo->prepare("INSERT INTO users (first_name, last_name, email, phone, password_hash, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
-        $result = $stmt->execute([$first_name, $last_name, $email, $phone, $hashedPassword]);
+        $stmt = $pdo->prepare("INSERT INTO users (first_name, last_name, email, phone, password_hash, `role`, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+        $result = $stmt->execute([$first_name, $last_name, $email, $phone, $hashedPassword, 'regular']);
 
         if (!$result) {
             throw new Exception('Failed to create user account. Please try again.');
