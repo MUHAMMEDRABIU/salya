@@ -38,6 +38,14 @@ try {
         exit;
     }
 
+    // Update user last_login
+    $stmt = $pdo->prepare("
+        UPDATE users 
+        SET last_login = NOW() 
+        WHERE id = :id
+    ");
+    $stmt->execute(['id' => $user['id']]);
+
     // Regenerate session ID to prevent fixation attacks
     session_regenerate_id(true);
     $_SESSION['user_id'] = $user['id'];

@@ -47,12 +47,12 @@ require_once 'partials/headers.php';
             </div>
 
             <div class="mb-6">
-              <p class="text-gray-300 text-sm">Price</p>
+              <p class="text-gray-600 text-sm">Price</p>
               <p class="text-lg text-accent font-bold text-custom-dark"><?php echo CURRENCY_SYMBOL; ?><?php echo number_format($product['price'], 2); ?></p>
             </div>
 
             <div>
-              <p class="text-gray-200 text-md mb-4">Choose quantity</p>
+              <p class="text-gray-600 text-md mb-4">Choose quantity</p>
               <div class="flex items-center">
                 <button id="decreaseBtn" class="bg-white quantity-btn w-12 h-12 flex items-center justify-center text-xl font-bold rounded-xl shadow-lg text-custom-dark">
                   -

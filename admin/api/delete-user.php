@@ -86,7 +86,7 @@ try {
         $stmt->execute([$user_id]);
 
         // Delete user's notifications
-        $stmt = $pdo->prepare("DELETE FROM notifications WHERE user_id = ?");
+        $stmt = $pdo->prepare("DELETE FROM user_notifications WHERE user_id = ?");
         $stmt->execute([$user_id]);
 
         // Delete user's wallet transactions
@@ -119,14 +119,12 @@ try {
             'user_name' => $user_name,
             'deleted_at' => date('Y-m-d H:i:s')
         ]);
-
     } catch (Exception $e) {
         // Rollback transaction on error
         $pdo->rollback();
         error_log("Transaction rollback in delete-user.php: " . $e->getMessage());
         throw $e;
     }
-
 } catch (PDOException $e) {
     error_log("Database error in delete-user.php: " . $e->getMessage());
     sendResponse(false, 'Database error occurred');
@@ -134,4 +132,3 @@ try {
     error_log("General error in delete-user.php: " . $e->getMessage());
     sendResponse(false, 'An unexpected error occurred: ' . $e->getMessage());
 }
-?>

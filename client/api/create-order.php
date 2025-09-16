@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../initialize.php';
+require_once __DIR__ . '/../util/util.php';
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
@@ -41,8 +43,8 @@ try {
     $pdo->beginTransaction();
 
     // Generate unique order number and verification ID
-    $order_number = 'ORD-' . date('Y') . '-' . strtoupper(uniqid());
-    $verification_id = 'VER-' . strtoupper(uniqid());
+    $order_number = 'ORD-' . strtoupper(uniqid()) . '.' . $user_id;
+    $verification_id = 'VER-' . strtoupper(uniqid()) . '.' . $user_id;
 
     // Calculate totals from cart items
     $subtotal = 0;
@@ -50,7 +52,7 @@ try {
         $subtotal += $item['price'] * $item['quantity'];
     }
 
-    $delivery_fee = $subtotal >= 10000 ? 0 : 500; // Free delivery for orders above ₦10,000
+    $delivery_fee = $subtotal >= 10000 ? 0 : 500;
     $total_amount = $subtotal + $delivery_fee;
 
     // Verify amount matches
@@ -118,6 +120,15 @@ try {
     // Commit transaction
     $pdo->commit();
 
+    // Push notification for new order
+    $notifTitle = 'Order Placed';
+    $notifMessage = 'Your order #' . htmlspecialchars($order_number) . ' has been placed successfully.';
+    $notifType = 'orders';
+    // Custom color/icon logic for 'orders' type
+    $notifIcon = 'fa-solid fa-bag-shopping text-purple-600';
+    $notifColor = '#ea580c'; // Tailwind orange-600
+    $notifAction = 'View';
+    pushNotification($pdo, $user_id, $notifTitle, $notifMessage, $notifType, $notifIcon, $notifColor, $notifAction);
     echo json_encode([
         'success' => true,
         'message' => 'Order created successfully',

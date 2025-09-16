@@ -4,8 +4,26 @@ require_once 'util/util.php';
 require_once 'partials/headers.php';
 
 $user_id = $_SESSION['user_id'];
-$notifications = getAllNotifications($pdo, $user_id);
 
+$notifications = getAllNotifications($pdo, $user_id);
+// Group notifications by date
+$grouped_notifications = [];
+foreach ($notifications as $n) {
+    $notifDate = strtotime($n['time']);
+    $today = strtotime('today');
+    $yesterday = strtotime('yesterday');
+    if ($notifDate >= $today) {
+        $dateKey = 'Today';
+    } elseif ($notifDate >= $yesterday && $notifDate < $today) {
+        $dateKey = 'Yesterday';
+    } else {
+        $dateKey = date('M d, Y', $notifDate);
+    }
+    if (!isset($grouped_notifications[$dateKey])) {
+        $grouped_notifications[$dateKey] = [];
+    }
+    $grouped_notifications[$dateKey][] = $n;
+}
 // Count unread notifications
 $unread_count = count(array_filter($notifications, function ($n) {
     return empty($n['read']) || $n['read'] == 0;
@@ -53,32 +71,41 @@ $unread_count = count(array_filter($notifications, function ($n) {
         </div>
 
         <!-- Notifications List -->
-        <div class="space-y-4" id="notificationsList">
-            <?php foreach ($notifications as $n): ?>
-                <div class="notification-item bg-white rounded-2xl p-6 floating-card animate-fade-in"
-                    data-category="<?php echo htmlspecialchars($n['type']); ?>"
-                    data-read="<?php echo $n['read'] ? 'true' : 'false'; ?>">
-                    <div class="flex items-start space-x-4">
-                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 <?php echo htmlspecialchars($n['color'] ?? 'bg-gray-100'); ?>">
-                            <i class="<?php echo htmlspecialchars($n['icon'] ?? 'fas fa-bell'); ?> text-xl <?php echo htmlspecialchars($n['color'] ?? 'text-gray-600'); ?>"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-lg font-bold text-custom-dark"><?php echo htmlspecialchars($n['title']); ?></h3>
-                                <?php if (empty($n['read'])): ?>
-                                    <div class="w-3 h-3 bg-custom-accent rounded-full flex-shrink-0"></div>
-                                <?php endif; ?>
+        <div class="space-y-8" id="notificationsList">
+            <?php foreach ($grouped_notifications as $date => $notifs): ?>
+                <div>
+                    <h2 class="text-lg font-bold text-gray-700 mb-4 px-2">
+                        <?php echo htmlspecialchars($date); ?>
+                    </h2>
+                    <div class="space-y-4">
+                        <?php foreach ($notifs as $n): ?>
+                            <div class="notification-item bg-white rounded-2xl p-6 floating-card animate-fade-in"
+                                data-category="<?php echo htmlspecialchars($n['type']); ?>"
+                                data-read="<?php echo $n['read'] ? 'true' : 'false'; ?>">
+                                <div class="flex items-start space-x-4">
+                                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 <?php echo htmlspecialchars($n['color'] ?? 'bg-gray-100'); ?>">
+                                        <i class="<?php echo htmlspecialchars($n['icon'] ?? 'fas fa-bell'); ?> text-xl <?php echo htmlspecialchars($n['color'] ?? 'text-gray-600'); ?>"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h3 class="text-lg font-bold text-custom-dark"><?php echo htmlspecialchars($n['title']); ?></h3>
+                                            <?php if (empty($n['read'])): ?>
+                                                <div class="w-3 h-3 bg-custom-accent rounded-full flex-shrink-0"></div>
+                                            <?php endif; ?>
+                                        </div>
+                                        <p class="text-gray-600 mb-3"><?php echo htmlspecialchars($n['message']); ?></p>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm text-gray-500"><?php echo date('H:i', strtotime($n['time'])); ?></span>
+                                            <?php if (!empty($n['action_label'])): ?>
+                                                <button class="text-sm font-semibold text-custom-accent hover:opacity-80 transition-opacity">
+                                                    <?php echo htmlspecialchars($n['action_label']); ?>
+                                                </button>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <p class="text-gray-600 mb-3"><?php echo htmlspecialchars($n['message']); ?></p>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-500"><?php echo date('M d, Y H:i', strtotime($n['time'])); ?></span>
-                                <?php if (!empty($n['action_label'])): ?>
-                                    <button class="text-sm font-semibold text-custom-accent hover:opacity-80 transition-opacity">
-                                        <?php echo htmlspecialchars($n['action_label']); ?>
-                                    </button>
-                                <?php endif; ?>
-                            </div>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -97,6 +124,9 @@ $unread_count = count(array_filter($notifications, function ($n) {
     </div>
     <!-- Bottom navigation include -->
     <?php include 'partials/bottom-nav.php'; ?>
+    <!-- Scripts -->
+    <script src="../assets/js/toast.js"></script>
+    <script src="js/script.js"></script>
     <script>
         // Notification management
         let notifications = [];

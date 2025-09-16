@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../initialize.php';
+require_once __DIR__ . '/../util/util.php';
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
@@ -46,6 +47,22 @@ try {
     if (!$result) {
         throw new Exception('Failed to update profile');
     }
+
+    // Custom color for notification types
+    $notifType = 'updates';
+    $notifIcon = 'fas fa-user-edit text-blue-600';
+    $notifColor = 'bg-orange-100';
+    
+    pushNotification(
+        $pdo,
+        $user_id,
+        'Profile Updated',
+        'Your profile information was updated successfully.',
+        $notifType,
+        $notifIcon,
+        $notifColor,
+        'View Profile'
+    );
 
     echo json_encode([
         'success' => true,

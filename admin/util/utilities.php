@@ -1,4 +1,20 @@
 <?php
+
+/**
+ * Get virtual account details for a user
+ * Returns array with keys: account_number, account_name, currency_code (with fallback if missing)
+ */
+function getUserVirtualAccount($pdo, $user_id)
+{
+    $stmt = $pdo->prepare("SELECT account_number, account_name, currency_code FROM virtual_accounts WHERE user_id = ? AND is_active = 1 LIMIT 1");
+    $stmt->execute([$user_id]);
+    $account = $stmt->fetch(PDO::FETCH_ASSOC);
+    return [
+        'account_number' => $account['account_number'] ?? 'Unavailable',
+        'account_name' => $account['account_name'] ?? 'Unavailable',
+        'currency_code' => $account['currency_code'] ?? 'NGN',
+    ];
+}
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -67,6 +83,25 @@ function getAdminProfile($pdo, $admin_id)
     } catch (PDOException $th) {
         error_log("[ADMIN FETCH ERRO]: Couldn't fetch admin data");
         return [];
+    }
+}
+
+
+/**
+ * Get unread notification count for a user
+ * @param PDO $pdo
+ * @param int $admin_id
+ * @return int
+ */
+function getUnreadNotificationCount($pdo)
+{
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM admin_notifications");
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    } catch (Exception $e) {
+        error_log("Error getting admin unread notification count: " . $e->getMessage());
+        return 0;
     }
 }
 function getRecentOrders($pdo, $limit = 5)
