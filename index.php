@@ -374,19 +374,31 @@
                         Nigeria's leading frozen food delivery platform, bringing fresh quality from farm to your table.
                     </p>
                     <div class="flex space-x-4">
-                        <a href="#" class="w-10 h-10 bg-accent rounded-full flex items-center justify-center hover:bg-secondary transition-colors">
+                        <!-- Facebook -->
+                        <a href="https://facebook.com/YourPageName" target="_blank"
+                            class="w-10 h-10 bg-accent rounded-full flex items-center justify-center hover:bg-secondary transition-colors">
                             <i class="fab fa-facebook-f"></i>
                         </a>
-                        <a href="#" class="w-10 h-10 bg-accent rounded-full flex items-center justify-center hover:bg-secondary transition-colors">
+
+                        <!-- WhatsApp -->
+                        <a href="https://wa.me/23407059217896" target="_blank"
+                            class="w-10 h-10 bg-accent rounded-full flex items-center justify-center hover:bg-secondary transition-colors">
                             <i class="fab fa-whatsapp"></i>
                         </a>
-                        <a href="#" class="w-10 h-10 bg-accent rounded-full flex items-center justify-center hover:bg-secondary transition-colors">
+
+                        <!-- Instagram -->
+                        <a href="https://instagram.com/salya_nigerialimited" target="salya_nigerialimited"
+                            class="w-10 h-10 bg-accent rounded-full flex items-center justify-center hover:bg-secondary transition-colors">
                             <i class="fab fa-instagram"></i>
                         </a>
-                        <a href="#" class="w-10 h-10 bg-accent rounded-full flex items-center justify-center hover:bg-secondary transition-colors">
-                            <i class="fab fa-twitter"></i>
+
+                        <!-- Twitter (X) -->
+                        <a href="mailto:salyanigerialimited@gmail.com"
+                            class="w-10 h-10 bg-accent rounded-full flex items-center justify-center hover:bg-secondary transition-colors">
+                            <i class="fas fa-envelope"></i>
                         </a>
                     </div>
+
                 </div>
                 <div>
                     <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
@@ -417,15 +429,15 @@
                     <div class="space-y-3">
                         <p class="flex items-center text-gray-300">
                             <i class="fas fa-phone text-accent mr-3"></i>
-                            +234 800 FRESH (37374)
+                            +234 07059217896
                         </p>
                         <p class="flex items-center text-gray-300">
                             <i class="fas fa-envelope text-accent mr-3"></i>
-                            hello@freshfreeze.ng
+                            salyanigerialimited@gmail.com
                         </p>
                         <p class="flex items-center text-gray-300">
                             <i class="fas fa-map-marker-alt text-accent mr-3"></i>
-                            Lagos, Nigeria
+                            Abuja, Nigeria
                         </p>
                     </div>
                 </div>
